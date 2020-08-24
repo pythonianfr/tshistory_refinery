@@ -1,0 +1,27 @@
+.summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+span.tznaive {
+    color: darkred;
+}
+
+span.tzaware {
+    color: darkgreen;
+}
+
+
+.gridlike {
+    display: grid;
+    grid-template-columns: 15em 15em 15em 15em;
+}
+
+.gridlike button {
+    margin: 2px;
+}
+
+section:hover {
+    background: lightgrey;
+    border-radius: 3px;
+}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+{{ table | safe }}
+
+<script>
+ $(document).ready(function () {
+     let table = $('.table').DataTable({
+         "pageLength": 20,
+         "ordering": false,
+         "deferRender": true
+     })
+
+     $('.table thead th').each( function () {
+         var title = $(this).text();
+         $(this).html(
+             `<input type="text" placeholder="Search ${title}" />`
+         )
+     })
+
+     table.columns().every( function () {
+         var that = this;
+
+         $('input', this.header()).on('keyup change clear', function () {
+             if (that.search() !== this.value) {
+                 that
+                     .search( this.value )
+                     .draw();
+             }
+         })
+     })
+ })
+
+ function refresh(name) {
+     console.log('refresh', name)
+     fetch(
+         `{{refreshuri}}?name=${name}`,
+         {method: 'PATCH', credentials: 'same-origin'}
+     ).then(resp => console.log(resp))
+ }
+</script>
+
+{% endblock %}

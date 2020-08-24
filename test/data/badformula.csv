@@ -1,0 +1,4 @@
+name,text
+prio1,(priority (* 10 (series "crude-a")) (series "crude-b") (series "crude-c"))
+primary,(priority (* 10 (series "crude-a")) (series "crude-b") (series "crude-c"))
+syntax,(i (am (broken(

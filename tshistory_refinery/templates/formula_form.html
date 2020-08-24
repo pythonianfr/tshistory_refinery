@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+<section>
+    <legend>Usage</legend>
+    <ul>
+        <li> Download the current state of the formula in one csv.</li>
+        <li> Remove the ones you want unchanged</li>
+        <li> Edit and add your owns</li>
+        <li> Upload your file but DO NOT CHECK "really do it"</li>
+        <li> Pay attention to errors AND warnings, and fix you file</li>
+        <li> When it looks good, re-upload with "really do it" CHECKED</li>
+    </ul>
+</section>
+
+<section>
+    <legend>Download current Formula</legend>
+    <a class="btn btn-default"
+       href={{url_for("downloadformulas")}}
+       download="formula.csv">
+        Download
+    </a>
+</section>
+
+<br>
+<form id="formulaform">
+    <div class="form-group">
+        <legend>Upload custom Formulas</legend>
+        <label for="new_formulas.csv">
+            Your csv:
+        </label>
+        <input type="file"
+               id="csvfile"
+               name="new_formulas.csv"
+               accept=".csv"
+               class="btn btn-default"/>
+    </div>
+    <div class="form-group">
+        <label for="reallydoit">
+            Really do it (will apply the changes):
+        </label>
+        <input type="checkbox" name="reallydoit" value="Really do it">
+    </div>
+    <input type="submit" value="Upload" class="btn btn-primary">
+</form>
+
+<br>
+<div id="crash"></div>
+<div id="output"></div>
+<div id="errors"></div>
+<div id="warnings"></div>
+
+<script>
+ function initform() {
+     // setup click handler and do initial click
+     // to fetch the plot
+     $('#formulaform').submit(event => {
+         event.preventDefault()
+         const form = document.getElementById('formulaform')
+         fetch('updateformulas',
+               {method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin'}
+         ).then(
+             response => response.json()
+         ).then(response => {
+             ['crash', 'output', 'errors', 'warnings'].forEach(item =>
+                 $('#' + item).html('')
+             );
+             ['errors', 'warnings'].forEach(item => {
+                 const node = $('#' + item)
+                 if (response.hasOwnProperty(item)) {
+                     let html = ['<h2>' + item + '</h2>']
+                     Object.keys(response[item]).forEach(key => {
+                         html.push('<section><legend>' + key + '</legend>')
+                         let inner = []
+                         response[item][key].forEach(elt =>
+                             inner.push(elt)
+                         )
+                         html.push(inner.join(', '))
+                         html.push('</section><br>')
+                     })
+                     console.log(html)
+                     node.html(html.join(' '))
+                 }
+             });
+             ['output', 'crash'].forEach(item => {
+                 if (response.hasOwnProperty(item)) {
+                     const node = $('#' + item)
+                     console.log(response)
+                     node.html(response[item])
+                 }
+             })
+         })
+     })
+ }
+ initform()
+</script>
+
+{% endblock %}

@@ -1,0 +1,4 @@
+name,text
+prio1,(priority (series "crude-a") (series "crude-b") (series "crude-c"))
+arith1,(add (* 10 (series "gas-a")) (series "gas-b"))
+arith2,(add (series "gas-c") (series "prio1") (naive (cronos "xxx" (date "2010-1-1") (today)) "CET"))

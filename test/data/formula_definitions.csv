@@ -1,0 +1,3 @@
+name,text
+excelalias4,(priority (* 8 (series "rep1")) (* 11 (series "rep2")))
+excelaliassum1,(add (series "rep1") (* 11 (series "rep2")))
