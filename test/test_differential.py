@@ -464,7 +464,7 @@ def test_revision_date(engine, tsh):
     ts = tsh.get(engine, 'ts_through_time',
                  revision_date=datetime(2014, 1, 1, 18, 43, 23))
 
-    assert ts is None
+    assert len(ts) == 0
 
 
 def test_before_first_insertion(engine, tsh):
@@ -475,13 +475,13 @@ def test_before_first_insertion(engine, tsh):
     result = tsh.get_ts_marker(engine, 'unknown_ts')
     assert (None, None) == result
 
-    result = tsh.get_ts_marker(engine, 'ts_shtroumpf', revision_date=datetime(1970, 1, 1))
-    assert (None, None) == result
+    a, b = tsh.get_ts_marker(engine, 'ts_shtroumpf', revision_date=datetime(1970, 1, 1))
+    assert len(a) == len(b) == 0
 
     result1 = tsh.get_many(engine, 'unknown_ts')
     result2 = tsh.get_many(engine, 'ts_shtroumpf', revision_date=datetime(1970, 1, 1))
 
-    assert len(result1) == len(result2) # (None, None, None)
+    assert len(result1) == len(result2)
 
 
 def test_get_many(engine, tsh):
@@ -710,7 +710,7 @@ def test_na_and_delete(engine, tsh):
     ts_repushed[0:3] = np.nan
     tsh.update(engine, ts_repushed, 'ts_repushed', 'test')
     diff = tsh.update(engine, ts_repushed, 'ts_repushed', 'test')
-    assert diff is None
+    assert len(diff) == 0
 
 
 def test_exotic_name(engine, tsh):

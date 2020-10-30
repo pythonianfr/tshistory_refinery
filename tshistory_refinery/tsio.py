@@ -1,8 +1,10 @@
+from psyl import lisp
+
 from tshistory_supervision.tsio import timeseries as supervisionts
 from tshistory_formula import interpreter
 from tshistory_formula.tsio import timeseries as formulats
 
-#registration
+# registration
 import tshistory_refinery.funcs
 import tshistory_refinery.api
 
@@ -48,7 +50,7 @@ class timeseries(supervisionts, formulats):
                     'to_value_date':to_value_date
                 }
             )
-            ts_values, ts_origins = i.evaluate(formula)
+            ts_values, ts_origins = i.evaluate(lisp.parse(formula))
             ts_values.name = name
             ts_origins.name = name
             return ts_values, ts_marker, ts_origins
