@@ -8,9 +8,11 @@ import numpy as np
 
 from tshistory.testutil import (
     assert_df,
+    genserie,
     utcdt
 )
 from tshistory_formula.interpreter import jsontypes
+
 
 DATADIR = Path(__file__).parent / 'data'
 
@@ -25,19 +27,6 @@ def ingest_formulas(tsh, engine, formula_file):
                 row.text,
                 update=True
             )
-
-
-def genserie(start, freq, repeat, initval=None, tz=None, name=None):
-    if initval is None:
-        values = range(repeat)
-    else:
-        values = initval * repeat
-    return pd.Series(values,
-                     name=name,
-                     index=pd.date_range(start=start,
-                                         freq=freq,
-                                         periods=repeat,
-                                         tz=tz))
 
 
 def test_rename(engine, tsh):
@@ -763,17 +752,22 @@ def test_historic_delta(engine, tsh):
 
 
 def test_staircase_formula(engine, tsh):
-    for insertion_date in pd.date_range(
-            start=datetime(2015, 1, 1),
-            end=datetime(2015, 1, 2),
-            freq='H'
-        ):
+    dr = pd.date_range(
+        start=datetime(2015, 1, 1),
+        end=datetime(2015, 1, 2),
+        freq='H'
+    )
+    for insertion_date in dr:
         ts1 = genserie(start=insertion_date, freq='H', repeat=6)
         ts2 = ts1 + 1
-        tsh.update(engine, ts1, 'rep1', 'test',
-                   insertion_date=pd.Timestamp(insertion_date,tz='UTC'))
-        tsh.update(engine, ts2, 'rep2', 'test',
-                   insertion_date=pd.Timestamp(insertion_date,tz='UTC'))
+        tsh.update(
+            engine, ts1, 'rep1', 'test',
+            insertion_date=pd.Timestamp(insertion_date,tz='UTC')
+        )
+        tsh.update(
+            engine, ts2, 'rep2', 'test',
+            insertion_date=pd.Timestamp(insertion_date,tz='UTC')
+        )
 
     ingest_formulas(tsh, engine,  DATADIR / 'formula_definitions.csv')
 
@@ -915,7 +909,7 @@ def test_types(tsh):
     # prune the types registered from other modules/plugins
     # we want to only show the ones provided by the current package
     opnames = set(
-        ('priority-origin', )
+        ('priority-origin',)
     )
     types = {
         name: ftype
