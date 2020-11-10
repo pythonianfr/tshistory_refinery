@@ -27,7 +27,8 @@ def series_priority_origin(*serieslist: pd.Series) -> pd.Series:
         # origin
         ids = pd.Series(
             [ts.name] * len(ts.index),
-            index=ts.index
+            index=ts.index,
+            dtype='object'  # think about "string" dtype when it matures
         )
         origin = patch(origin, ids)
 
