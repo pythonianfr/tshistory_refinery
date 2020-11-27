@@ -9,11 +9,12 @@ from tshistory_formula.registry import func
 DATADIR = Path(__file__).parent / 'data'
 
 
-def test_formula_form(engine, client, tsh):
-    @func('cronos')
-    def cronos(uid: str, fromdate: pd.Timestamp, todate: pd.Timestamp) -> pd.Series:
-        pass
+@func('cronos')
+def cronos(uid: str, fromdate: pd.Timestamp, todate: pd.Timestamp) -> pd.Series:
+    pass
 
+
+def test_formula_form(engine, client, tsh):
     with engine.begin() as cn:
         cn.execute('delete from tsh.formula')
 
@@ -113,3 +114,35 @@ def test_formula_form(engine, client, tsh):
 
     meta = tsh.metadata(engine, 'arith2')
     assert 'supervision_status' not in meta
+
+
+
+def test_formula_form_metadata(engine, client, tsh, remote):
+    with engine.begin() as cn:
+        cn.execute('delete from tsh.formula')
+        cn.execute('delete from remote.formula')
+
+    remote.register_formula(
+        'remote',
+        '(cronos "yyy" (date "2020-1-1") (date "2021-1-1"))'
+    )
+
+    user_file = DATADIR / 'remoteautoformula.csv'
+    uploaded = client.post(
+        '/updateformulas',
+        {'reallydoit': True},
+        upload_files=[
+            ('new_formulas.csv',
+             user_file.name,
+             user_file.read_bytes(),
+             'text/csv')
+        ]
+    )
+    # the user is downloading the current formulaes
+    response = client.get('/downloadformulas')
+    formula_inserted = pd.read_csv(user_file)
+    formula_downloaded = pd.read_csv(io.StringIO(response.text))
+    assert formula_inserted['name'].isin(formula_downloaded['name']).all()
+
+    assert tsh.exists(engine, 'remote')
+    assert tsh.metadata(engine, 'remote') is None

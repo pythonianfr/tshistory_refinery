@@ -5,9 +5,11 @@ from tshistory_formula.schema import formula_schema
 
 
 
-def init(engine, drop=False):
-    tsschema('tsh').create(engine)
-    tsschema('tsh-upstream').create(engine)
-    formula_schema().create(engine)
-    rework_init(engine, drop=drop)
-    rework_ui_init(engine)
+def init(engine, namespace='tsh', rework=True, drop=False):
+    tsschema(namespace).create(engine)
+    tsschema(f'{namespace}-upstream').create(engine)
+    formula_schema(namespace).create(engine)
+
+    if rework:
+        rework_init(engine, drop=drop)
+        rework_ui_init(engine)

@@ -11,7 +11,7 @@ from pytest_sa_pg import db
 
 from rework import api
 
-
+from tshistory.api import timeseries
 from tshistory_refinery import schema, webapi, tsio
 
 
@@ -69,3 +69,17 @@ def webapp(engine):
 @pytest.fixture(scope='session')
 def client(engine):
     return NonSuckingWebTester(webapp(engine))
+
+
+@pytest.fixture(scope='session')
+def remote(engine):
+    schema.init(engine, 'remote', rework=False)
+
+    return timeseries(
+        str(engine.url),
+        namespace='remote',
+        handler=tsio.timeseries,
+        sources=[
+            (str(engine.url), 'remote')
+        ]
+    )
