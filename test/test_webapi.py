@@ -3,24 +3,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from tshistory.testutil import assert_df, genserie
+
 
 DATADIR = Path(__file__).parent / 'data'
-
-def assert_df(expected, df):
-    assert expected.strip() == df.to_string().strip()
-
-
-def genserie(start, freq, repeat, initval=None, tz=None, name=None):
-    if initval is None:
-        values = range(repeat)
-    else:
-        values = [initval] * repeat
-    return pd.Series(values,
-                     name=name,
-                     index=pd.date_range(start=start,
-                                         freq=freq,
-                                         periods=repeat,
-                                         tz=tz))
 
 
 def test_formula_form(engine, client, tsh):
