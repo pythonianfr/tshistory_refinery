@@ -13,16 +13,16 @@ class timeseries(supervisionts, formulats):
     _forbidden_chars = ' (),;=[]'
     metadata_compat_excluded = ('supervision_status',)
 
-    def update(self, cnx, ts, name, author,
-               manual=False,
+    def update(self, cn, ts, name, author,
                metadata=None,
-               insertion_date=None):
+               insertion_date=None,
+               manual=False):
         name = self._sanitize(name)
         return super().update(
-            cnx, ts, name, author,
-            manual=manual,
+            cn, ts, name, author,
             metadata=metadata,
-            insertion_date=insertion_date
+            insertion_date=insertion_date,
+            manual=manual
         )
 
     def get_many(self, cn, name,
