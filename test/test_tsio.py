@@ -338,7 +338,7 @@ def test_first_manual(engine, tsh):
 """, tsh.get(engine, 'ts_only'))
 
     tsh.update(engine, ts_begin, 'ts_only', 'test', manual=True)
-    assert_df( """
+    assert_df("""
 2010-01-01    0.0
 2010-01-02    1.0
 2010-01-03    2.0
@@ -359,7 +359,7 @@ def test_first_manual(engine, tsh):
 
     # should be a noop
     tsh.update(engine, ts_slight_variation, 'ts_only', 'test', manual=True)
-    ts, marker = tsh.get_ts_marker(engine, 'ts_only')
+    _, marker = tsh.get_ts_marker(engine, 'ts_only')
 
     assert_df("""
 2010-01-01    False
@@ -762,14 +762,14 @@ def test_staircase_formula(engine, tsh):
         ts2 = ts1 + 1
         tsh.update(
             engine, ts1, 'rep1', 'test',
-            insertion_date=pd.Timestamp(insertion_date,tz='UTC')
+            insertion_date=pd.Timestamp(insertion_date, tz='UTC')
         )
         tsh.update(
             engine, ts2, 'rep2', 'test',
-            insertion_date=pd.Timestamp(insertion_date,tz='UTC')
+            insertion_date=pd.Timestamp(insertion_date, tz='UTC')
         )
 
-    ingest_formulas(tsh, engine,  DATADIR / 'formula_definitions.csv')
+    ingest_formulas(tsh, engine, DATADIR / 'formula_definitions.csv')
 
     d = timedelta(hours=3)
     start = datetime(2015, 1, 2)
@@ -905,7 +905,7 @@ def test_formula_metadata(engine, tsh):
     }
 
 
-def test_types(tsh):
+def test_types():
     # prune the types registered from other modules/plugins
     # we want to only show the ones provided by the current package
     opnames = set(
