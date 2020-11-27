@@ -4,12 +4,16 @@ from pathlib import Path
 import pandas as pd
 
 from tshistory.testutil import assert_df, genserie
-
+from tshistory_formula.registry import func
 
 DATADIR = Path(__file__).parent / 'data'
 
 
 def test_formula_form(engine, client, tsh):
+    @func('cronos')
+    def cronos(uid: str, fromdate: pd.Timestamp, todate: pd.Timestamp) -> pd.Series:
+        pass
+
     with engine.begin() as cn:
         cn.execute('delete from tsh.formula')
 
