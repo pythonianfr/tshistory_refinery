@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from tshistory.testutil import assert_df, genserie
-from tshistory_formula.registry import func
+from tshistory_formula.registry import func, metadata
 
 DATADIR = Path(__file__).parent / 'data'
 
@@ -12,6 +12,20 @@ DATADIR = Path(__file__).parent / 'data'
 @func('cronos')
 def cronos(uid: str, fromdate: pd.Timestamp, todate: pd.Timestamp) -> pd.Series:
     pass
+
+
+@metadata('cronos')
+def cronos_metadata(cn, tsh, tree):
+    return {
+        f'cronos:{tree[1]}': {
+            'tzaware': True,
+            'source': 'singularity-cronos',
+            'index_type': 'datetime64[ns, UTC]',
+            'value_type': 'float64',
+            'index_dtype': '|M8[ns]',
+            'value_dtype': '<f8'
+        }
+    }
 
 
 def test_formula_form(engine, client, tsh):
@@ -123,9 +137,11 @@ def test_formula_form_metadata(engine, client, tsh, remote):
         cn.execute('delete from remote.formula')
 
     remote.register_formula(
-        'remote',
+        'remote-formula',
         '(cronos "yyy" (date "2020-1-1") (date "2021-1-1"))'
     )
+    assert not tsh.exists(engine, 'remote-formula')
+    assert not tsh.exists(engine, 'remote')
 
     user_file = DATADIR / 'remoteautoformula.csv'
     uploaded = client.post(
@@ -145,4 +161,11 @@ def test_formula_form_metadata(engine, client, tsh, remote):
     assert formula_inserted['name'].isin(formula_downloaded['name']).all()
 
     assert tsh.exists(engine, 'remote')
-    assert tsh.metadata(engine, 'remote') is None
+    assert tsh.metadata(engine, 'remote') == {
+        'tzaware': True,
+        'index_type': 'datetime64[ns, UTC]',
+        'value_type': 'float64',
+        'index_dtype': '|M8[ns]',
+        'value_dtype': '<f8'
+    }
+

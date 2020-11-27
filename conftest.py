@@ -12,7 +12,12 @@ from pytest_sa_pg import db
 from rework import api
 
 from tshistory.api import timeseries
-from tshistory_refinery import schema, webapi, tsio
+from tshistory_refinery import (
+    helper,
+    schema,
+    tsio,
+    webapi
+)
 
 
 DATADIR = Path(__file__).parent / 'test' / 'data'
@@ -25,6 +30,7 @@ def engine(request):
     uri = 'postgresql://localhost:{}/postgres'.format(port)
     e = create_engine(uri)
     schema.init(e, drop=True)
+    schema.init(e, 'remote', rework=False, drop=True)
     api.freeze_operations(e)
     yield e
 
@@ -61,8 +67,10 @@ def webapp(engine):
     if APP is not None:
         return APP
     BASECONFIG['db'] = {'uri': str(engine.url)}
-    BASECONFIG['sources'] = {}
-    APP = webapi.make_app(BASECONFIG)
+    BASECONFIG['sources'] = {
+        'remote': f'{engine.url},remote'
+    }
+    APP = webapi.make_app(BASECONFIG, helper.apimaker(BASECONFIG))
     return APP
 
 
@@ -73,6 +81,18 @@ def client(engine):
 
 @pytest.fixture(scope='session')
 def remote(engine):
+    return timeseries(
+        str(engine.url),
+        namespace='remote',
+        handler=tsio.timeseries,
+        sources=[
+            (str(engine.url), 'remote')
+        ]
+    )
+
+
+@pytest.fixture(scope='session')
+def local(engine):
     schema.init(engine, 'remote', rework=False)
 
     return timeseries(
@@ -83,3 +103,4 @@ def remote(engine):
             (str(engine.url), 'remote')
         ]
     )
+

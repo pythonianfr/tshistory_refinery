@@ -35,7 +35,6 @@ from tshistory_formula.editor import components_table
 from tshistory_rest.blueprint import blueprint as webapi
 from tshistory_xl.blueprint import blueprint as excel
 
-from tshistory_refinery.tsio import timeseries as tshclass
 from tshistory_refinery import helper
 
 
@@ -71,10 +70,8 @@ def format_metadata(meta):
     return str(h)
 
 
-def make_app(config, editor_callback=None):
+def make_app(config, tsa, editor_callback=None):
     app = Flask(__name__)
-
-    tsa = helper.apimaker(config)
     dburi = config['db']['uri']
     engine = create_engine(dburi)
 
@@ -150,13 +147,12 @@ def make_app(config, editor_callback=None):
     def validate_formula(df_formula):
         errors = defaultdict(list)
         warnings = defaultdict(list)
-        tsh = tshclass()
 
         # conflicts with primary series are an error
         primaries = {
             name for name in np.unique(df_formula['name'])
-            if tsh.type(engine, name) == 'primary'
-               and tsh.exists(engine, name)
+            if tsa.type(name) == 'primary'
+               and tsa.exists(name)
         }
         if primaries:
             errors['primary'] = sorted(primaries)
@@ -164,8 +160,8 @@ def make_app(config, editor_callback=None):
         # overriding an existing formula yields a warning
         formulas = {
             name for name in np.unique(df_formula['name'])
-            if tsh.type(engine, name) == 'formula'
-               and tsh.exists(engine, name)
+            if tsa.type(name) == 'formula'
+               and tsa.exists(name)
         }
         if formulas:
             warnings['existing'] = sorted(formulas)
@@ -181,36 +177,34 @@ def make_app(config, editor_callback=None):
         missing = set()
         prevmissing = set()
 
-        def exists(cn, sname):
-            if not tsh.exists(cn, sname):
+        def exists(sname):
+            if not tsa.exists(sname):
                 for op in ('cronos', 'meteo', 'pointconnect'):
                     if sname.startswith(op):
                         return True
                 return False
             return True
 
-        with engine.begin() as cn:
+        for row in df_formula.itertuples():
+            try:
+                parsed = fparse(row.text)
+            except SyntaxError:
+                syntax_error.add(row.name)
+                continue
 
-            for row in df_formula.itertuples():
-                try:
-                    parsed = fparse(row.text)
-                except SyntaxError:
-                    syntax_error.add(row.name)
-                    continue
-
-                needset = set(
-                    tsh.find_metas(cn, parsed)
-                )
-                # even if ok, the def might refer to the current
-                # uploaded set, or worse ...
-                newmissing = {
-                    needname
-                    for needname in needset
-                    if needname not in uploadset and not exists(cn, needname)
-                }
-                missing |= newmissing
-                if not newmissing:
-                    ok.add(row.name)
+            needset = set(
+                tsa.tsh.find_metas(tsa.engine, parsed)
+            )
+            # even if ok, the def might refer to the current
+            # uploaded set, or worse ...
+            newmissing = {
+                needname
+                for needname in needset
+                if needname not in uploadset and not exists(needname)
+            }
+            missing |= newmissing
+            if not newmissing:
+                ok.add(row.name)
 
         if syntax_error:
             errors['syntax'] = sorted(syntax_error)
@@ -244,15 +238,14 @@ def make_app(config, editor_callback=None):
                     'warnings': warnings
                 })
 
-            tsh = tshclass()
-            with engine.begin() as cn:
-                with redirect_stdout(stdout):
-                    for row in df_formula.itertuples():
-                        tsh.register_formula(
-                            cn, row.name, row.text,
-                            reject_unknown=False,
-                            update=True
-                        )
+            with redirect_stdout(stdout):
+                for row in df_formula.itertuples():
+                    tsa.register_formula(
+                        row.name,
+                        row.text,
+                        reject_unknown=False,
+                        update=True
+                    )
 
         except Exception:
             traceback.print_exc()
