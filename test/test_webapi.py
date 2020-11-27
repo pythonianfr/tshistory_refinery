@@ -65,6 +65,8 @@ def test_formula_form(engine, client, tsh):
     formula_downloaded = pd.read_csv(io.StringIO(response.text))
     assert formula_inserted['name'].isin(formula_downloaded['name']).all()
 
+    assert tsh.metadata(engine, 'arith2')['tzaware'] == False
+
     # We reinsert the donwloaded formulaes and check that everything is kept in the process
     response = client.post(
         '/updateformulas',
