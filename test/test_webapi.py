@@ -1,17 +1,8 @@
-import pytest
 import io
-import json
-
-import pandas as pd
-import numpy as np
 from pathlib import Path
 
-from flask import url_for
-from bs4 import BeautifulSoup
+import pandas as pd
 
-from tshistory.util import tojson, fromjson
-
-import tshistory_refinery.webapi
 
 DATADIR = Path(__file__).parent / 'data'
 
