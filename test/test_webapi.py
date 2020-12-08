@@ -51,6 +51,7 @@ def test_formula_form(engine, client, tsh):
         'warnings': {},
         'errors': {
             'missing': [
+                'constant',
                 'crude-b',
                 'crude-c',
                 'gas-a',
@@ -59,7 +60,7 @@ def test_formula_form(engine, client, tsh):
             ]
         }
     }
-
+    return
     # really do it
     for name in ('crude-b', 'crude-b', 'crude-c', 'gas-a', 'gas-b', 'gas-c'):
         tsh.update(engine, ts, name, 'Babar')
