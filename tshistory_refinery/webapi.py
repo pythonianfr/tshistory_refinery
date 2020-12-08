@@ -32,6 +32,7 @@ from rework_ui.blueprint import reworkui
 
 from tshistory_editor.editor import editor
 from tshistory_formula.editor import components_table
+from tshistory_formula import registry
 from tshistory_rest.blueprint import blueprint as webapi
 from tshistory_xl.blueprint import blueprint as excel
 
@@ -179,6 +180,8 @@ def make_app(config, tsa, editor_callback=None):
 
         def exists(sname):
             if not tsa.exists(sname):
+                if sname in registry.AUTO:
+                    return True
                 for op in ('cronos', 'meteo', 'pointconnect'):
                     if sname.startswith(op):
                         return True

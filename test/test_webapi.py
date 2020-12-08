@@ -28,7 +28,7 @@ def cronos_metadata(cn, tsh, tree):
     }
 
 
-def test_formula_form(engine, client, tsh):
+def test_formula_form_base(engine, client, tsh):
     with engine.begin() as cn:
         cn.execute('delete from tsh.formula')
 
@@ -51,7 +51,6 @@ def test_formula_form(engine, client, tsh):
         'warnings': {},
         'errors': {
             'missing': [
-                'constant',
                 'crude-b',
                 'crude-c',
                 'gas-a',
@@ -60,7 +59,7 @@ def test_formula_form(engine, client, tsh):
             ]
         }
     }
-    return
+
     # really do it
     for name in ('crude-b', 'crude-b', 'crude-c', 'gas-a', 'gas-b', 'gas-c'):
         tsh.update(engine, ts, name, 'Babar')
