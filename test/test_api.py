@@ -736,3 +736,16 @@ def test_origin_federated(tsa1, tsa2):
 2010-01-19    forecasted
 2010-01-20    forecasted
 """, origin)
+
+
+def test_today_vs_revision_date(tsa):
+    tsa.register_formula(
+        'constant-1',
+        '(constant 1. (date "2020-1-1") (today) "D" (date "2020-2-1"))'
+    )
+
+    with pytest.raises(AssertionError):
+        ts, _, _ = tsa.values_markers_origins(
+            'constant-1',
+            revision_date=datetime(2020, 2, 1)
+        )
