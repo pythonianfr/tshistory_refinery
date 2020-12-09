@@ -744,8 +744,8 @@ def test_today_vs_revision_date(tsa):
         '(constant 1. (date "2020-1-1") (today) "D" (date "2020-2-1"))'
     )
 
-    with pytest.raises(AssertionError):
-        ts, _, _ = tsa.values_markers_origins(
-            'constant-1',
-            revision_date=datetime(2020, 2, 1)
-        )
+    ts, _, _ = tsa.values_markers_origins(
+        'constant-1',
+        revision_date=datetime(2020, 2, 1)
+    )
+    assert len(ts) == 32
