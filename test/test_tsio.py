@@ -269,58 +269,6 @@ def test_manual_overrides(engine, tsh):
 """, tsh.get(engine, 'ts_mixte'))
 
 
-def test_bad_import(engine, tsh):
-    # the data were parsed as date by pd.read_json()
-    df_result = pd.read_csv(DATADIR / 'test_data.csv')
-    df_result['Gas Day'] = df_result['Gas Day'].apply(parser.parse, dayfirst=True, yearfirst=False)
-    df_result.set_index('Gas Day', inplace=True)
-    ts = df_result['SC']
-    tsh.update(engine, ts, 'SND_SC', 'test')
-    result = tsh.get(engine, 'SND_SC')
-    assert result.dtype == 'float64'
-
-    # insertion of empty ts
-    ts = empty_series(False, name='truc', dtype='object')
-    tsh.update(engine, ts, 'empty_ts', 'test')
-    result = tsh.get(engine, 'empty_ts')
-    assert result is None
-
-    ts = empty_series(False, name='truc', dtype='object')
-    tsh.update(engine, ts, 'empty_ts', 'test')
-    result = tsh.get(engine, 'empty_ts')
-
-    assert result is None
-
-    # nan in ts
-    # all na
-    ts = genserie(datetime(2010, 1, 10), 'D', 10, [np.nan], name='truc')
-    tsh.update(engine, ts, 'test_nan', 'test')
-    result = tsh.get(engine, 'test_nan')
-
-    assert result is None
-
-    # mixe na
-    ts = pd.Series([np.nan] * 5 + [3] * 5,
-                   index=pd.date_range(start=datetime(2010, 1, 10),
-                                       freq='D', periods=10), name='truc')
-    tsh.update(engine, ts, 'test_nan', 'test')
-    result = tsh.get(engine, 'test_nan')
-
-    tsh.update(engine, ts, 'test_nan', 'test')
-    result = tsh.get(engine, 'test_nan')
-    assert_df("""
-2010-01-15    3.0
-2010-01-16    3.0
-2010-01-17    3.0
-2010-01-18    3.0
-2010-01-19    3.0
-""", result)
-
-    # tsh.get with name not in database
-
-    assert tsh.get(engine, 'inexisting_name') is None
-
-
 def test_first_manual(engine, tsh):
     ts_begin = genserie(datetime(2010, 1, 1), 'D', 10)
     tsh.update(engine, ts_begin, 'ts_only', 'test', manual=True)
