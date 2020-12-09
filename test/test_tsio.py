@@ -6,6 +6,7 @@ from dateutil import parser
 import pandas as pd
 import numpy as np
 
+from tshistory.util import empty_series
 from tshistory.testutil import (
     assert_df,
     genserie,
@@ -279,12 +280,12 @@ def test_bad_import(engine, tsh):
     assert result.dtype == 'float64'
 
     # insertion of empty ts
-    ts = pd.Series(name='truc', dtype='object')
+    ts = empty_series(False, name='truc', dtype='object')
     tsh.update(engine, ts, 'empty_ts', 'test')
     result = tsh.get(engine, 'empty_ts')
     assert result is None
 
-    ts = pd.Series(name='truc', dtype='object')
+    ts = empty_series(False, name='truc', dtype='object')
     tsh.update(engine, ts, 'empty_ts', 'test')
     result = tsh.get(engine, 'empty_ts')
 
