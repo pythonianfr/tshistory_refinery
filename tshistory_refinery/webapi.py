@@ -32,8 +32,7 @@ from rework_ui.blueprint import reworkui
 
 from tshistory_editor.editor import editor
 from tshistory_formula.editor import components_table
-from tshistory_formula import registry
-from tshistory_rest.blueprint import httpapi
+from tshistory_formula import registry, http
 from tshistory_xl.blueprint import blueprint as excel
 
 from tshistory_refinery import helper
@@ -109,7 +108,7 @@ def make_app(config, tsa, editor_callback=None):
     )
 
     app.register_blueprint(
-        httpapi(tsa).bp,
+        http.formula_httpapi(tsa).bp,
         url_prefix='/api'
     )
 
