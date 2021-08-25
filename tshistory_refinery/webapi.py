@@ -229,10 +229,11 @@ def make_app(config, tsa, editor_callback=None):
         args = _args(request.form)
         stdout = io.StringIO()
         try:
-            df_formula = pd.read_csv(
-                request.files['new_formulas.csv'].stream,
-                dtype={'serie': str}
-            )
+            content = request.files['new_formulas.csv'].stream.read().decode("utf-8")
+            stdout.write(content)
+            stdout.seek(0)
+            df_formula = pd.read_csv(stdout, dtype={'name': str, 'serie': str}, sep=',')
+
             errors, warnings = validate_formula(df_formula)
             if errors or not args.reallydoit:
                 return jsonify({
