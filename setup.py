@@ -21,7 +21,8 @@ setup(name='tshistory_refinery',
           'webtest',
           'responses',
           'requests',
-          'pml'
+          'pml',
+          'pygments'
       ],
       entry_points={
           'tshistory.subcommands': [
