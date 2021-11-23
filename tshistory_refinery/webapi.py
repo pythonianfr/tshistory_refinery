@@ -17,7 +17,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from rework import api
 
-from pm_utils.flaskutil import argsdict as _args
+from rework_ui.helper import argsdict as _args
 
 from psyl.lisp import (
     parse as fparse,
