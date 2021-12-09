@@ -423,6 +423,10 @@ def test_before_first_insertion(engine, tsh):
 
 
 def test_get_many(engine, tsh):
+    with engine.begin() as cn:
+        for name in ('scalarprod', 'base', 'comp1', 'comp2', 'repusum', 'repuprio'):
+            tsh.delete(cn, name)
+
     ts_base = genserie(datetime(2010, 1, 1), 'D', 3, [1])
     tsh.update(engine, ts_base, 'base', 'test')
 
