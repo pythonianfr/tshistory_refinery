@@ -8,8 +8,6 @@ setup(name='tshistory_refinery',
       packages=['tshistory_refinery'],
       install_requires=[
           'tshistory',
-          'tshistory_rest',
-          'tshistory_client',
           'tsview',
           'tshistory_supervision',
           'tshistory_formula',
