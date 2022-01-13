@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 setup(name='tshistory_refinery',
-      version='0.2.0',
+      version='0.3.0',
       author='Pythonian',
       author_email='aurelien.campeas@pythonian.fr, arnaud.campeas@pythonian.fr',
       packages=['tshistory_refinery'],
