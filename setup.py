@@ -26,7 +26,8 @@ setup(name='tshistory_refinery',
       entry_points={
           'tshistory.subcommands': [
               'webstart=tshistory_refinery.cli:webstart',
-              'init-db=tshistory_refinery.cli:initdb'
+              'init-db=tshistory_refinery.cli:initdb',
+              'migrate-to-cache=tshistory_refinery.cli:migrate_to_cache'
           ],
       }
 )

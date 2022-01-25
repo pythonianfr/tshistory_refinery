@@ -1,5 +1,6 @@
 import click
 from sqlalchemy import create_engine
+from sqlhelp import sqlfile
 
 from tshistory_refinery.helper import host, config, apimaker
 from tshistory_refinery.schema import init
@@ -9,6 +10,28 @@ from tshistory_refinery.schema import init
 def webstart():
     from tshistory_refinery.wsgi import app
     app.run(host=host(), debug=True)
+
+
+@click.command('migrate-to-cache')
+@click.option('--namespace', default='tsh')
+def migrate_to_cache(namespace='tsh'):
+    from pathlib import Path
+    cfg = config()
+    dburi = cfg['db']['uri']
+    engine = create_engine(dburi)
+
+    exists = engine.execute(
+        'select 1 from information_schema.schemata where schema_name = %(name)s',
+        name=f'{namespace}.cache_policy'
+    ).scalar()
+
+    if exists:
+        print('nothing to do.')
+        return
+    
+    cache_policy = Path(__file__).parent.parent / 'tshistory_refinery/schema.sql'
+    with engine.begin() as cn:
+        cn.execute(sqlfile(cache_policy, ns=namespace))
 
 
 @click.command('init-db')
