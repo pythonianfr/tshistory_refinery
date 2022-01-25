@@ -3,6 +3,7 @@
 create table "{ns}".cache_policy (
   id serial primary key,
   name text unique not null,
+  ready bool not null default false,
 
   -- four moment expressions
   from_date text not null,

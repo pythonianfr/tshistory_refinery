@@ -78,3 +78,41 @@ def cache_policy_by_name(engine, name):
             'from tsh.cache_policy'
         ).fetchone()
     return dict(p)
+
+
+def set_cache_policy(cn, policy_name, series_name):
+    """ Associate a cache policy to a series """
+    q = (
+        'insert into tsh.cache_policy_series '
+        '(cache_policy_id, series_id) '
+        'values ('
+        ' (select id '
+        '  from tsh.cache_policy '
+        '  where name = %(cachename)s), '
+        ' (select id '
+        '  from tsh.formula '
+        '  where name = %(seriesname)s) '
+        ')'
+    )
+    cn.execute(
+        q,
+        cachename=policy_name,
+        seriesname=series_name
+    )
+
+
+def cache_policy_for_series(cn, series_name):
+    " return the cache policy associated with a series "
+    q = (
+        'select ready '
+        'from tsh.cache_policy as cache, '
+        '     tsh.cache_policy_series as middle, '
+        '     tsh.formula as series '
+        'where cache.id = middle.cache_policy_id and '
+        '      series_id = series.id and '
+        '      series.name = %(seriesname)s'
+    )
+    return cn.execute(
+        q,
+        seriesname=series_name
+    ).scalar()

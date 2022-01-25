@@ -1,9 +1,12 @@
+import pandas as pd
 import pytest
 
 from tshistory_refinery.cache import (
     new_cache_policy,
     validate_policy,
-    cache_policy_by_name
+    cache_policy_by_name,
+    cache_policy_for_series,
+    set_cache_policy
 )
 
 
@@ -57,3 +60,51 @@ def test_good_cache(engine):
         'schedule_rule': '0 8-18 * * *',
         'to_date': '(shifted (today) #:days 15)'
     }
+
+
+def test_cache_a_series(engine, tsh):
+    with engine.begin() as cn:
+        cn.execute('delete from tsh.cache_policy')
+
+    ts = pd.Series(
+        [1., 2., 3.],
+        index=pd.date_range(
+            pd.Timestamp('2022-1-1'),
+            freq='D', periods=3
+        )
+    )
+
+    tsh.update(engine, ts, 'ground-0', 'Babar')
+    tsh.register_formula(
+        engine,
+        'over-ground-0',
+        '(series "ground-0")'
+    )
+
+    new_cache_policy(
+        engine,
+        'a-policy',
+        '(date "2010-1-1")',
+        '(shifted (today) #:days 15)',
+        '(shifted (today) #:days -10)',
+        '(shifted (today) #:days 10)',
+        '0 1 * * *',
+        '0 8-18 * * *'
+    )
+
+    set_cache_policy(
+        engine,
+        'a-policy',
+        'over-ground-0'
+    )
+    p = cache_policy_for_series(
+        engine,
+        'no-such-series'
+    )
+    assert p is None
+
+    p = cache_policy_for_series(
+        engine,
+        'over-ground-0'
+    )
+    assert p == False
