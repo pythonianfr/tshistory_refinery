@@ -8,16 +8,12 @@ from tshistory.testutil import (
     assert_df,
     make_tsx
 )
-from tshistory.schema import tsschema
-from tshistory_formula.schema import formula_schema
 
-from tshistory_refinery import tsio, http
+from tshistory_refinery import tsio, http, schema
 
 
 def _initschema(engine, ns='tsh'):
-    tsschema(ns).create(engine)
-    tsschema(ns + '-upstream').create(engine)
-    formula_schema(ns).create(engine)
+    schema.init(engine, namespace=ns, drop=True)
 
 
 def make_api(engine, ns, sources=()):
@@ -59,9 +55,7 @@ tsx = make_tsx(
 @pytest.fixture(scope='session')
 def tsa2(engine):
     ns = 'test-remote'
-    tsschema(ns).create(engine)
-    tsschema(ns + '-upstream').create(engine)
-    formula_schema(ns).create(engine)
+    _initschema(engine, ns)
     dburi = str(engine.url)
 
     return api.timeseries(
@@ -370,6 +364,9 @@ def test_get_many_federated(tsa1, tsa2):
     # same test as above
     # tsa1: local with remote source
     # tsa2: remote source
+    for name in ('scalarprod', 'base', 'comp1', 'comp2', 'repusum', 'repuprio'):
+        tsa2.delete(name)
+
     ts_base = genserie(datetime(2010, 1, 1), 'D', 3, [1])
     tsa2.update('base', ts_base, 'test')
 
@@ -605,6 +602,9 @@ def test_origin_federated(tsa1, tsa2):
     ts_real = genserie(datetime(2010, 1, 1), 'D', 10, [1])
     ts_nomination = genserie(datetime(2010, 1, 1), 'D', 12, [2])
     ts_forecast = genserie(datetime(2010, 1, 1), 'D', 20, [3])
+
+    for name in ('realised', 'nominated', 'forecasted', 'serie5', 'serie6', 'serie7'):
+        tsa2.delete(name)
 
     tsa2.update('realised', ts_real, 'test')
     tsa2.update('nominated', ts_nomination, 'test')

@@ -20,7 +20,8 @@ setup(name='tshistory_refinery',
           'responses',
           'requests',
           'pml',
-          'pygments'
+          'pygments',
+          'croniter'
       ],
       entry_points={
           'tshistory.subcommands': [
