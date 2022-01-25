@@ -4,9 +4,11 @@ create table "{ns}".cache_policy (
   id serial primary key,
   name text unique not null,
 
-  -- two moment expressions
+  -- four moment expressions
   from_date text not null,
   to_date text not null,
+  look_before text not null,
+  look_after text not null,
 
   -- two cron expressions
   revdate_rule text not null,
