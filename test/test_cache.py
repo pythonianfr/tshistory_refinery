@@ -1,17 +1,22 @@
 import pandas as pd
 import pytest
 
+from tshistory.testutil import assert_df
+
 from tshistory_refinery.cache import (
     new_cache_policy,
     validate_policy,
     cache_policy_by_name,
-    cache_policy_for_series,
+    series_policy,
+    ready,
+    refresh_cache,
     set_cache_policy
 )
 
 
 def test_invalid_cache():
     bad = validate_policy(
+        'not a moment',
         'not a moment',
         'not a moment either',
         'not a moment',
@@ -20,6 +25,7 @@ def test_invalid_cache():
         'you guessed it right'
     )
     assert bad == [
+        ('initial_revdate', 'not a moment'),
         ('from_date', 'not a moment'),
         ('to_date', 'not a moment either'),
         ('look_before', 'not a moment'),
@@ -33,6 +39,7 @@ def test_invalid_cache():
             None,  # we won't even need the engine
             'bogus-policy',
             'not a moment',
+            'not a moment',
             'not a moment either',
             'not a moment',
             'not a moment either',
@@ -45,6 +52,7 @@ def test_good_cache(engine):
     new_cache_policy(
         engine,
         'my-policy',
+        '(date "2020-1-1")',
         '(date "2010-1-1")',
         '(shifted (today) #:days 15)',
         '(shifted (today) #:days -10)',
@@ -55,6 +63,7 @@ def test_good_cache(engine):
 
     p = cache_policy_by_name(engine, 'my-policy')
     assert p == {
+        'initial_revdate': '(date "2020-1-1")',
         'from_date': '(date "2010-1-1")',
         'revdate_rule': '0 1 * * *',
         'schedule_rule': '0 8-18 * * *',
@@ -62,7 +71,7 @@ def test_good_cache(engine):
     }
 
 
-def test_cache_a_series(engine, tsh):
+def test_cache_a_series(engine, tsh, tsa):
     with engine.begin() as cn:
         cn.execute('delete from tsh.cache_policy')
 
@@ -84,8 +93,9 @@ def test_cache_a_series(engine, tsh):
     new_cache_policy(
         engine,
         'a-policy',
-        '(date "2010-1-1")',
-        '(shifted (today) #:days 15)',
+        '(date "2023-1-1")',
+        '(date "2022-1-1")',
+        '(date "2022-1-5")',
         '(shifted (today) #:days -10)',
         '(shifted (today) #:days 10)',
         '0 1 * * *',
@@ -97,14 +107,46 @@ def test_cache_a_series(engine, tsh):
         'a-policy',
         'over-ground-0'
     )
-    p = cache_policy_for_series(
+    r = ready(
         engine,
         'no-such-series'
     )
-    assert p is None
+    assert r is None
 
-    p = cache_policy_for_series(
+    r = ready(
         engine,
         'over-ground-0'
     )
-    assert p == False
+    assert r == False
+
+    p = series_policy(
+        engine,
+        'over-ground-0'
+    )
+    assert p == {
+        'from_date': '(date "2022-1-1")',
+        'initial_revdate': '(date "2023-1-1")',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *',
+        'to_date': '(date "2022-1-5")'
+    }
+
+    refresh_cache(
+        engine,
+        tsh,
+        tsa,
+        'over-ground-0',
+        final_revdate=pd.Timestamp('2023-1-5')
+    )
+
+    r = ready(
+        engine,
+        'over-ground-0'
+    )
+    assert r
+
+    assert_df("""
+2022-01-01    1.0
+2022-01-02    2.0
+2022-01-03    3.0
+""", tsh.get(engine, 'over-ground-0'))

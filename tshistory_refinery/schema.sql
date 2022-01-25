@@ -5,7 +5,8 @@ create table "{ns}".cache_policy (
   name text unique not null,
   ready bool not null default false,
 
-  -- four moment expressions
+  -- five moment expressions
+  initial_revdate text,
   from_date text not null,
   to_date text not null,
   look_before text not null,

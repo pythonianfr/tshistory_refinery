@@ -9,7 +9,7 @@ import webtest
 
 from pytest_sa_pg import db
 
-from rework import api
+from rework import api as rapi
 
 from tshistory.api import timeseries
 from tshistory_refinery import (
@@ -31,13 +31,22 @@ def engine(request):
     e = create_engine(uri)
     schema.init(e, drop=True)
     schema.init(e, 'remote', rework=False, drop=True)
-    api.freeze_operations(e)
+    rapi.freeze_operations(e)
     yield e
 
 
 @pytest.fixture(scope='session')
 def tsh(engine):
     return tsio.timeseries()
+
+
+@pytest.fixture(scope='session')
+def tsa(engine):
+    return timeseries(
+        str(engine.url),
+        namespace='tsh',
+        handler=tsio.timeseries
+    )
 
 
 class NonSuckingWebTester(webtest.TestApp):

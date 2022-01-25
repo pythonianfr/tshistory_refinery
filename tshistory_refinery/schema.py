@@ -22,3 +22,4 @@ def init(engine, namespace='tsh', rework=True, drop=False):
 
     with engine.begin() as cn:
         cn.execute(sqlfile(CACHE_POLICY, ns=namespace))
+    tsschema(f'{namespace}-cache').create(engine)
