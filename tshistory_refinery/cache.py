@@ -55,7 +55,8 @@ def new_cache_policy(
         look_before,
         look_after,
         revdate_rule,
-        schedule_rule
+        schedule_rule,
+        namespace='tsh'
 ):
     """ Create a new cache policy """
     badinputs = validate_policy(
@@ -74,7 +75,7 @@ def new_cache_policy(
 
     with engine.begin() as cn:
         q = insert(
-            'tsh.cache_policy'
+            f'"{namespace}".cache_policy'
         ).values(
             name=name,
             initial_revdate=initial_revdate,
@@ -88,30 +89,30 @@ def new_cache_policy(
         q.do(cn)
 
 
-def cache_policy_by_name(engine, name):
+def cache_policy_by_name(engine, name, namespace='tsh'):
     """ Return a cache policy by name, as a dict """
     with engine.begin() as cn:
         p = cn.execute(
-            'select initial_revdate, from_date, to_date, '
-            '       revdate_rule, schedule_rule '
-            'from tsh.cache_policy'
+            f'select initial_revdate, from_date, to_date, '
+            f'       revdate_rule, schedule_rule '
+            f'from "{namespace}".cache_policy'
         ).fetchone()
     return dict(p)
 
 
-def set_cache_policy(cn, policy_name, series_name):
+def set_cache_policy(cn, policy_name, series_name, namespace='tsh'):
     """ Associate a cache policy to a series """
     q = (
-        'insert into tsh.cache_policy_series '
-        '(cache_policy_id, series_id) '
-        'values ('
-        ' (select id '
-        '  from tsh.cache_policy '
-        '  where name = %(cachename)s), '
-        ' (select id '
-        '  from tsh.formula '
-        '  where name = %(seriesname)s) '
-        ')'
+        f'insert into "{namespace}".cache_policy_series '
+        f'(cache_policy_id, series_id) '
+        f'values ( '
+        f' (select id '
+        f'  from "{namespace}".cache_policy '
+        f'  where name = %(cachename)s), '
+        f' (select id '
+        f'  from "{namespace}".formula '
+        f'  where name = %(seriesname)s) '
+        f')'
     )
     cn.execute(
         q,
@@ -120,16 +121,16 @@ def set_cache_policy(cn, policy_name, series_name):
     )
 
 
-def ready(cn, series_name):
+def ready(cn, series_name, namespace='tsh'):
     """ Return the cache readiness for a series """
     q = (
-        'select ready '
-        'from tsh.cache_policy as cache, '
-        '     tsh.cache_policy_series as middle, '
-        '     tsh.formula as series '
-        'where cache.id = middle.cache_policy_id and '
-        '      series_id = series.id and '
-        '      series.name = %(seriesname)s'
+        f'select ready '
+        f'from "{namespace}".cache_policy as cache, '
+        f'     "{namespace}".cache_policy_series as middle, '
+        f'     "{namespace}".formula as series '
+        f'where cache.id = middle.cache_policy_id and '
+        f'      series_id = series.id and '
+        f'      series.name = %(seriesname)s'
     )
     return cn.execute(
         q,
@@ -137,18 +138,18 @@ def ready(cn, series_name):
     ).scalar()
 
 
-def series_policy(cn, series_name):
+def series_policy(cn, series_name, namespace='tsh'):
     """ Return the cache policy for a series """
     q = (
-        'select initial_revdate, from_date, to_date, '
-        '       look_before, look_after, '
-        '       revdate_rule, schedule_rule '
-        'from tsh.cache_policy as cache, '
-        '     tsh.cache_policy_series as middle, '
-        '     tsh.formula as series '
-        'where cache.id = middle.cache_policy_id and '
-        '      series_id = series.id and '
-        '      series.name = %(seriesname)s'
+        f'select initial_revdate, from_date, to_date, '
+        f'       look_before, look_after, '
+        f'       revdate_rule, schedule_rule '
+        f'from "{namespace}".cache_policy as cache, '
+        f'     "{namespace}".cache_policy_series as middle, '
+        f'     "{namespace}".formula as series '
+        f'where cache.id = middle.cache_policy_id and '
+        f'      series_id = series.id and '
+        f'      series.name = %(seriesname)s'
     )
     p = cn.execute(
         q,
@@ -160,9 +161,10 @@ def series_policy(cn, series_name):
 
 
 
-def refresh_cache(engine, tsh, tsa, name, now=None, final_revdate=None):
+def refresh_cache(engine, tsa, name, now=None, final_revdate=None):
     """ Refresh a series cache """
-    policy = series_policy(engine, name)
+    tsh = tsa.tsh
+    policy = series_policy(engine, name, tsh.namespace)
 
     if tsh.cache.exists(engine, name):
         idates = tsh.cache.insertion_dates(engine, name)
@@ -211,4 +213,4 @@ def refresh_cache(engine, tsh, tsa, name, now=None, final_revdate=None):
         )
 
     with engine.begin() as cn:
-        cn.execute('update tsh.cache_policy set ready = true')
+        cn.execute(f'update "{tsh.namespace}".cache_policy set ready = true')

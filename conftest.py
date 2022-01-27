@@ -23,14 +23,18 @@ from tshistory_refinery import (
 DATADIR = Path(__file__).parent / 'test' / 'data'
 
 
+def _initschema(engine, ns='tsh'):
+    schema.init(engine, namespace=ns, drop=True)
+
+
 @pytest.fixture(scope='session')
 def engine(request):
     port = 5433
     db.setup_local_pg_cluster(request, DATADIR, port)
     uri = 'postgresql://localhost:{}/postgres'.format(port)
     e = create_engine(uri)
-    schema.init(e, drop=True)
-    schema.init(e, 'remote', rework=False, drop=True)
+    _initschema(e)
+    _initschema(e, 'remote')
     rapi.freeze_operations(e)
     yield e
 
@@ -40,11 +44,13 @@ def tsh(engine):
     return tsio.timeseries()
 
 
-@pytest.fixture(scope='session')
-def tsa(engine):
+@pytest.fixture(scope='session', params=['tsh', 'fancy-ns'])
+def tsa(request, engine):
+    _initschema(engine, request.param)
+
     return timeseries(
         str(engine.url),
-        namespace='tsh',
+        namespace=request.param,
         handler=tsio.timeseries
     )
 

@@ -17,7 +17,7 @@ class timeseries(xlts):
             return super().get(cn, name, **kw)
 
         if not nocache:
-            ready = cache.ready(cn, name)
+            ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None and ready:
                 return self.cache.get(cn, name, **kw)
 
@@ -34,7 +34,7 @@ class timeseries(xlts):
 
 
         if not nocache:
-            ready = cache.ready(cn, name)
+            ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None and ready:
                 return self.cache.insertion_dates(cn, name, **kw)
 
@@ -52,7 +52,7 @@ class timeseries(xlts):
             )
 
         if not nocache:
-            ready = cache.ready(cn, name)
+            ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None and ready:
                 return self.cache.history(cn, name, **kw)
 
@@ -63,7 +63,7 @@ class timeseries(xlts):
     @tx
     def rename(self, cn, oldname, newname):
         if self.type(cn, oldname) == 'formula':
-            ready = cache.ready(cn, oldname)
+            ready = cache.ready(cn, oldname, namespace=self.namespace)
             if ready is not None:
                 self.cache.rename(cn, oldname, newname)
 
@@ -72,7 +72,7 @@ class timeseries(xlts):
     @tx
     def delete(self, cn, name):
         if self.type(cn, name) == 'formula':
-            ready = cache.ready(cn, name)
+            ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None:
                 self.cache.delete(cn, name)
 

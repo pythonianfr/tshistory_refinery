@@ -75,7 +75,9 @@ def test_good_cache(engine):
     }
 
 
-def test_cache_a_series(engine, tsh, tsa):
+def test_cache_a_series(engine, tsa):
+    tsh = tsa.tsh
+
     with engine.begin() as cn:
         cn.execute('delete from tsh.cache_policy')
 
@@ -103,29 +105,34 @@ def test_cache_a_series(engine, tsh, tsa):
         '(shifted now #:days -10)',
         '(shifted now #:days 10)',
         '0 1 * * *',
-        '0 8-18 * * *'
+        '0 8-18 * * *',
+        namespace=tsh.namespace
     )
 
     set_cache_policy(
         engine,
         'a-policy',
-        'over-ground-0'
+        'over-ground-0',
+        namespace=tsh.namespace
     )
     r = ready(
         engine,
-        'no-such-series'
+        'no-such-series',
+        namespace=tsh.namespace
     )
     assert r is None
 
     r = ready(
         engine,
-        'over-ground-0'
+        'over-ground-0',
+        namespace=tsh.namespace
     )
     assert r == False
 
     p = series_policy(
         engine,
-        'over-ground-0'
+        'over-ground-0',
+        namespace=tsh.namespace
     )
     assert p == {
         'from_date': '(date "2022-1-1")',
@@ -139,7 +146,6 @@ def test_cache_a_series(engine, tsh, tsa):
 
     refresh_cache(
         engine,
-        tsh,
         tsa,
         'over-ground-0',
         final_revdate=pd.Timestamp('2023-1-5', tz='UTC')
@@ -147,7 +153,8 @@ def test_cache_a_series(engine, tsh, tsa):
 
     r = ready(
         engine,
-        'over-ground-0'
+        'over-ground-0',
+        namespace=tsh.namespace
     )
     assert r
 
@@ -158,7 +165,9 @@ def test_cache_a_series(engine, tsh, tsa):
 """, tsh.get(engine, 'over-ground-0'))
 
 
-def test_cache_refresh(engine, tsh, tsa):
+def test_cache_refresh(engine, tsa):
+    tsh = tsa.tsh
+
     new_cache_policy(
         engine,
         'another-policy',
@@ -168,7 +177,8 @@ def test_cache_refresh(engine, tsh, tsa):
         look_before='(shifted now #:days -10)',
         look_after='(shifted now #:days 10)',
         revdate_rule='0 0 * * *',
-        schedule_rule='0 8-18 * * *'
+        schedule_rule='0 8-18 * * *',
+        namespace=tsh.namespace
     )
 
     # let's prepare a 3 points series with 5 revisions
@@ -232,18 +242,19 @@ insertion_date             value_date
     set_cache_policy(
         engine,
         'another-policy',
-        'over-ground-1'
+        'over-ground-1',
+        namespace=tsh.namespace
     )
     r = ready(
         engine,
-        'over-ground-1'
+        'over-ground-1',
+        namespace=tsh.namespace
     )
     assert r == False
 
     # we only refresh up to the first 3 revisions
     refresh_cache(
         engine,
-        tsh,
         tsa,
         'over-ground-1',
         final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
@@ -251,7 +262,8 @@ insertion_date             value_date
 
     r = ready(
         engine,
-        'over-ground-1'
+        'over-ground-1',
+        namespace=tsh.namespace
     )
     assert r
 
@@ -315,7 +327,6 @@ insertion_date             value_date
     # let's pretend two new revisions showed up
     refresh_cache(
         engine,
-        tsh,
         tsa,
         'over-ground-1',
         now=pd.Timestamp('2022-1-7'),
@@ -356,9 +367,11 @@ insertion_date             value_date
     tsa.get('over-ground-1').equals(tsa.get('over-ground-1', nocache=True))
 
 
-def test_rename_delete(engine, tsh, tsa):
+def test_rename_delete(engine, tsa):
+    tsh = tsa.tsh
+
     with engine.begin() as cn:
-        cn.execute('delete from tsh.cache_policy')
+        cn.execute(f'delete from "{tsh.namespace}".cache_policy')
 
     new_cache_policy(
         engine,
@@ -369,7 +382,8 @@ def test_rename_delete(engine, tsh, tsa):
         look_before='(shifted now #:days -10)',
         look_after='(shifted now #:days 10)',
         revdate_rule='0 0 * * *',
-        schedule_rule='0 8-18 * * *'
+        schedule_rule='0 8-18 * * *',
+        namespace=tsh.namespace
     )
 
     ts = pd.Series(
@@ -396,13 +410,13 @@ def test_rename_delete(engine, tsh, tsa):
     set_cache_policy(
         engine,
         'policy-3',
-        'over-ground-2'
+        'over-ground-2',
+        namespace=tsh.namespace
     )
     assert not tsh.cache.exists(engine, 'over-ground-2')
 
     refresh_cache(
         engine,
-        tsh,
         tsa,
         'over-ground-2',
         final_revdate=pd.Timestamp('2023-1-1', tz='UTC')
