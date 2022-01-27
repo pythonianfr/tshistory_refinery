@@ -10,8 +10,10 @@ from rework import io as rio
 from sqlhelp import insert
 
 
-def eval_moment(expr):
-    return lisp.evaluate(expr, env=rio._MOMENT_ENV)
+def eval_moment(expr, env={}):
+    env = env.copy()
+    env.update(rio._MOMENT_ENV)
+    return lisp.evaluate(expr, env=lisp.Env(env))
 
 
 def validate_policy(
@@ -25,6 +27,7 @@ def validate_policy(
 ):
     """ Validate each of the four parameters of a given cache policy """
     badinputs = []
+    env = {'now': datetime.utcnow()}
     for name, val in (
             ('initial_revdate', initial_revdate),
             ('from_date', from_date),
@@ -32,7 +35,7 @@ def validate_policy(
             ('look_before', look_before),
             ('look_after', look_after)):
         try:
-            eval_moment(val)
+            eval_moment(val, env)
         except:
             badinputs.append((name, val))
 
@@ -138,6 +141,7 @@ def series_policy(cn, series_name):
     """ Return the cache policy for a series """
     q = (
         'select initial_revdate, from_date, to_date, '
+        '       look_before, look_after, '
         '       revdate_rule, schedule_rule '
         'from tsh.cache_policy as cache, '
         '     tsh.cache_policy_series as middle, '
@@ -156,36 +160,54 @@ def series_policy(cn, series_name):
 
 
 
-def refresh_cache(engine, tsh, tsa, name, final_revdate=None):
+def refresh_cache(engine, tsh, tsa, name, now=None, final_revdate=None):
+    """ Refresh a series cache """
     policy = series_policy(engine, name)
 
     if tsh.cache.exists(engine, name):
         idates = tsh.cache.insertion_dates(engine, name)
-        initial_revdate = idates[0]
-        now = pd.Timestamp(datetime.utcnow(), tz='utc')
-        from_value_date = now + policy['look_before']
-        to_value_date = now + policy['look_after']
+        initial_revdate = idates[-1]
+        now = now or pd.Timestamp(datetime.utcnow(), tz='utc')
+        from_value_date = eval_moment(
+            policy['look_before'],
+            {'now': now}
+        )
+        to_value_date = eval_moment(
+            policy['look_after'],
+            {'now': now}
+        )
     else:
-        initial_revdate = eval_moment(policy['initial_revdate'])
-        from_value_date = eval_moment(policy['from_date'])
-        to_value_date = eval_moment(policy['to_date'])
+        initial_revdate = pd.Timestamp(
+            eval_moment(policy['initial_revdate']),
+            tz='UTC'
+        )
+        from_value_date = pd.Timestamp(
+            eval_moment(policy['from_date']),
+            tz='UTC'
+        )
+        to_value_date = pd.Timestamp(
+            eval_moment(policy['to_date']),
+            tz='UTC'
+        )
 
     for revdate in croniter_range(
-            initial_revdate,
-            final_revdate or datetime.now(),
-            policy['revdate_rule']
+        initial_revdate,
+        final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC'),
+        policy['revdate_rule']
     ):
         ts = tsa.get(
             name,
             revision_date=revdate,
             from_value_date=from_value_date,
-            to_value_date=to_value_date
+            to_value_date=to_value_date,
+            nocache=True
         )
         tsh.cache.update(
             engine,
             ts,
             name,
-            'formula-cacher'
+            'formula-cacher',
+            insertion_date=revdate
         )
 
     with engine.begin() as cn:
