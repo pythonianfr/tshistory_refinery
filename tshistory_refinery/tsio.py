@@ -41,3 +41,21 @@ class timeseries(xlts):
         return super().insertion_dates(
             cn, name, **kw
         )
+
+    @tx
+    def history(self, cn, name,
+                nocache=False,
+                **kw):
+        if self.type(cn, name) != 'formula':
+            return super().history(
+                cn, name, **kw
+            )
+
+        if not nocache:
+            ready = cache.ready(cn, name)
+            if ready is not None and ready:
+                return self.cache.history(cn, name, **kw)
+
+        return super().history(
+            cn, name, **kw
+        )
