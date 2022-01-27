@@ -22,3 +22,22 @@ class timeseries(xlts):
                 return self.cache.get(cn, name, **kw)
 
         return super().get(cn, name, **kw)
+
+    @tx
+    def insertion_dates(self, cn, name,
+                        nocache=False,
+                        **kw):
+        if self.type(cn, name) != 'formula':
+            return super().insertion_dates(
+                cn, name, **kw
+            )
+
+
+        if not nocache:
+            ready = cache.ready(cn, name)
+            if ready is not None and ready:
+                return self.cache.insertion_dates(cn, name, **kw)
+
+        return super().insertion_dates(
+            cn, name, **kw
+        )
