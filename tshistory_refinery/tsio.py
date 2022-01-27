@@ -59,3 +59,12 @@ class timeseries(xlts):
         return super().history(
             cn, name, **kw
         )
+
+    @tx
+    def rename(self, cn, oldname, newname):
+        if self.type(cn, oldname) == 'formula':
+            ready = cache.ready(cn, oldname)
+            if ready is not None:
+                self.cache.rename(cn, oldname, newname)
+
+        return super().rename(cn, oldname, newname)

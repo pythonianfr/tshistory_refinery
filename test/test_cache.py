@@ -354,3 +354,61 @@ insertion_date             value_date
 
     # now cached and uncached are the same
     tsa.get('over-ground-1').equals(tsa.get('over-ground-1', nocache=True))
+
+
+def test_rename(engine, tsh, tsa):
+    with engine.begin() as cn:
+        cn.execute('delete from tsh.cache_policy')
+
+    new_cache_policy(
+        engine,
+        'policy-3',
+        initial_revdate='(date "2023-1-1")',
+        from_date='(date "2022-1-1")',
+        to_date='(date "2022-1-31")',
+        look_before='(shifted now #:days -10)',
+        look_after='(shifted now #:days 10)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(
+            utcdt(2022, 1, 1),
+            freq='D',
+            periods=3
+        )
+    )
+    tsa.update(
+        'ground-2',
+        ts,
+        'Babar',
+        insertion_date=pd.Timestamp('2023-1-1')
+    )
+
+    # the formula that refers to the series
+    tsa.register_formula(
+        'over-ground-2',
+        '(series "ground-2")'
+    )
+
+    set_cache_policy(
+        engine,
+        'policy-3',
+        'over-ground-2'
+    )
+    assert not tsh.cache.exists(engine, 'over-ground-2')
+
+    refresh_cache(
+        engine,
+        tsh,
+        tsa,
+        'over-ground-2',
+        final_revdate=pd.Timestamp('2023-1-1', tz='UTC')
+    )
+
+    assert tsh.cache.exists(engine, 'over-ground-2')
+    tsa.rename('over-ground-2', 'a-fancy-name')
+    assert not tsh.cache.exists(engine, 'over-ground-2')
+    assert tsh.cache.exists(engine, 'a-fancy-name')
