@@ -68,3 +68,12 @@ class timeseries(xlts):
                 self.cache.rename(cn, oldname, newname)
 
         return super().rename(cn, oldname, newname)
+
+    @tx
+    def delete(self, cn, name):
+        if self.type(cn, name) == 'formula':
+            ready = cache.ready(cn, name)
+            if ready is not None:
+                self.cache.delete(cn, name)
+
+        return super().delete(cn, name)

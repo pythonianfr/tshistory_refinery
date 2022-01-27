@@ -356,7 +356,7 @@ insertion_date             value_date
     tsa.get('over-ground-1').equals(tsa.get('over-ground-1', nocache=True))
 
 
-def test_rename(engine, tsh, tsa):
+def test_rename_delete(engine, tsh, tsa):
     with engine.begin() as cn:
         cn.execute('delete from tsh.cache_policy')
 
@@ -412,3 +412,6 @@ def test_rename(engine, tsh, tsa):
     tsa.rename('over-ground-2', 'a-fancy-name')
     assert not tsh.cache.exists(engine, 'over-ground-2')
     assert tsh.cache.exists(engine, 'a-fancy-name')
+
+    tsa.delete('a-fancy-name')
+    assert not tsh.cache.exists(engine, 'a-fancy-name')
