@@ -7,19 +7,11 @@ from tshistory.testutil import (
     utcdt
 )
 
-from tshistory_refinery.cache import (
-    new_cache_policy,
-    validate_policy,
-    cache_policy_by_name,
-    series_policy,
-    ready,
-    refresh_cache,
-    set_cache_policy
-)
+from tshistory_refinery import cache
 
 
 def test_invalid_cache():
-    bad = validate_policy(
+    bad = cache.validate_policy(
         'not a moment',
         'not a moment',
         'not a moment either',
@@ -39,7 +31,7 @@ def test_invalid_cache():
     ]
 
     with pytest.raises(ValueError):
-        new_cache_policy(
+        cache.new_policy(
             None,  # we won't even need the engine
             'bogus-policy',
             'not a moment',
@@ -53,7 +45,7 @@ def test_invalid_cache():
 
 
 def test_good_cache(engine):
-    new_cache_policy(
+    cache.new_policy(
         engine,
         'my-policy',
         '(date "2020-1-1")',
@@ -65,7 +57,7 @@ def test_good_cache(engine):
         '0 8-18 * * *'
     )
 
-    p = cache_policy_by_name(engine, 'my-policy')
+    p = cache.policy_by_name(engine, 'my-policy')
     assert p == {
         'initial_revdate': '(date "2020-1-1")',
         'from_date': '(date "2010-1-1")',
@@ -96,7 +88,7 @@ def test_cache_a_series(engine, tsa):
         '(series "ground-0")'
     )
 
-    new_cache_policy(
+    cache.new_policy(
         engine,
         'a-policy',
         '(date "2023-1-1")',
@@ -109,27 +101,27 @@ def test_cache_a_series(engine, tsa):
         namespace=tsh.namespace
     )
 
-    set_cache_policy(
+    cache.set_policy(
         engine,
         'a-policy',
         'over-ground-0',
         namespace=tsh.namespace
     )
-    r = ready(
+    r = cache.ready(
         engine,
         'no-such-series',
         namespace=tsh.namespace
     )
     assert r is None
 
-    r = ready(
+    r = cache.ready(
         engine,
         'over-ground-0',
         namespace=tsh.namespace
     )
     assert r == False
 
-    p = series_policy(
+    p = cache.series_policy(
         engine,
         'over-ground-0',
         namespace=tsh.namespace
@@ -144,14 +136,14 @@ def test_cache_a_series(engine, tsa):
         'to_date': '(date "2022-1-5")'
     }
 
-    refresh_cache(
+    cache.refresh(
         engine,
         tsa,
         'over-ground-0',
         final_revdate=pd.Timestamp('2023-1-5', tz='UTC')
     )
 
-    r = ready(
+    r = cache.ready(
         engine,
         'over-ground-0',
         namespace=tsh.namespace
@@ -168,7 +160,7 @@ def test_cache_a_series(engine, tsa):
 def test_cache_refresh(engine, tsa):
     tsh = tsa.tsh
 
-    new_cache_policy(
+    cache.new_policy(
         engine,
         'another-policy',
         initial_revdate='(date "2023-1-1")',
@@ -239,13 +231,13 @@ insertion_date             value_date
         '(series "ground-1")'
     )
 
-    set_cache_policy(
+    cache.set_policy(
         engine,
         'another-policy',
         'over-ground-1',
         namespace=tsh.namespace
     )
-    r = ready(
+    r = cache.ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -253,14 +245,14 @@ insertion_date             value_date
     assert r == False
 
     # we only refresh up to the first 3 revisions
-    refresh_cache(
+    cache.refresh(
         engine,
         tsa,
         'over-ground-1',
         final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
     )
 
-    r = ready(
+    r = cache.ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -325,7 +317,7 @@ insertion_date             value_date
     assert len(tsa.history('over-ground-1', nocache=True)) == 5
 
     # let's pretend two new revisions showed up
-    refresh_cache(
+    cache.refresh(
         engine,
         tsa,
         'over-ground-1',
@@ -373,7 +365,7 @@ insertion_date             value_date
     # cached and uncached are *still* the same
     assert tsa.get('over-ground-1').equals(tsa.get('over-ground-1', nocache=True))
 
-    r = ready(
+    r = cache.ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -381,13 +373,13 @@ insertion_date             value_date
     assert r == False
 
     # we only refresh up to the first 3 revisions
-    refresh_cache(
+    cache.refresh(
         engine,
         tsa,
         'over-ground-1',
         final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
     )
-    r = ready(
+    r = cache.ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -405,7 +397,7 @@ insertion_date             value_date
     # cache has been reset
     assert len(tsa.insertion_dates('over-ground-1')) == 5
 
-    r = ready(
+    r = cache.ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -413,13 +405,13 @@ insertion_date             value_date
     assert r == False
 
     # we only refresh up to the first 3 revisions
-    refresh_cache(
+    cache.refresh(
         engine,
         tsa,
         'over-ground-1',
         final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
     )
-    r = ready(
+    r = cache.ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -441,7 +433,7 @@ def test_rename_delete(engine, tsa):
     with engine.begin() as cn:
         cn.execute(f'delete from "{tsh.namespace}".cache_policy')
 
-    new_cache_policy(
+    cache.new_policy(
         engine,
         'policy-3',
         initial_revdate='(date "2023-1-1")',
@@ -475,7 +467,7 @@ def test_rename_delete(engine, tsa):
         '(series "ground-2")'
     )
 
-    set_cache_policy(
+    cache.set_policy(
         engine,
         'policy-3',
         'over-ground-2',
@@ -483,7 +475,7 @@ def test_rename_delete(engine, tsa):
     )
     assert not tsh.cache.exists(engine, 'over-ground-2')
 
-    refresh_cache(
+    cache.refresh(
         engine,
         tsa,
         'over-ground-2',

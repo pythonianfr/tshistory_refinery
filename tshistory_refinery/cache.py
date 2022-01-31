@@ -46,7 +46,7 @@ def validate_policy(
     return badinputs
 
 
-def new_cache_policy(
+def new_policy(
         engine,
         name,
         initial_revdate,
@@ -89,7 +89,7 @@ def new_cache_policy(
         q.do(cn)
 
 
-def cache_policy_by_name(engine, name, namespace='tsh'):
+def policy_by_name(engine, name, namespace='tsh'):
     """ Return a cache policy by name, as a dict """
     with engine.begin() as cn:
         p = cn.execute(
@@ -100,7 +100,7 @@ def cache_policy_by_name(engine, name, namespace='tsh'):
     return dict(p)
 
 
-def set_cache_policy(cn, policy_name, series_name, namespace='tsh'):
+def set_policy(cn, policy_name, series_name, namespace='tsh'):
     """ Associate a cache policy to a series """
     q = (
         f'insert into "{namespace}".cache_policy_series '
@@ -160,7 +160,7 @@ def series_policy(cn, series_name, namespace='tsh'):
     return dict(p)
 
 
-def invalidate_cache(cn, series_name, namespace='tsh'):
+def invalidate(cn, series_name, namespace='tsh'):
     """ Reset the cache readiness for a series """
     q = (
         f'update "{namespace}".cache_policy '
@@ -178,7 +178,7 @@ def invalidate_cache(cn, series_name, namespace='tsh'):
     )
 
 
-def refresh_cache(engine, tsa, name, now=None, final_revdate=None):
+def refresh(engine, tsa, name, now=None, final_revdate=None):
     """ Refresh a series cache """
     tsh = tsa.tsh
     policy = series_policy(engine, name, tsh.namespace)
