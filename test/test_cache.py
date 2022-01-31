@@ -241,6 +241,7 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
+        now=pd.Timestamp('2022-1-7'),
         final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
     )
 
@@ -369,6 +370,7 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
+        now=pd.Timestamp('2022-1-7'),
         final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
     )
     r = cache.ready(
@@ -401,6 +403,7 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
+        now=pd.Timestamp('2022-1-7'),
         final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
     )
     r = cache.ready(
@@ -417,6 +420,43 @@ insertion_date             value_date
 2022-01-04 00:00:00+00:00    3.0
 2022-01-05 00:00:00+00:00    4.0
 """, tsa.get('over-ground-1'))
+
+    # now, let's pretend upstream does something obnoxious
+    tsa.delete('ground-1')
+
+    # let's prepare a 3 points series with 5 revisions
+    # WITH DIFFERENT VALUES THIS TIME
+    for idx, idate in enumerate(
+            pd.date_range(
+                utcdt(2023, 1, 1),
+                freq='D',
+                periods=5
+            )
+    ):
+        ts = pd.Series(
+            [1.1, 2.1, 3.1],
+            index=pd.date_range(
+                utcdt(2022, 1, 1 + idx),
+                freq='D',
+                periods=3
+            )
+        )
+        tsa.update(
+            'ground-1',
+            ts,
+            'Babar',
+            insertion_date=idate
+        )
+
+    # we refresh up to rev 5
+    with pytest.raises(AssertionError):
+        cache.refresh(
+            engine,
+            tsa,
+            'over-ground-1',
+            now=pd.Timestamp('2022-1-7'),
+            final_revdate=pd.Timestamp('2023-1-5', tz='UTC')
+        )
 
 
 def test_rename_delete(engine, tsa):
