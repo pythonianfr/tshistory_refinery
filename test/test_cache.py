@@ -396,6 +396,44 @@ insertion_date             value_date
 
     assert len(tsa.insertion_dates('over-ground-1')) == 3
 
+    # the formula that refers to the series
+    tsa.register_formula(
+        'over-ground-1',
+        '(+ 1 (series "ground-1"))',
+        update=True
+    )
+    # cache has been reset
+    assert len(tsa.insertion_dates('over-ground-1')) == 5
+
+    r = ready(
+        engine,
+        'over-ground-1',
+        namespace=tsh.namespace
+    )
+    assert r == False
+
+    # we only refresh up to the first 3 revisions
+    refresh_cache(
+        engine,
+        tsa,
+        'over-ground-1',
+        final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
+    )
+    r = ready(
+        engine,
+        'over-ground-1',
+        namespace=tsh.namespace
+    )
+    assert r
+
+    assert_df("""
+2022-01-01 00:00:00+00:00    2.0
+2022-01-02 00:00:00+00:00    2.0
+2022-01-03 00:00:00+00:00    2.0
+2022-01-04 00:00:00+00:00    3.0
+2022-01-05 00:00:00+00:00    4.0
+""", tsa.get('over-ground-1'))
+
 
 def test_rename_delete(engine, tsa):
     tsh = tsa.tsh

@@ -84,3 +84,14 @@ class timeseries(xlts):
         if ready is not None:
             cache.invalidate_cache(cn, name, namespace=self.namespace)
             self.cache.delete(cn, name)
+
+    @tx
+    def register_formula(self, cn, name, formula,
+                         reject_unknown=True, update=False):
+        self.invalidate_cache(cn, name)
+        return super().register_formula(
+            cn, name, formula,
+            reject_unknown=reject_unknown,
+            update=update
+        )
+
