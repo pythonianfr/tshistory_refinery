@@ -95,6 +95,25 @@ def policy_by_name(engine, name, namespace='tsh'):
     return dict(p)
 
 
+def policy_series(cn, policyname, namespace='tsh'):
+    q = (
+        f'select series.name '
+        f'from "{namespace}".cache_policy as cache, '
+        f'     "{namespace}".cache_policy_series as middle, '
+        f'     "{namespace}".formula as series '
+        f'where cache.id = middle.cache_policy_id and '
+        f'      series_id = series.id and '
+        f'      cache.name = %(policyname)s '
+        f'order by series.name asc'
+    )
+    return [
+        name for name, in cn.execute(
+            q,
+            policyname=policyname
+        ).fetchall()
+    ]
+
+
 def set_policy(cn, policy_name, series_name, namespace='tsh'):
     """ Associate a cache policy to a series """
     q = (

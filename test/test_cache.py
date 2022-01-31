@@ -61,12 +61,15 @@ def test_good_cache(engine):
         'schedule_rule': '0 8-18 * * *'
     }
 
+    names = cache.policy_series(engine, 'my-policy')
+    assert len(names) == 0
+
 
 def test_cache_a_series(engine, tsa):
     tsh = tsa.tsh
 
     with engine.begin() as cn:
-        cn.execute('delete from tsh.cache_policy')
+        cn.execute(f'delete from "{tsh.namespace}".cache_policy')
 
     ts = pd.Series(
         [1., 2., 3.],
@@ -148,6 +151,24 @@ def test_cache_a_series(engine, tsa):
 2022-01-02    2.0
 2022-01-03    3.0
 """, tsh.get(engine, 'over-ground-0'))
+
+    # series per policy
+    names = cache.policy_series(engine, 'a-policy', namespace=tsh.namespace)
+    assert len(names) == 1
+
+    tsh.register_formula(
+        engine,
+        'over-ground-0-b',
+        '(+ 1 (series "ground-0"))'
+    )
+    cache.set_policy(
+        engine,
+        'a-policy',
+        'over-ground-0-b',
+        namespace=tsh.namespace
+    )
+    names = cache.policy_series(engine, 'a-policy', namespace=tsh.namespace)
+    assert len(names) == 2
 
 
 def test_cache_refresh(engine, tsa):
