@@ -19,7 +19,6 @@ def eval_moment(expr, env={}):
 def validate_policy(
         initial_revdate,
         from_date,
-        to_date,
         look_before,
         look_after,
         revdate_rule,
@@ -31,7 +30,6 @@ def validate_policy(
     for name, val in (
             ('initial_revdate', initial_revdate),
             ('from_date', from_date),
-            ('to_date', to_date),
             ('look_before', look_before),
             ('look_after', look_after)):
         try:
@@ -51,7 +49,6 @@ def new_policy(
         name,
         initial_revdate,
         from_date,
-        to_date,
         look_before,
         look_after,
         revdate_rule,
@@ -62,7 +59,6 @@ def new_policy(
     badinputs = validate_policy(
         initial_revdate,
         from_date,
-        to_date,
         look_before,
         look_after,
         revdate_rule,
@@ -80,7 +76,6 @@ def new_policy(
             name=name,
             initial_revdate=initial_revdate,
             from_date=from_date,
-            to_date=to_date,
             look_before=look_before,
             look_after=look_after,
             revdate_rule=revdate_rule,
@@ -93,7 +88,7 @@ def policy_by_name(engine, name, namespace='tsh'):
     """ Return a cache policy by name, as a dict """
     with engine.begin() as cn:
         p = cn.execute(
-            f'select initial_revdate, from_date, to_date, '
+            f'select initial_revdate, from_date, '
             f'       revdate_rule, schedule_rule '
             f'from "{namespace}".cache_policy'
         ).fetchone()
@@ -141,7 +136,7 @@ def ready(cn, series_name, namespace='tsh'):
 def series_policy(cn, series_name, namespace='tsh'):
     """ Return the cache policy for a series """
     q = (
-        f'select initial_revdate, from_date, to_date, '
+        f'select initial_revdate, from_date, '
         f'       look_before, look_after, '
         f'       revdate_rule, schedule_rule '
         f'from "{namespace}".cache_policy as cache, '
@@ -182,17 +177,13 @@ def refresh(engine, tsa, name, now=None, final_revdate=None):
     """ Refresh a series cache """
     tsh = tsa.tsh
     policy = series_policy(engine, name, tsh.namespace)
+    now = now or pd.Timestamp(datetime.utcnow(), tz='utc')
 
     if tsh.cache.exists(engine, name):
         idates = tsh.cache.insertion_dates(engine, name)
         initial_revdate = idates[-1]
-        now = now or pd.Timestamp(datetime.utcnow(), tz='utc')
         from_value_date = eval_moment(
             policy['look_before'],
-            {'now': now}
-        )
-        to_value_date = eval_moment(
-            policy['look_after'],
             {'now': now}
         )
     else:
@@ -204,10 +195,10 @@ def refresh(engine, tsa, name, now=None, final_revdate=None):
             eval_moment(policy['from_date']),
             tz='UTC'
         )
-        to_value_date = pd.Timestamp(
-            eval_moment(policy['to_date']),
-            tz='UTC'
-        )
+    to_value_date = eval_moment(
+        policy['look_after'],
+        {'now': now}
+    )
 
     for revdate in croniter_range(
         initial_revdate,

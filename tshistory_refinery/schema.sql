@@ -5,10 +5,9 @@ create table "{ns}".cache_policy (
   name text unique not null,
   ready bool not null default false,
 
-  -- five moment expressions
+  -- four moment expressions
   initial_revdate text,
   from_date text not null,
-  to_date text not null,
   look_before text not null,
   look_after text not null,
 
@@ -16,12 +15,16 @@ create table "{ns}".cache_policy (
   revdate_rule text not null,
   schedule_rule text not null,
 
-  unique (from_date, to_date, revdate_rule, schedule_rule)
+  unique (initial_revdate, from_date,
+          look_before, look_after,
+          revdate_rule, schedule_rule)
 );
 
 
+
 create index on "{ns}".cache_policy (from_date);
-create index on "{ns}".cache_policy (to_date);
+create index on "{ns}".cache_policy (look_before);
+create index on "{ns}".cache_policy (look_after);
 create index on "{ns}".cache_policy (revdate_rule);
 create index on "{ns}".cache_policy (schedule_rule);
 
