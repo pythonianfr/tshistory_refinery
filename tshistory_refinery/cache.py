@@ -179,7 +179,8 @@ def refresh(engine, tsa, name, now=None, final_revdate=None):
     policy = series_policy(engine, name, tsh.namespace)
     now = now or pd.Timestamp(datetime.utcnow(), tz='utc')
 
-    if tsh.cache.exists(engine, name):
+    exists = tsh.cache.exists(engine, name)
+    if exists:
         idates = tsh.cache.insertion_dates(engine, name)
         initial_revdate = idates[-1]
         from_value_date = eval_moment(
@@ -205,6 +206,8 @@ def refresh(engine, tsa, name, now=None, final_revdate=None):
         final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC'),
         policy['revdate_rule']
     ):
+        if exists and revdate == initial_revdate:
+            continue
         ts = tsa.get(
             name,
             revision_date=revdate,
