@@ -364,7 +364,37 @@ insertion_date             value_date
 """, hist)
 
     # now cached and uncached are the same
-    tsa.get('over-ground-1').equals(tsa.get('over-ground-1', nocache=True))
+    assert tsa.get('over-ground-1').equals(tsa.get('over-ground-1', nocache=True))
+
+    # cache invalidation
+    with engine.begin() as cn:
+        tsh.invalidate_cache(cn, 'over-ground-1')
+
+    # cached and uncached are *still* the same
+    assert tsa.get('over-ground-1').equals(tsa.get('over-ground-1', nocache=True))
+
+    r = ready(
+        engine,
+        'over-ground-1',
+        namespace=tsh.namespace
+    )
+    assert r == False
+
+    # we only refresh up to the first 3 revisions
+    refresh_cache(
+        engine,
+        tsa,
+        'over-ground-1',
+        final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
+    )
+    r = ready(
+        engine,
+        'over-ground-1',
+        namespace=tsh.namespace
+    )
+    assert r
+
+    assert len(tsa.insertion_dates('over-ground-1')) == 3
 
 
 def test_rename_delete(engine, tsa):

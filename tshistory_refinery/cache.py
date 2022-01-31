@@ -160,6 +160,23 @@ def series_policy(cn, series_name, namespace='tsh'):
     return dict(p)
 
 
+def invalidate_cache(cn, series_name, namespace='tsh'):
+    """ Reset the cache readiness for a series """
+    q = (
+        f'update "{namespace}".cache_policy '
+        f'set ready = false '
+        f'from "{namespace}".cache_policy as cache, '
+        f'     "{namespace}".cache_policy_series as middle, '
+        f'     "{namespace}".formula as series '
+        f'where cache.id = middle.cache_policy_id and '
+        f'      series_id = series.id and '
+        f'      series.name = %(seriesname)s'
+    )
+    return cn.execute(
+        q,
+        seriesname=series_name
+    )
+
 
 def refresh_cache(engine, tsa, name, now=None, final_revdate=None):
     """ Refresh a series cache """

@@ -77,3 +77,10 @@ class timeseries(xlts):
                 self.cache.delete(cn, name)
 
         return super().delete(cn, name)
+
+    @tx
+    def invalidate_cache(self, cn, name):
+        ready = cache.ready(cn, name, namespace=self.namespace)
+        if ready is not None:
+            cache.invalidate_cache(cn, name, namespace=self.namespace)
+            self.cache.delete(cn, name)
