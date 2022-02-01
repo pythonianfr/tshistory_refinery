@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 
+from rework import api
 from tshistory.testutil import (
     assert_df,
     assert_hist,
@@ -42,6 +43,7 @@ def test_invalid_cache():
 
 
 def test_good_cache(engine):
+    api.freeze_operations(engine)
     cache.new_policy(
         engine,
         'my-policy',

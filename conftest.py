@@ -16,7 +16,8 @@ from tshistory_refinery import (
     helper,
     schema,
     tsio,
-    webapi
+    webapi,
+    tasks  # be registrable
 )
 
 
@@ -25,6 +26,7 @@ DATADIR = Path(__file__).parent / 'test' / 'data'
 
 def _initschema(engine, ns='tsh'):
     schema.init(engine, namespace=ns, drop=True)
+    rapi.freeze_operations(engine)
 
 
 @pytest.fixture(scope='session')
@@ -35,7 +37,6 @@ def engine(request):
     e = create_engine(uri)
     _initschema(e)
     _initschema(e, 'remote')
-    rapi.freeze_operations(e)
     yield e
 
 
@@ -108,7 +109,7 @@ def remote(engine):
 
 @pytest.fixture(scope='session')
 def local(engine):
-    schema.init(engine, 'remote', rework=False)
+    _initschema(engine, 'remote')
 
     return timeseries(
         str(engine.url),

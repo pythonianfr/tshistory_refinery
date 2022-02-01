@@ -6,7 +6,10 @@ from croniter import (
 )
 import pandas as pd
 from psyl import lisp
-from rework import io as rio
+from rework import (
+    api as rapi,
+    io as rio
+)
 from sqlhelp import insert
 
 
@@ -82,6 +85,14 @@ def new_policy(
             schedule_rule=schedule_rule
         )
         q.do(cn)
+
+    rapi.prepare(
+        engine,
+        'refresh_formula_cache',
+        domain='timeseries',
+        rule='0 ' + schedule_rule,
+        inputdata={'policy': name}
+    )
 
 
 def policy_by_name(engine, name, namespace='tsh'):
