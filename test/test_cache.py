@@ -44,6 +44,10 @@ def test_invalid_cache():
 
 def test_good_cache(engine):
     api.freeze_operations(engine)
+
+    assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 0
+    assert engine.execute('select count(*) from rework.sched').scalar() == 0
+
     cache.new_policy(
         engine,
         'my-policy',
@@ -65,6 +69,14 @@ def test_good_cache(engine):
 
     names = cache.policy_series(engine, 'my-policy')
     assert len(names) == 0
+
+    assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 1
+    assert engine.execute('select count(*) from rework.sched').scalar() == 1
+
+    cache.delete_policy(engine, 'my-policy')
+
+    assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 0
+    assert engine.execute('select count(*) from rework.sched').scalar() == 0
 
 
 def test_cache_a_series(engine, tsa):
