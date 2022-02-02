@@ -71,8 +71,14 @@ def test_good_cache(engine):
     assert len(names) == 0
 
     assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 1
+    assert engine.execute('select count(*) from rework.sched').scalar() == 0
+
+    cache.schedule_policy(engine, 'my-policy')
+    assert engine.execute('select count(*) from rework.sched').scalar() == 1
+    cache.unschedule_policy(engine, 'my-policy')
     assert engine.execute('select count(*) from rework.sched').scalar() == 1
 
+    cache.schedule_policy(engine, 'my-policy')
     cache.delete_policy(engine, 'my-policy')
 
     assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 0

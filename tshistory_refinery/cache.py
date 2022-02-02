@@ -73,14 +73,6 @@ def new_policy(
         )
 
     with engine.begin() as cn:
-        sid = rapi.prepare(
-            engine,
-            'refresh_formula_cache',
-            domain='timeseries',
-            rule='0 ' + schedule_rule,
-            inputdata={'policy': name}
-        )
-
         q = insert(
             f'"{namespace}".cache_policy'
         ).values(
@@ -92,14 +84,40 @@ def new_policy(
             revdate_rule=revdate_rule,
             schedule_rule=schedule_rule
         )
-        cid = q.do(cn).scalar()
+        q.do(cn).scalar()
 
+
+def schedule_policy(engine, name, namespace='tsh'):
+    with engine.begin() as cn:
+        cid, schedule_rule = cn.execute(
+            f'select id, schedule_rule from "{namespace}".cache_policy '
+            f'where name = %(name)s',
+            name=name
+        ).fetchone()
+        sid = rapi.prepare(
+            engine,
+            'refresh_formula_cache',
+            domain='timeseries',
+            rule='0 ' + schedule_rule,
+            inputdata={'policy': name}
+        )
         cn.execute(
             f'insert into "{namespace}".cache_policy_sched '
             f'(cache_policy_id, prepared_task_id) '
             f'values (%(policy_id)s, %(sched_id)s)',
             policy_id=cid,
             sched_id=sid
+        )
+
+
+def unschedule_policy(engine, name, namespace='tsh'):
+    with engine.begin() as cn:
+        cn.execute(
+            f'delete from "{namespace}".cache_policy_sched as cps '
+            f'using "{namespace}".cache_policy as cp '
+            f'where cps.cache_policy_id = cp.id and '
+            f'      cp.name = %(name)s',
+            name=name
         )
 
 
