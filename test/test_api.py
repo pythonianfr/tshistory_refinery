@@ -6,10 +6,17 @@ import pandas as pd
 from tshistory import api
 from tshistory.testutil import (
     assert_df,
-    make_tsx
+    assert_hist,
+    make_tsx,
+    utcdt
 )
 
-from tshistory_refinery import tsio, http, schema
+from tshistory_refinery import (
+    cache,
+    http,
+    tsio,
+    schema
+)
 
 
 def _initschema(engine, ns='tsh'):
@@ -63,6 +70,11 @@ def tsa2(engine):
         namespace=ns,
         handler=tsio.timeseries
     )
+
+
+@pytest.fixture(scope='session')
+def tsa3(engine):
+    return make_api(engine, 'tsh')
 
 
 def genserie(start, freq, repeat, initval=None, tz=None, name=None):
@@ -766,3 +778,140 @@ def test_today_vs_revision_date(tsx):
         revision_date=datetime(2020, 2, 1)
     )
     assert len(ts) == 32
+
+
+def test_cache(engine, tsx, tsa3):
+    cache.new_policy(
+        engine,
+        'another-policy',
+        initial_revdate='(date "2023-1-1")',
+        from_date='(date "2022-1-1")',
+        look_before='(shifted now #:days -10)',
+        look_after='(shifted now #:days 10)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+
+    # let's prepare a 3 points series with 5 revisions
+    for idx, idate in enumerate(
+            pd.date_range(
+                utcdt(2023, 1, 1),
+                freq='D',
+                periods=5
+            )
+    ):
+        ts = pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(
+                utcdt(2022, 1, 1 + idx),
+                freq='D',
+                periods=3
+            )
+        )
+        tsx.update(
+            'ground-1',
+            ts,
+            'Babar',
+            insertion_date=idate
+        )
+
+    assert_hist("""
+insertion_date             value_date               
+2023-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+                           2022-01-02 00:00:00+00:00    2.0
+                           2022-01-03 00:00:00+00:00    3.0
+2023-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+                           2022-01-02 00:00:00+00:00    1.0
+                           2022-01-03 00:00:00+00:00    2.0
+                           2022-01-04 00:00:00+00:00    3.0
+2023-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+                           2022-01-02 00:00:00+00:00    1.0
+                           2022-01-03 00:00:00+00:00    1.0
+                           2022-01-04 00:00:00+00:00    2.0
+                           2022-01-05 00:00:00+00:00    3.0
+2023-01-04 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+                           2022-01-02 00:00:00+00:00    1.0
+                           2022-01-03 00:00:00+00:00    1.0
+                           2022-01-04 00:00:00+00:00    1.0
+                           2022-01-05 00:00:00+00:00    2.0
+                           2022-01-06 00:00:00+00:00    3.0
+2023-01-05 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+                           2022-01-02 00:00:00+00:00    1.0
+                           2022-01-03 00:00:00+00:00    1.0
+                           2022-01-04 00:00:00+00:00    1.0
+                           2022-01-05 00:00:00+00:00    1.0
+                           2022-01-06 00:00:00+00:00    2.0
+                           2022-01-07 00:00:00+00:00    3.0
+""", tsx.history('ground-1'))
+
+    # the formula that refers to the series
+    tsx.register_formula(
+        'over-ground-1',
+        '(series "ground-1")'
+    )
+
+    cache.set_policy(
+        engine,
+        'another-policy',
+        'over-ground-1'
+    )
+    r = cache.ready(
+        engine,
+        'over-ground-1'
+    )
+    assert r == False
+
+    # we only refresh up to the first 3 revisions
+    cache.refresh(
+        engine,
+        tsa3,
+        'over-ground-1',
+        now=pd.Timestamp('2022-1-7'),
+        final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
+    )
+
+    r = cache.ready(
+        engine,
+        'over-ground-1'
+    )
+    assert r
+
+    # get: cache vs nocache
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    2.0
+2022-01-05 00:00:00+00:00    3.0
+""", tsx.get('over-ground-1'))
+
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00    1.0
+2022-01-06 00:00:00+00:00    2.0
+2022-01-07 00:00:00+00:00    3.0
+""", tsx.get('over-ground-1', nocache=True))
+
+    # insertion dates: only 3 vs 5
+    idates = tsx.insertion_dates('over-ground-1')
+    assert idates == [
+        pd.Timestamp('2023-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2023-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2023-01-03 00:00:00+0000', tz='UTC')
+    ]
+
+    idates = tsx.insertion_dates('over-ground-1', nocache=True)
+    assert idates == [
+        pd.Timestamp('2023-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2023-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2023-01-03 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2023-01-04 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2023-01-05 00:00:00+0000', tz='UTC')
+    ]
+
+    # history points: only 3 vs 5
+    assert len(tsx.history('over-ground-1')) == 3
+    assert len(tsx.history('over-ground-1', nocache=True)) == 5

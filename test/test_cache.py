@@ -43,6 +43,9 @@ def test_invalid_cache():
 
 
 def test_good_cache(engine):
+    with engine.begin() as cn:
+        cn.execute('delete from tsh.cache_policy')
+
     api.freeze_operations(engine)
 
     assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 0
