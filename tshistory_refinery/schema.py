@@ -12,7 +12,7 @@ CACHE_POLICY = Path(__file__).parent / 'schema.sql'
 
 
 def init(engine, namespace='tsh', rework=True, drop=False):
-    tsschema(namespace).create(engine)
+    tsschema(namespace).create(engine, reset=drop)
     tsschema(f'{namespace}-upstream').create(engine)
     formula_schema(namespace).create(engine)
 
