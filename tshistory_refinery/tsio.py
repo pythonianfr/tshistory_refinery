@@ -25,21 +25,34 @@ class timeseries(xlts):
 
     @tx
     def insertion_dates(self, cn, name,
+                        from_insertion_date=None,
+                        to_insertion_date=None,
                         nocache=False,
                         **kw):
         if self.type(cn, name) != 'formula':
             return super().insertion_dates(
-                cn, name, **kw
+                cn, name,
+                from_insertion_date=from_insertion_date,
+                to_insertion_date=to_insertion_date,
+                **kw
             )
 
 
         if not nocache:
             ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None and ready:
-                return self.cache.insertion_dates(cn, name, **kw)
+                return self.cache.insertion_dates(
+                    cn, name,
+                    from_insertion_date=from_insertion_date,
+                    to_insertion_date=to_insertion_date,
+                    **kw
+                )
 
         return super().insertion_dates(
-            cn, name, **kw
+            cn, name,
+            from_insertion_date=from_insertion_date,
+            to_insertion_date=to_insertion_date,
+            **kw
         )
 
     @tx
