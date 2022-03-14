@@ -2,7 +2,8 @@ import click
 from sqlalchemy import create_engine
 from sqlhelp import sqlfile
 
-from tshistory_refinery.helper import host, config, apimaker
+from rework.helper import host
+from tshistory_refinery.helper import config, apimaker
 from tshistory_refinery.schema import init
 
 
