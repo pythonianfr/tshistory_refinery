@@ -1,3 +1,5 @@
+from psyl import lisp
+
 from tshistory.util import tx
 from tshistory.tsio import timeseries as basets
 from tshistory_xl.tsio import timeseries as xlts
@@ -101,10 +103,11 @@ class timeseries(xlts):
     @tx
     def register_formula(self, cn, name, formula,
                          reject_unknown=True, update=False):
-        self.invalidate_cache(cn, name)
-        return super().register_formula(
+        super().register_formula(
             cn, name, formula,
             reject_unknown=reject_unknown,
             update=update
         )
-
+        self.invalidate_cache(cn, name)
+        for name in self.dependants(cn, name):
+            self.invalidate_cache(cn, name)

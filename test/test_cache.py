@@ -666,9 +666,9 @@ def test_cache_coherency(engine, tsa):
         update=True
     )
 
-    # this is brain-damaged ! the cache should have been invalidated
+    # here we see the truth -- the cache has been proeprly wiped
     assert_df("""
-2022-01-01 00:00:00+00:00    1.0
-2022-01-02 00:00:00+00:00    2.0
-2022-01-03 00:00:00+00:00    3.0
+2022-01-01 00:00:00+00:00    2.0
+2022-01-02 00:00:00+00:00    3.0
+2022-01-03 00:00:00+00:00    4.0
 """, tsa.get('invalidate-me'))
