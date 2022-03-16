@@ -1,3 +1,5 @@
+from functools import cmp_to_key
+
 import pandas as pd
 import pytest
 
@@ -9,6 +11,7 @@ from tshistory.testutil import (
 )
 
 from tshistory_refinery import cache
+from tshistory_refinery.helper import comparator
 
 
 def test_invalid_cache():
@@ -672,3 +675,64 @@ def test_cache_coherency(engine, tsa):
 2022-01-02 00:00:00+00:00    3.0
 2022-01-03 00:00:00+00:00    4.0
 """, tsa.get('invalidate-me'))
+
+
+def test_formula_order(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        ts,
+        'dep-base',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'dep-bottom',
+        '(series "dep-base")'
+    )
+    tsh.register_formula(
+        engine,
+        'dep-middle-left',
+        '(+ -1 (series "dep-bottom"))'
+    )
+    tsh.register_formula(
+        engine,
+        'dep-middle-right',
+        '(+ 1 (series "dep-bottom"))'
+    )
+    tsh.register_formula(
+        engine,
+        'dep-top',
+        '(add (series "dep-middle-left") (series "dep-middle-right"))'
+    )
+
+    cmp = comparator(tsh, engine)
+    assert cmp('a', 'a') == 0
+    assert cmp('a', 'b') == -1
+
+    assert cmp('dep-bottom', 'dep-top') == 1
+    assert cmp('dep-bottom', 'dep-middle-left') == 1
+    assert cmp('dep-bottom', 'dep-middle-right') == 1
+    assert cmp('dep-middle-left', 'dep-top') == 1
+    assert cmp('dep-middle-right', 'dep-top') == 1
+
+    assert cmp('dep-top', 'dep-middle-left') == -1
+
+    names = [
+        'dep-bottom',
+        'dep-middle-left',
+        'dep-middle-right',
+        'dep-top'
+    ]
+    names.sort(key=cmp_to_key(cmp))
+    assert names == [
+        'dep-top',
+        'dep-middle-left',
+        'dep-middle-right',
+        'dep-bottom'
+    ]

@@ -1,3 +1,5 @@
+from functools import cmp_to_key
+
 from rework.api import task
 from rework.io import string
 
@@ -21,5 +23,13 @@ def refresh_formula_cache(task):
         namespace=tsa.tsh.namespace
     )
 
+    # sort series by dependency order
+    # we want the leafs to be computed
+    tsh = tsa.tsh
+    engine = tsa.engine
+
+    cmp = helper.comparator(tsh, engine)
+    names.sort(key=cmp_to_key(cmp))
+
     for name in names:
-        cache.refresh(tsa.engine, tsa, name)
+        cache.refresh(engine, tsa, name)
