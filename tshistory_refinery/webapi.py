@@ -246,8 +246,7 @@ def make_app(config, tsa, editor_callback=None):
                     tsa.register_formula(
                         row.name,
                         row.text,
-                        reject_unknown=False,
-                        update=True
+                        reject_unknown=False
                     )
 
         except Exception:

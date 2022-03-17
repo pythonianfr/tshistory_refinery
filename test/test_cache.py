@@ -432,8 +432,7 @@ insertion_date             value_date
     # the formula that refers to the series
     tsa.register_formula(
         'over-ground-1',
-        '(+ 1 (series "ground-1"))',
-        update=True
+        '(+ 1 (series "ground-1"))'
     )
     # cache has been reset
     assert len(tsa.insertion_dates('over-ground-1')) == 5
@@ -666,8 +665,7 @@ def test_cache_coherency(engine, tsa):
     # update without change
     tsa.register_formula(
         'ground-formula',
-        '(series "ground-3")',
-        update=True
+        '(series "ground-3")'
     )
     assert tsh.cache.exists(engine, 'invalidate-me')
     assert_df("""
@@ -678,8 +676,7 @@ def test_cache_coherency(engine, tsa):
 
     tsa.register_formula(
         'ground-formula',
-        '(+ 1 (series "ground-3"))',
-        update=True
+        '(+ 1 (series "ground-3"))'
     )
     assert not tsh.cache.exists(engine, 'invalidate-me')
 

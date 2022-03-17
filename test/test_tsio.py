@@ -25,8 +25,7 @@ def ingest_formulas(tsh, engine, formula_file):
             tsh.register_formula(
                 cn,
                 row.name,
-                row.text,
-                update=True
+                row.text
             )
 
 
