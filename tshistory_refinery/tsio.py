@@ -103,11 +103,13 @@ class timeseries(xlts):
     @tx
     def register_formula(self, cn, name, formula,
                          reject_unknown=True, update=False):
+        prevch = self.content_hash(cn, name)
         super().register_formula(
             cn, name, formula,
             reject_unknown=reject_unknown,
             update=update
         )
-        self.invalidate_cache(cn, name)
-        for name in self.dependants(cn, name):
+        if prevch != self.content_hash(cn, name):
             self.invalidate_cache(cn, name)
+            for name in self.dependants(cn, name):
+                self.invalidate_cache(cn, name)

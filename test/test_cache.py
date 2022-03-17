@@ -663,11 +663,25 @@ def test_cache_coherency(engine, tsa):
 2022-01-03 00:00:00+00:00    3.0
 """, tsa.get('invalidate-me'))
 
+    # update without change
+    tsa.register_formula(
+        'ground-formula',
+        '(series "ground-3")',
+        update=True
+    )
+    assert tsh.cache.exists(engine, 'invalidate-me')
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    2.0
+2022-01-03 00:00:00+00:00    3.0
+""", tsa.get('invalidate-me'))
+
     tsa.register_formula(
         'ground-formula',
         '(+ 1 (series "ground-3"))',
         update=True
     )
+    assert not tsh.cache.exists(engine, 'invalidate-me')
 
     # here we see the truth -- the cache has been proeprly wiped
     assert_df("""
