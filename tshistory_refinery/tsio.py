@@ -101,6 +101,35 @@ class timeseries(xlts):
             self.cache.delete(cn, name)
 
     @tx
+    def cacheable_formulas(self, cn):
+        formulas = dict(
+            cn.execute(
+                f'select name, text '
+                f'from "{self.namespace}".formula'
+            ).fetchall()
+        )
+        primaries = {
+            name
+            for name, in cn.execute(
+                    f'select seriesname from "{self.namespace}".registry'
+            ).fetchall()
+        }
+
+        def only_local(formula):
+            tree = self._expanded_formula(cn, formula)
+            for name in self.find_series(cn, tree):
+                if name in formulas or name in primaries:
+                    continue
+                return False
+            return True
+
+        return [
+            name
+            for name, text in formulas.items()
+            if only_local(text)
+        ]
+
+    @tx
     def register_formula(self, cn, name, formula, reject_unknown=True):
         prevch = self.content_hash(cn, name)
         super().register_formula(

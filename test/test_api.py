@@ -734,3 +734,34 @@ insertion_date             value_date
     # history points: only 3 vs 5
     assert len(tsx.history('over-ground-1')) == 3
     assert len(tsx.history('over-ground-1', nocache=True)) == 5
+
+
+def test_cacheable_formulas(tsa1, tsa2):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2022, 1, 1), freq='D', periods=3)
+    )
+    tsa1.update('cacheable-base-local', ts, 'Babar')
+    tsa2.update('cacheable-base-remote', ts, 'Celeste')
+
+    tsa1.register_formula(
+        'cacheable',
+        '(series "cacheable-base-local")'
+    )
+    tsa1.register_formula(
+        'un-cacheable-1',
+        '(series "cacheable-base-remote")'
+    )
+    tsa1.register_formula(
+        'un-cacheable-2',
+        '(add (series "cacheable-base-local") (series "cacheable-base-remote"))'
+    )
+    tsa1.register_formula(
+        'un-cacheable-3',
+        '(series "un-cacheable-2")'
+    )
+
+    tsh = tsa1.tsh
+    engine = tsa1.engine
+
+    assert tsh.cacheable_formulas(engine) == ['cacheable']
