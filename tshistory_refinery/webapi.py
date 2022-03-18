@@ -78,7 +78,7 @@ def refinery_bp(tsa):
         'refinery',
         __name__,
         template_folder='templates',
-        static_folder='static',
+        static_folder='refinery_static',
     )
 
     # extra formula handling
