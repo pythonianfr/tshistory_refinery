@@ -5,6 +5,8 @@ import pandas as pd
 
 from tshistory.testutil import assert_df, genserie
 from tshistory_formula.registry import func, metadata
+from tshistory_refinery import cache
+
 
 DATADIR = Path(__file__).parent / 'data'
 
@@ -170,8 +172,29 @@ def test_formula_form_metadata(engine, client, tsh, remote):
     }
 
 
-def test_policies(client):
+def test_policies(client, engine):
     res = client.get('/policies')
     assert res.json == []
-    assert res.json() == []
 
+    cache.new_policy(
+        engine,
+        'pol-1',
+        initial_revdate='(date "2020-1-1")',
+        from_date='(date "2010-1-1")',
+        look_before='(shifted (today) #:days 15)',
+        look_after='(shifted (today) #:days -10)',
+        revdate_rule='0 1 * * *',
+        schedule_rule='0 8-18 * * *',
+    )
+
+    res = client.get('/policies')
+    assert res.json == [
+        {'from_date': '(date "2010-1-1")',
+         'initial_revdate': '(date "2020-1-1")',
+         'look_after': '(shifted (today) #:days -10)',
+         'look_before': '(shifted (today) #:days 15)',
+         'name': 'pol-1',
+         'ready': False,
+         'revdate_rule': '0 1 * * *',
+         'schedule_rule': '0 8-18 * * *'}
+    ]

@@ -249,7 +249,10 @@ def refinery_bp(tsa):
         ).table('tsh.cache_policy')
 
         return jsonify(
-            q.do(engine).fetchall()
+            [
+                dict(item)
+                for item in q.do(engine).fetchall()
+            ]
         )
 
     # /formula cache
