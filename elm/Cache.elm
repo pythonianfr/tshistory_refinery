@@ -4,8 +4,24 @@ import Browser
 import Html as H
 
 
+
+type alias Policy =
+    { name : String
+    , ready : Bool
+    , initial_revdate : String
+    , from_date : String
+    , look_before : String
+    , look_after : String
+    , revdate_rule : String
+    , schedule_rule : String
+    }
+
+
 type alias Model =
-    { baseurl : String }
+    { baseurl : String
+    , policies : List Policy
+    }
+
 
 
 type Msg = Nothing
@@ -31,7 +47,7 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            (Model input.baseurl, Cmd.none)
+            (Model input.baseurl [], Cmd.none)
     in
         Browser.element
             { init = init
