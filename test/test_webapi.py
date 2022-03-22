@@ -169,3 +169,9 @@ def test_formula_form_metadata(engine, client, tsh, remote):
         'value_dtype': '<f8'
     }
 
+
+def test_policies(client):
+    res = client.get('/policies')
+    assert res.json == []
+    assert res.json() == []
+

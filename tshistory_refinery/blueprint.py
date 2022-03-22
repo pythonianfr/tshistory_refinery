@@ -21,6 +21,7 @@ from psyl.lisp import (
     serialize,
 )
 
+from sqlhelp import select
 from tshistory_formula import registry
 from tsview.util import format_formula as pretty_formula
 
@@ -236,5 +237,21 @@ def refinery_bp(tsa):
         return render_template('cache.html')
 
     # /formula
+    # formula cache
+
+    @bp.route('/policies')
+    def cache_policies():
+        q = select(
+            'name', 'ready',
+            'initial_revdate', 'from_date',
+            'look_before', 'look_after',
+            'revdate_rule', 'schedule_rule'
+        ).table('tsh.cache_policy')
+
+        return jsonify(
+            q.do(engine).fetchall()
+        )
+
+    # /formula cache
 
     return bp
