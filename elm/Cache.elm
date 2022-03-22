@@ -2,7 +2,7 @@ module Cache exposing (main)
 
 import Browser
 import Html as H
-
+import Json.Decode as D
 
 
 type alias Policy =
@@ -22,6 +22,21 @@ type alias Model =
     , policies : List Policy
     }
 
+
+policydecoder =
+    D.map8 Policy
+        (D.field "name" D.string)
+        (D.field "ready" D.bool)
+        (D.field "initial_revdate" D.string)
+        (D.field "from_date" D.string)
+        (D.field "look_before" D.string)
+        (D.field "look_after" D.string)
+        (D.field "revdate_rule" D.string)
+        (D.field "schedule_rule" D.string)
+
+
+policiesdecoder =
+    D.list policydecoder
 
 
 type Msg = Nothing
