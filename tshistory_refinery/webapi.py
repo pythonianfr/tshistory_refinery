@@ -5,6 +5,7 @@ import traceback
 from collections import defaultdict
 
 from flask import (
+    Blueprint,
     Flask,
     jsonify,
     make_response,
@@ -70,55 +71,19 @@ def format_metadata(meta):
     return str(h)
 
 
-def make_app(config, tsa, editor_callback=None):
-    app = Flask(__name__)
-    dburi = config['db']['uri']
-    engine = create_engine(dburi)
+def refinery_bp(tsa):
+    engine = tsa.engine
 
-    segment = config['nginx']['segment']
-
-    def has_permission(perm):
-        return True
-
-    app.register_blueprint(
-        tsview(
-            tsa,
-            has_permission=has_permission
-        )
-    )
-    app.register_blueprint(
-        reworkui(
-            engine,
-            has_permission=has_permission
-        ),
-        url_prefix='/tasks'
-    )
-    historic(
-        app,
-        tsa,
-        request_pathname_prefix=segment
-    )
-    editor(
-        app,
-        tsa,
-        has_permission=has_permission,
-        request_pathname_prefix=segment,
-        additionnal_info=editor_callback,
-        alternative_table=components_table
+    bp = Blueprint(
+        'refinery',
+        __name__,
+        template_folder='templates',
+        static_folder='static',
     )
 
-    app.register_blueprint(
-        http.refinery_httpapi(tsa).bp,
-        url_prefix='/api'
-    )
+    # extra formula handling
 
-    app.register_blueprint(
-        excel(tsa)
-    )
-
-    # formula handling
-
-    @app.route('/formulas')
+    @bp.route('/formulas')
     def formulas():
         pd.set_option('display.max_colwidth', None)
         fmt = {
@@ -216,13 +181,13 @@ def make_app(config, tsa, editor_callback=None):
 
         return errors, warnings
 
-    @app.route('/addformulas')
+    @bp.route('/addformulas')
     def addformulas():
         return render_template(
             'formula_form.html'
         )
 
-    @app.route('/updateformulas', methods=['POST'])
+    @bp.route('/updateformulas', methods=['POST'])
     def updateformulas():
         if not request.files:
             return jsonify({'errors': ['Missing CSV file']})
@@ -261,7 +226,7 @@ def make_app(config, tsa, editor_callback=None):
             'crash': ''
         })
 
-    @app.route('/downloadformulas')
+    @bp.route('/downloadformulas')
     def downloadformulas():
         formulas = pd.read_sql(
             'select name, text from tsh.formula',
@@ -281,6 +246,63 @@ def make_app(config, tsa, editor_callback=None):
         response.headers['Content-Type'] = 'text/json'
         return response
 
+    @bp.route('/formulacache')
+    def formulacache():
+        return render_template('cache.html')
+
     # /formula
+
+    return bp
+
+
+def make_app(config, tsa, editor_callback=None):
+    app = Flask('refinery')
+    dburi = config['db']['uri']
+    engine = create_engine(dburi)
+
+    segment = config['nginx']['segment']
+
+    def has_permission(perm):
+        return True
+
+    app.register_blueprint(
+        tsview(
+            tsa,
+            has_permission=has_permission
+        )
+    )
+    app.register_blueprint(
+        reworkui(
+            engine,
+            has_permission=has_permission
+        ),
+        url_prefix='/tasks'
+    )
+    historic(
+        app,
+        tsa,
+        request_pathname_prefix=segment
+    )
+    editor(
+        app,
+        tsa,
+        has_permission=has_permission,
+        request_pathname_prefix=segment,
+        additionnal_info=editor_callback,
+        alternative_table=components_table
+    )
+
+    app.register_blueprint(
+        http.refinery_httpapi(tsa).bp,
+        url_prefix='/api'
+    )
+
+    app.register_blueprint(
+        excel(tsa)
+    )
+
+    app.register_blueprint(
+        refinery_bp(tsa)
+    )
 
     return app
