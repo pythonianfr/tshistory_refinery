@@ -2,7 +2,12 @@ module Cache exposing (main)
 
 import Browser
 import Html as H
+import Http
 import Json.Decode as D
+import Url.Builder as UB
+
+
+nocmd model = ( model, Cmd.none )
 
 
 type alias Policy =
@@ -39,12 +44,27 @@ policiesdecoder =
     D.list policydecoder
 
 
-type Msg = Nothing
+getpolicies model =
+    Http.get
+    { url = UB.crossOrigin model.baseurl
+          [ "policies" ] [ ]
+    , expect = Http.expectJson GotPolicies policiesdecoder
+    }
+
+
+
+type Msg
+    = GotPolicies (Result Http.Error (List Policy))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        GotPolicies (Ok policies) ->
+            ( { model | policies = policies }, Cmd.none )
+
+        GotPolicies (Err err) ->
+            nocmd <| model
 
 
 view : Model -> H.Html Msg
