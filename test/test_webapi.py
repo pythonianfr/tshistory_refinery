@@ -137,6 +137,7 @@ def test_formula_form_metadata(engine, client, tsh, remote):
     with engine.begin() as cn:
         cn.execute('delete from tsh.formula')
         cn.execute('delete from remote.formula')
+        cn.execute('delete from tsh.cache_policy')
 
     remote.register_formula(
         'remote-formula',
@@ -198,3 +199,43 @@ def test_policies(client, engine):
          'revdate_rule': '0 1 * * *',
          'schedule_rule': '0 8-18 * * *'}
     ]
+
+
+    ts = pd.Series(
+        [1., 2., 3.],
+        index=pd.date_range(
+            pd.Timestamp('2022-1-1'),
+            freq='D', periods=3
+        )
+    )
+
+    from tshistory_formula.tsio import timeseries
+    tsh = timeseries()
+
+    tsh.update(engine, ts, 'for-pol-1-ground', 'Babar')
+    tsh.register_formula(
+        engine,
+        'for-pol-1',
+        '(series "for-pol-1-ground")'
+    )
+
+    cache.set_policy(
+        engine,
+        'pol-1',
+        'for-pol-1',
+        namespace=tsh.namespace
+    )
+
+    assert engine.execute(
+        'select count(*) from tsh.cache_policy_series'
+    ).scalar() == 1
+
+    resp = client.delete('/delete-policy/pol-1')
+    assert resp.status_code == 204
+
+    assert engine.execute(
+        'select count(*) from tsh.cache_policy_series'
+    ).scalar() == 0
+    assert engine.execute(
+        'select count(*) from tsh.cache_policy'
+    ).scalar() == 0

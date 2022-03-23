@@ -255,6 +255,17 @@ def refinery_bp(tsa):
             ]
         )
 
+    @bp.route('/delete-policy/<name>', methods=['DELETE'])
+    def delete_policy(name):
+        with engine.begin() as cn:
+            cn.execute(
+                'delete from tsh.cache_policy '
+                'where name = %(name)s',
+                name=name
+            )
+
+            return make_response('', 204)
+
     # /formula cache
 
     return bp
