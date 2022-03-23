@@ -2,6 +2,8 @@ module Cache exposing (main)
 
 import Browser
 import Html as H
+import Html.Attributes as HA
+import Html.Events as HE
 import Http
 import Json.Decode as D
 import Url.Builder as UB
@@ -62,9 +64,23 @@ getpolicies model =
     }
 
 
+deletepolicy model name =
+    Http.request
+    { url = UB.crossOrigin model.baseurl [ "delete-policy", name ] [ ]
+    , method = "DELETE"
+    , headers = []
+    , body = Http.emptyBody
+    , expect = Http.expectString DeletedPolicy
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
 
 type Msg
     = GotPolicies (Result Http.Error (List Policy))
+    | DeletePolicy String
+    | DeletedPolicy (Result Http.Error String)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -75,6 +91,12 @@ update msg model =
 
         GotPolicies (Err err) ->
             nocmd <| model
+
+        DeletePolicy name ->
+            ( model, deletepolicy model name )
+
+        DeletedPolicy _ ->
+            ( model, getpolicies model )
 
 
 viewpolicy policy =
@@ -87,6 +109,11 @@ viewpolicy policy =
         , H.p [] [ H.text <| "look after → " ++ policy.look_after ]
         , H.p [] [ H.text <| "rev date rule → " ++ policy.revdate_rule ]
         , H.p [] [ H.text <| "schedule rule → " ++ policy.schedule_rule ]
+        , H.button [ HA.class "btn btn-outline-danger"
+                   , HA.type_ "button"
+                   , HE.onClick (DeletePolicy policy.name)
+                   ]
+            [ H.text "delete" ]
         ]
 
 
