@@ -10,6 +10,16 @@ import Url.Builder as UB
 nocmd model = ( model, Cmd.none )
 
 
+unwraperror : Http.Error -> String
+unwraperror resp =
+    case resp of
+        Http.BadUrl x -> "bad url: " ++ x
+        Http.Timeout -> "the query timed out"
+        Http.NetworkError -> "there was a network error"
+        Http.BadStatus val -> "we got a bad status answer: " ++ String.fromInt val
+        Http.BadBody body -> "we got a bad body: " ++ body
+
+
 type alias Policy =
     { name : String
     , ready : Bool
@@ -67,9 +77,29 @@ update msg model =
             nocmd <| model
 
 
+viewpolicy policy =
+    H.li []
+        [ H.p [] [ H.text <| "name → " ++ policy.name ]
+        , H.p [] [ H.text <| "ready → " ++ if policy.ready then "true" else "false" ]
+        , H.p [] [ H.text <| "initial rev date → " ++ policy.initial_revdate ]
+        , H.p [] [ H.text <| "from date → " ++ policy.from_date ]
+        , H.p [] [ H.text <| "look before → " ++ policy.look_before ]
+        , H.p [] [ H.text <| "look after → " ++ policy.look_after ]
+        , H.p [] [ H.text <| "rev date rule → " ++ policy.revdate_rule ]
+        , H.p [] [ H.text <| "schedule rule → " ++ policy.schedule_rule ]
+        ]
+
+
+viewpolicies model =
+    H.ul [] <| List.map viewpolicy model.policies
+
+
 view : Model -> H.Html Msg
 view model =
-    H.p [ ] [ H.text "Hello" ]
+    H.div []
+        [ H.h1 [] [ H.text "Policies" ]
+        , viewpolicies model
+        ]
 
 
 sub model = Sub.none
@@ -82,7 +112,10 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            (Model input.baseurl [], Cmd.none)
+            let model = Model input.baseurl [] in
+            ( model
+            , getpolicies model
+            )
     in
         Browser.element
             { init = init
