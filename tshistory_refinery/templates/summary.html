@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+<link rel="stylesheet" type="text/css"
+      href="{{url_for('refinery.static', filename='cockpit.css')}}"/>
+
+<body>
+    <div class="container">
+        <h1>{{title}}</h1>
+
+        <div class="summary">
+            {% for section in sections %}
+            <section>
+                <h2>{{section}}</h2>
+                <ul>
+                    {% for item in sections[section] %}
+                    <li><a href={{ sections[section][item] }}>{{item}}</a></li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+
+{% endblock %}

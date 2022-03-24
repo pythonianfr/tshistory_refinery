@@ -21,11 +21,6 @@ span.tzaware {
     margin: 2px;
 }
 
-section:hover {
-    background: lightgrey;
-    border-radius: 3px;
-}
-
 
 /* cache ui */
 .btn {
