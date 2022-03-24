@@ -6,6 +6,7 @@ import Html.Attributes as HA
 import Html.Events as HE
 import Http
 import Json.Decode as D
+import Json.Encode as E
 import Url.Builder as UB
 
 
@@ -39,6 +40,7 @@ type alias Model =
     , policies : List Policy
     , deleting : Maybe String
     , adding : Maybe Policy
+    , adderror : String
     }
 
 
@@ -66,6 +68,27 @@ getpolicies model =
     }
 
 
+sendpolicy model policy =
+    let policy_encoder =
+            [ ("name" , E.string policy.name)
+            , ("initial_revdate", E.string policy.initial_revdate)
+            , ("from_date", E.string policy.from_date)
+            , ("look_before", E.string policy.look_before)
+            , ("look_after", E.string policy.look_after)
+            , ("revdate_rule", E.string policy.revdate_rule)
+            , ("schedule_rule", E.string policy.schedule_rule)
+            ]
+    in Http.request
+    { url = UB.crossOrigin model.baseurl [ "create-policy" ] [ ]
+    , method = "PUT"
+    , headers = []
+    , body = Http.jsonBody <| E.object policy_encoder
+    , expect = Http.expectString CreatedPolicy
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
 deletepolicy model name =
     Http.request
     { url = UB.crossOrigin model.baseurl [ "delete-policy", name ] [ ]
@@ -87,6 +110,8 @@ type Msg
     | DeletedPolicy (Result Http.Error String)
     | NewPolicy
     | PolicyField String String
+    | CreatePolicy
+    | CreatedPolicy (Result Http.Error String)
 
 
 update_policy_field policy fieldname value =
@@ -138,6 +163,21 @@ update msg model =
                 Nothing -> nocmd model
                 Just p ->
                     nocmd { model | adding = Just <| update_policy_field p field value }
+
+        CreatePolicy ->
+            case model.adding of
+                Nothing -> nocmd model
+                Just policy ->
+                    ( model, sendpolicy model policy )
+
+        CreatedPolicy (Ok _) ->
+            ( { model | adderror = "", adding = Nothing }
+            , getpolicies model
+            )
+
+        CreatedPolicy (Err err) ->
+            let emsg = unwraperror err in
+            nocmd { model | adderror = emsg }
 
 
 viewdeletepolicyaction model policy =
@@ -202,7 +242,16 @@ newpolicy model =
                 [ H.text displayname ]
             ]
     in
-    H.div [] <| List.concat <| List.map makeinput inputs
+    H.div [] <| ( List.concat <| List.map makeinput inputs ) ++
+        (
+         [ H.button [ HA.class "btn btn-success"
+                    , HA.type_ "button"
+                    , HE.onClick CreatePolicy
+                    ]
+               [ H.text "create" ]
+         , H.p [] [ H.text model.adderror ]
+         ]
+        )
 
 
 viewpolicies model =
@@ -238,7 +287,7 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            let model = Model input.baseurl [] Nothing Nothing in
+            let model = Model input.baseurl [] Nothing Nothing "" in
             ( model
             , getpolicies model
             )

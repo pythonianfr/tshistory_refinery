@@ -245,7 +245,7 @@ def test_create_policies(client, engine):
     res = client.get('/policies')
     assert res.json == []
 
-    res = client.put('/create-policy', params={
+    res = client.put_json('/create-policy', {
         'name': 'web-pol',
         'from_date': '(date "2010-1-1")',
         'initial_revdate': '(date "2020-1-1")',
@@ -269,14 +269,14 @@ def test_create_policies(client, engine):
          }
     ]
 
-    res = client.put('/create-policy', params={
+    res = client.put_json('/create-policy', {
         'name': 'web-pol',
     })
     assert res.status_code == 400
     assert res.text == 'Missing fields'
 
     # identical to the first
-    res = client.put('/create-policy', params={
+    res = client.put_json('/create-policy', {
         'name': 'web-pol-bis',
         'from_date': '(date "2010-1-1")',
         'initial_revdate': '(date "2020-1-1")',
@@ -289,7 +289,7 @@ def test_create_policies(client, engine):
     assert res.text == 'A policy with identical parameters already exists'
 
     # with a bogus field
-    res = client.put('/create-policy', params={
+    res = client.put_json('/create-policy', {
         'name': 'web-pol-bis',
         'from_date': '(date "2010-1-1")',
         'initial_revdate': 'BOGUS',

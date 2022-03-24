@@ -281,7 +281,7 @@ def refinery_bp(tsa):
 
     @bp.route('/create-policy', methods=['PUT'])
     def create_policy():
-        args = policy_args(request.form)
+        args = policy_args(request.json)
         try:
             cache.new_policy(engine, **args)
         except ValueError as err:
