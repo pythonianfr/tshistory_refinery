@@ -86,13 +86,19 @@ type Msg
     | DeletePolicy String
     | DeletedPolicy (Result Http.Error String)
     | NewPolicy
-    | PolicyName String
-    | PolicyInitialRevdate String
-    | PolicyFromDate String
-    | PolicyLookBefore String
-    | PolicyLookAfter String
-    | PolicyRevdateRule String
-    | PolicyScheduleRule String
+    | PolicyField String String
+
+
+update_policy_field policy fieldname value =
+    case fieldname of
+        "name" -> { policy | name = value }
+        "initial_revdate" -> { policy | initial_revdate = value }
+        "from_date" -> { policy | from_date = value }
+        "look_before" -> { policy | look_before = value }
+        "look_after" -> { policy | look_after = value }
+        "revdate_rule" -> { policy | revdate_rule = value }
+        "schedule_rule" -> { policy | schedule_rule = value }
+        _ -> policy
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -127,68 +133,11 @@ update msg model =
             , Cmd.none
             )
 
-        PolicyName name ->
+        PolicyField field value ->
             case model.adding of
                 Nothing -> nocmd model
                 Just p ->
-                    nocmd { model | adding = Just <| Policy
-                                name p.ready p.initial_revdate p.from_date p.look_before
-                                p.look_after p.revdate_rule p.schedule_rule
-                          }
-
-        PolicyInitialRevdate ird ->
-            case model.adding of
-                Nothing -> nocmd model
-                Just p ->
-                    nocmd { model | adding = Just <| Policy
-                                p.name p.ready ird p.from_date p.look_before
-                                p.look_after p.revdate_rule p.schedule_rule
-                          }
-
-        PolicyFromDate fd ->
-            case model.adding of
-                Nothing -> nocmd model
-                Just p ->
-                    nocmd { model | adding = Just <| Policy
-                                p.name p.ready p.initial_revdate fd p.look_before
-                                p.look_after p.revdate_rule p.schedule_rule
-                          }
-
-        PolicyLookBefore lb ->
-            case model.adding of
-                Nothing -> nocmd model
-                Just p ->
-                    nocmd { model | adding = Just <| Policy
-                                p.name p.ready p.initial_revdate p.from_date lb
-                                p.look_after p.revdate_rule p.schedule_rule
-                          }
-
-        PolicyLookAfter la ->
-            case model.adding of
-                Nothing -> nocmd model
-                Just p ->
-                    nocmd { model | adding = Just <| Policy
-                                p.name p.ready p.initial_revdate p.from_date p.look_before
-                                la p.revdate_rule p.schedule_rule
-                          }
-
-        PolicyRevdateRule rdr ->
-            case model.adding of
-                Nothing -> nocmd model
-                Just p ->
-                    nocmd { model | adding = Just <| Policy
-                                p.name p.ready p.initial_revdate p.from_date p.look_before
-                                p.look_after rdr p.schedule_rule
-                          }
-
-        PolicyScheduleRule sr ->
-            case model.adding of
-                Nothing -> nocmd model
-                Just p ->
-                    nocmd { model | adding = Just <| Policy
-                                p.name p.ready p.initial_revdate p.from_date p.look_before
-                                p.look_after p.revdate_rule sr
-                          }
+                    nocmd { model | adding = Just <| update_policy_field p field value }
 
 
 viewdeletepolicyaction model policy =
@@ -232,26 +181,25 @@ viewpolicy model policy =
 
 newpolicy model =
     let inputs =
-            [ ("name", "policy name", PolicyName )
-            , ("initial revision date", "e.g. (date \"2022-1-1\")", PolicyInitialRevdate )
-            , ("from date", "e.g. (date \"2022-1-1\")", PolicyFromDate )
-            , ("look before", "e.g. (shifted (today) #:days -15)", PolicyLookBefore )
-            , ("look after", "e.g. (shifted (today) #:days 15)", PolicyLookAfter )
-            , ("revision date rule", "in crontab format", PolicyRevdateRule )
-            , ("schedule rule", "in crontab format", PolicyScheduleRule )
+            [ ("name", "name", "policy name" )
+            , ("initial_revdate", "initial revision date", "e.g. (date \"2022-1-1\")" )
+            , ("from_date", "from date", "e.g. (date \"2022-1-1\")" )
+            , ("look_before", "look before", "e.g. (shifted (today) #:days -15)" )
+            , ("look_after", "look after", "e.g. (shifted (today) #:days 15)" )
+            , ("revdate_rule", "revision date rule", "in crontab format" )
+            , ("schedule_rule", "schedule rule", "in crontab format" )
             ]
 
-        makeinput (name, placeholder, msg) =
+        makeinput (fieldname, displayname, placeholder) =
             [ H.input
                 [ HA.class "form-control"
                 , HA.placeholder placeholder
-                , HA.for name
-                , HE.onInput msg
+                , HE.onInput  (PolicyField fieldname)
                 ] []
             , H.label
                 [ HA.class "form-check-label"
-                , HA.for name ]
-                [ H.text name ]
+                , HA.for fieldname]
+                [ H.text displayname ]
             ]
     in
     H.div [] <| List.concat <| List.map makeinput inputs
