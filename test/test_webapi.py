@@ -173,7 +173,7 @@ def test_formula_form_metadata(engine, client, tsh, remote):
     }
 
 
-def test_policies(client, engine):
+def test_get_policies(client, engine):
     res = client.get('/policies')
     assert res.json == []
 
@@ -239,3 +239,64 @@ def test_policies(client, engine):
     assert engine.execute(
         'select count(*) from tsh.cache_policy'
     ).scalar() == 0
+
+
+def test_create_policies(client, engine):
+    res = client.get('/policies')
+    assert res.json == []
+
+    res = client.put('/create-policy', params={
+        'name': 'web-pol',
+        'from_date': '(date "2010-1-1")',
+        'initial_revdate': '(date "2020-1-1")',
+        'look_after': '(shifted (today) #:days -10)',
+        'look_before': '(shifted (today) #:days 15)',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    })
+    assert res.status_code == 201
+
+    res = client.get('/policies')
+    assert res.json == [
+        {'from_date': '(date "2010-1-1")',
+         'initial_revdate': '(date "2020-1-1")',
+         'look_after': '(shifted (today) #:days -10)',
+         'look_before': '(shifted (today) #:days 15)',
+         'name': 'web-pol',
+         'ready': False,
+         'revdate_rule': '0 1 * * *',
+         'schedule_rule': '0 8-18 * * *'
+         }
+    ]
+
+    res = client.put('/create-policy', params={
+        'name': 'web-pol',
+    })
+    assert res.status_code == 400
+    assert res.text == 'Missing fields'
+
+    # identical to the first
+    res = client.put('/create-policy', params={
+        'name': 'web-pol-bis',
+        'from_date': '(date "2010-1-1")',
+        'initial_revdate': '(date "2020-1-1")',
+        'look_after': '(shifted (today) #:days -10)',
+        'look_before': '(shifted (today) #:days 15)',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    })
+    assert res.status_code == 400
+    assert res.text == 'A policy with identical parameters already exists'
+
+    # with a bogus field
+    res = client.put('/create-policy', params={
+        'name': 'web-pol-bis',
+        'from_date': '(date "2010-1-1")',
+        'initial_revdate': 'BOGUS',
+        'look_after': '(shifted (today) #:days -10)',
+        'look_before': '(shifted (today) #:days 15)',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    })
+    assert res.status_code == 400
+    assert res.text == "Bad inputs for the cache policy: [('initial_revdate', 'BOGUS')]"

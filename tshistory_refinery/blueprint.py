@@ -14,6 +14,7 @@ from flask import (
     request,
     url_for
 )
+import sqlalchemy
 from pml import HTML
 from rework_ui.helper import argsdict as _args
 from psyl.lisp import (
@@ -24,6 +25,8 @@ from psyl.lisp import (
 from sqlhelp import select
 from tshistory_formula import registry
 from tsview.util import format_formula as pretty_formula
+
+from tshistory_refinery import cache
 
 
 def format_formula(formula):
@@ -265,6 +268,33 @@ def refinery_bp(tsa):
             )
 
             return make_response('', 204)
+
+    class policy_args(_args):
+        types = {
+            'name': str,
+            'initial_revdate': str,
+            'look_before': str,
+            'look_after': str,
+            'revdate_rule': str,
+            'schedule_rule': str
+        }
+
+    @bp.route('/create-policy', methods=['PUT'])
+    def create_policy():
+        args = policy_args(request.form)
+        try:
+            cache.new_policy(engine, **args)
+        except ValueError as err:
+            return make_response(str(err), 400)
+        except TypeError:
+            return make_response('Missing fields', 400)
+        except sqlalchemy.exc.IntegrityError as err:
+            return make_response(
+                'A policy with identical parameters already exists',
+                400
+            )
+
+        return make_response('', 201)
 
     # /formula cache
 
