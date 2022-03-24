@@ -86,6 +86,13 @@ type Msg
     | DeletePolicy String
     | DeletedPolicy (Result Http.Error String)
     | NewPolicy
+    | PolicyName String
+    | PolicyInitialRevdate String
+    | PolicyFromDate String
+    | PolicyLookBefore String
+    | PolicyLookAfter String
+    | PolicyRevdateRule String
+    | PolicyScheduleRule String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -119,6 +126,69 @@ update msg model =
             ( { model | adding = Just <| Policy "" False "" "" "" "" "" "" }
             , Cmd.none
             )
+
+        PolicyName name ->
+            case model.adding of
+                Nothing -> nocmd model
+                Just p ->
+                    nocmd { model | adding = Just <| Policy
+                                name p.ready p.initial_revdate p.from_date p.look_before
+                                p.look_after p.revdate_rule p.schedule_rule
+                          }
+
+        PolicyInitialRevdate ird ->
+            case model.adding of
+                Nothing -> nocmd model
+                Just p ->
+                    nocmd { model | adding = Just <| Policy
+                                p.name p.ready ird p.from_date p.look_before
+                                p.look_after p.revdate_rule p.schedule_rule
+                          }
+
+        PolicyFromDate fd ->
+            case model.adding of
+                Nothing -> nocmd model
+                Just p ->
+                    nocmd { model | adding = Just <| Policy
+                                p.name p.ready p.initial_revdate fd p.look_before
+                                p.look_after p.revdate_rule p.schedule_rule
+                          }
+
+        PolicyLookBefore lb ->
+            case model.adding of
+                Nothing -> nocmd model
+                Just p ->
+                    nocmd { model | adding = Just <| Policy
+                                p.name p.ready p.initial_revdate p.from_date lb
+                                p.look_after p.revdate_rule p.schedule_rule
+                          }
+
+        PolicyLookAfter la ->
+            case model.adding of
+                Nothing -> nocmd model
+                Just p ->
+                    nocmd { model | adding = Just <| Policy
+                                p.name p.ready p.initial_revdate p.from_date p.look_before
+                                la p.revdate_rule p.schedule_rule
+                          }
+
+        PolicyRevdateRule rdr ->
+            case model.adding of
+                Nothing -> nocmd model
+                Just p ->
+                    nocmd { model | adding = Just <| Policy
+                                p.name p.ready p.initial_revdate p.from_date p.look_before
+                                p.look_after rdr p.schedule_rule
+                          }
+
+        PolicyScheduleRule sr ->
+            case model.adding of
+                Nothing -> nocmd model
+                Just p ->
+                    nocmd { model | adding = Just <| Policy
+                                p.name p.ready p.initial_revdate p.from_date p.look_before
+                                p.look_after p.revdate_rule sr
+                          }
 
 
 viewdeletepolicyaction model policy =
@@ -160,6 +230,33 @@ viewpolicy model policy =
         ] ++ (viewdeletepolicyaction model policy))
 
 
+newpolicy model =
+    let inputs =
+            [ ("name", "policy name", PolicyName )
+            , ("initial revision date", "e.g. (date \"2022-1-1\")", PolicyInitialRevdate )
+            , ("from date", "e.g. (date \"2022-1-1\")", PolicyFromDate )
+            , ("look before", "e.g. (shifted (today) #:days -15)", PolicyLookBefore )
+            , ("look after", "e.g. (shifted (today) #:days 15)", PolicyLookAfter )
+            , ("revision date rule", "in crontab format", PolicyRevdateRule )
+            , ("schedule rule", "in crontab format", PolicyScheduleRule )
+            ]
+
+        makeinput (name, placeholder, msg) =
+            [ H.input
+                [ HA.class "form-control"
+                , HA.placeholder placeholder
+                , HA.for name
+                , HE.onInput msg
+                ] []
+            , H.label
+                [ HA.class "form-check-label"
+                , HA.for name ]
+                [ H.text name ]
+            ]
+    in
+    H.div [] <| List.concat <| List.map makeinput inputs
+
+
 viewpolicies model =
     case model.adding of
         Nothing ->
@@ -172,8 +269,7 @@ viewpolicies model =
                  , H.ul [] <| List.map (viewpolicy model) model.policies
                 ]
         Just policy ->
-            -- left as an exercise to the reader :)
-            H.p [] [ H.text "adding" ]
+            newpolicy model
 
 
 view : Model -> H.Html Msg
