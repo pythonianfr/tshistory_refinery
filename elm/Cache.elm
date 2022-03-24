@@ -38,6 +38,7 @@ type alias Model =
     { baseurl : String
     , policies : List Policy
     , deleting : Maybe String
+    , adding : Maybe Policy
     }
 
 
@@ -84,6 +85,7 @@ type Msg
     | CancelDeletePolicy
     | DeletePolicy String
     | DeletedPolicy (Result Http.Error String)
+    | NewPolicy
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -95,6 +97,7 @@ update msg model =
         GotPolicies (Err err) ->
             nocmd <| model
 
+        -- deletion
         AskDeletePolicy name ->
             ( { model | deleting = Just name }
             , Cmd.none
@@ -110,6 +113,12 @@ update msg model =
 
         DeletedPolicy _ ->
             ( model, getpolicies model )
+
+        -- addition
+        NewPolicy ->
+            ( { model | adding = Just <| Policy "" False "" "" "" "" "" "" }
+            , Cmd.none
+            )
 
 
 viewdeletepolicyaction model policy =
@@ -152,7 +161,19 @@ viewpolicy model policy =
 
 
 viewpolicies model =
-    H.ul [] <| List.map (viewpolicy model) model.policies
+    case model.adding of
+        Nothing ->
+            H.div []
+                [ H.button [ HA.class "btn btn-primary"
+                              , HA.type_ "button"
+                              , HE.onClick NewPolicy
+                              ]
+                       [ H.text "create a cache policy" ]
+                 , H.ul [] <| List.map (viewpolicy model) model.policies
+                ]
+        Just policy ->
+            -- left as an exercise to the reader :)
+            H.p [] [ H.text "adding" ]
 
 
 view : Model -> H.Html Msg
@@ -173,7 +194,7 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            let model = Model input.baseurl [] Nothing in
+            let model = Model input.baseurl [] Nothing Nothing in
             ( model
             , getpolicies model
             )
