@@ -37,6 +37,7 @@ type alias Policy =
 type alias Model =
     { baseurl : String
     , policies : List Policy
+    , deleting : Maybe String
     }
 
 
@@ -79,6 +80,8 @@ deletepolicy model name =
 
 type Msg
     = GotPolicies (Result Http.Error (List Policy))
+    | AskDeletePolicy String
+    | CancelDeletePolicy
     | DeletePolicy String
     | DeletedPolicy (Result Http.Error String)
 
@@ -92,6 +95,16 @@ update msg model =
         GotPolicies (Err err) ->
             nocmd <| model
 
+        AskDeletePolicy name ->
+            ( { model | deleting = Just name }
+            , Cmd.none
+            )
+
+        CancelDeletePolicy ->
+            ( { model | deleting = Nothing }
+            , Cmd.none
+            )
+
         DeletePolicy name ->
             ( model, deletepolicy model name )
 
@@ -99,8 +112,34 @@ update msg model =
             ( model, getpolicies model )
 
 
-viewpolicy policy =
-    H.li []
+viewdeletepolicyaction model policy =
+    let askdelete =
+            [ H.button [ HA.class "btn btn-outline-danger"
+                       , HA.type_ "button"
+                       , HE.onClick (AskDeletePolicy policy.name)
+                       ]
+                  [ H.text "delete" ]
+            ]
+    in case model.deleting of
+           Nothing -> askdelete
+           Just name ->
+               if name == policy.name then
+                   [ H.button [ HA.class "btn btn-success"
+                              , HA.type_ "button"
+                              , HE.onClick (DeletePolicy name)
+                              ]
+                         [ H.text "confirm" ]
+                   , H.button [ HA.class "btn btn-warning"
+                              , HA.type_ "button"
+                              , HE.onClick CancelDeletePolicy
+                              ]
+                       [ H.text "cancel" ]
+                   ]
+                   else askdelete
+
+
+viewpolicy model policy =
+    H.li [] (
         [ H.p [] [ H.text <| "name → " ++ policy.name ]
         , H.p [] [ H.text <| "ready → " ++ if policy.ready then "true" else "false" ]
         , H.p [] [ H.text <| "initial rev date → " ++ policy.initial_revdate ]
@@ -109,16 +148,11 @@ viewpolicy policy =
         , H.p [] [ H.text <| "look after → " ++ policy.look_after ]
         , H.p [] [ H.text <| "rev date rule → " ++ policy.revdate_rule ]
         , H.p [] [ H.text <| "schedule rule → " ++ policy.schedule_rule ]
-        , H.button [ HA.class "btn btn-outline-danger"
-                   , HA.type_ "button"
-                   , HE.onClick (DeletePolicy policy.name)
-                   ]
-            [ H.text "delete" ]
-        ]
+        ] ++ (viewdeletepolicyaction model policy))
 
 
 viewpolicies model =
-    H.ul [] <| List.map viewpolicy model.policies
+    H.ul [] <| List.map (viewpolicy model) model.policies
 
 
 view : Model -> H.Html Msg
@@ -139,7 +173,7 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            let model = Model input.baseurl [] in
+            let model = Model input.baseurl [] Nothing in
             ( model
             , getpolicies model
             )
