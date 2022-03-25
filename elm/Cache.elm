@@ -41,6 +41,7 @@ type alias Model =
     , deleting : Maybe String
     , adding : Maybe Policy
     , adderror : String
+    , linking : Maybe Policy
     }
 
 
@@ -113,6 +114,7 @@ type Msg
     | CreatePolicy
     | CreatedPolicy (Result Http.Error String)
     | CancelPolicyCreation
+    | LinkPolicySeries Policy
 
 
 update_policy_field policy fieldname value =
@@ -183,6 +185,10 @@ update msg model =
         CancelPolicyCreation ->
             nocmd { model | adderror = "", adding = Nothing }
 
+        -- link to series
+        LinkPolicySeries policy ->
+            nocmd { model | linking = Just policy }
+
 
 viewdeletepolicyaction model policy =
     let askdelete =
@@ -210,6 +216,15 @@ viewdeletepolicyaction model policy =
                    else askdelete
 
 
+viewlinkseriesaction model policy =
+    [ H.button [ HA.class "btn btn-primary"
+               , HA.type_ "button"
+               , HE.onClick (LinkPolicySeries policy)
+               ]
+          [ H.text "link to formulas" ]
+    ]
+
+
 viewpolicy model policy =
     H.li [] (
         [ H.p [] [ H.text <| "name → " ++ policy.name ]
@@ -220,7 +235,10 @@ viewpolicy model policy =
         , H.p [] [ H.text <| "look after → " ++ policy.look_after ]
         , H.p [] [ H.text <| "rev date rule → " ++ policy.revdate_rule ]
         , H.p [] [ H.text <| "schedule rule → " ++ policy.schedule_rule ]
-        ] ++ (viewdeletepolicyaction model policy))
+        ]
+            ++ (viewlinkseriesaction model policy)
+            ++ (viewdeletepolicyaction model policy)
+            )
 
 
 newpolicy model =
@@ -263,17 +281,25 @@ newpolicy model =
         )
 
 
+viewlinkpolicy model policy =
+    H.div [] [ H.p [] [ H.text "Link policy" ] ]
+
+
 viewpolicies model =
     case model.adding of
         Nothing ->
-            H.div []
-                [ H.button [ HA.class "btn btn-primary"
-                              , HA.type_ "button"
-                              , HE.onClick NewPolicy
-                              ]
-                       [ H.text "create a cache policy" ]
-                 , H.ul [] <| List.map (viewpolicy model) model.policies
-                ]
+            case model.linking of
+                Nothing ->
+                    H.div []
+                        [ H.button [ HA.class "btn btn-primary"
+                                   , HA.type_ "button"
+                                   , HE.onClick NewPolicy
+                                   ]
+                              [ H.text "create a cache policy" ]
+                        , H.ul [] <| List.map (viewpolicy model) model.policies
+                        ]
+                Just policy ->
+                    viewlinkpolicy model policy
         Just policy ->
             newpolicy model
 
@@ -296,7 +322,7 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            let model = Model input.baseurl [] Nothing Nothing "" in
+            let model = Model input.baseurl [] Nothing Nothing "" Nothing in
             ( model
             , getpolicies model
             )
