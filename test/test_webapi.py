@@ -305,6 +305,7 @@ def test_create_policies(client, engine):
 def test_cacheable_formulas(client, tsh, engine):
     with engine.begin() as cn:
         cn.execute('delete from tsh.formula')
+        cn.execute('delete from tsh.cache_policy')
 
     res = client.get('/cacheable-formulas')
     assert res.json == []
@@ -335,3 +336,24 @@ def test_cacheable_formulas(client, tsh, engine):
 
     res = client.get('/cacheable-formulas')
     assert res.json == ['i-am-cacheable']
+
+    res = client.put_json('/create-policy', {
+        'name': 'test-cacheable',
+        'from_date': '(date "2010-1-1")',
+        'initial_revdate': '(date "2020-1-1")',
+        'look_after': '(shifted (today) #:days -10)',
+        'look_before': '(shifted (today) #:days 15)',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    })
+    assert res.status_code == 201
+
+    cache.set_policy(
+        engine,
+        'test-cacheable',
+        'i-am-cacheable', # not any longer :)
+        namespace=tsh.namespace
+    )
+
+    res = client.get('/cacheable-formulas')
+    assert res.json == []

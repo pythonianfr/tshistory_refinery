@@ -1,4 +1,5 @@
 from psyl import lisp
+from sqlhelp import select
 
 from tshistory.util import tx
 from tshistory.tsio import timeseries as basets
@@ -101,13 +102,22 @@ class timeseries(xlts):
             self.cache.delete(cn, name)
 
     @tx
-    def cacheable_formulas(self, cn):
-        formulas = dict(
-            cn.execute(
-                f'select name, text '
-                f'from "{self.namespace}".formula'
-            ).fetchall()
+    def cacheable_formulas(self, cn, unlinked=True):
+        q = select(
+            'f.name', 'f.text'
+        ).table(
+            f'"{self.namespace}".formula as f'
         )
+        if unlinked:
+            q.where(
+                f'not exists '
+                f' (select 1 '
+                f'  from "{self.namespace}".cache_policy_series as p'
+                f'  where p.series_id = f.id'
+                f')'
+            )
+
+        formulas = dict(q.do(cn).fetchall())
         primaries = {
             name
             for name, in cn.execute(
