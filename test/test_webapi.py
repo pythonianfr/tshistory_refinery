@@ -300,3 +300,38 @@ def test_create_policies(client, engine):
     })
     assert res.status_code == 400
     assert res.text == "Bad inputs for the cache policy: [('initial_revdate', 'BOGUS')]"
+
+
+def test_cacheable_formulas(client, tsh, engine):
+    with engine.begin() as cn:
+        cn.execute('delete from tsh.formula')
+
+    res = client.get('/cacheable-formulas')
+    assert res.json == []
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(pd.Timestamp('2022-1-1', tz='UTC'), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        ts,
+        'cacheable-base',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'i-am-cacheable',
+        '(series "cacheable-base")',
+    )
+    tsh.register_formula(
+        engine,
+        'i-am-not-cacheable',
+        '(series "no-there")',
+        reject_unknown=False
+    )
+
+    res = client.get('/cacheable-formulas')
+    assert res.json == ['i-am-cacheable']

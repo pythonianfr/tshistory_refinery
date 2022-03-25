@@ -296,6 +296,13 @@ def refinery_bp(tsa):
 
         return make_response('', 201)
 
+    @bp.route('/cacheable-formulas')
+    def cacheable_formulas():
+        with tsa.engine.begin() as cn:
+            return jsonify(
+                tsa.tsh.cacheable_formulas(cn)
+            )
+
     # /formula cache
 
     return bp
