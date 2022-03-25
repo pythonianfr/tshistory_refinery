@@ -112,6 +112,7 @@ type Msg
     | PolicyField String String
     | CreatePolicy
     | CreatedPolicy (Result Http.Error String)
+    | CancelPolicyCreation
 
 
 update_policy_field policy fieldname value =
@@ -178,6 +179,9 @@ update msg model =
         CreatedPolicy (Err err) ->
             let emsg = unwraperror err in
             nocmd { model | adderror = emsg }
+
+        CancelPolicyCreation ->
+            nocmd { model | adderror = "", adding = Nothing }
 
 
 viewdeletepolicyaction model policy =
@@ -249,6 +253,11 @@ newpolicy model =
                     , HE.onClick CreatePolicy
                     ]
                [ H.text "create" ]
+         , H.button [ HA.class "btn btn-warning"
+                    , HA.type_ "button"
+                    , HE.onClick CancelPolicyCreation
+                    ]
+               [ H.text "cancel" ]
          , H.p [] [ H.text model.adderror ]
          ]
         )
