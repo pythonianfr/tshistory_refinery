@@ -348,12 +348,11 @@ def test_cacheable_formulas(client, tsh, engine):
     })
     assert res.status_code == 201
 
-    cache.set_policy(
-        engine,
-        'test-cacheable',
-        'i-am-cacheable', # not any longer :)
-        namespace=tsh.namespace
-    )
+    res = client.put_json('/set-series-policy', {
+        'policyname': 'test-cacheable',
+        'seriesname': 'i-am-cacheable'
+    })
+    assert res.status_code == 201
 
     res = client.get('/cacheable-formulas')
     assert res.json == []

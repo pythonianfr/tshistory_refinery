@@ -310,6 +310,23 @@ def refinery_bp(tsa):
             cache.policy_series(engine, name)
         )
 
+    class set_policy_args(_args):
+        types = {
+            'seriesname': str,
+            'policyname': str,
+        }
+
+    @bp.route('/set-series-policy', methods=['PUT'])
+    def set_series_policy():
+        args = policy_args(request.json)
+        with engine.begin() as cn:
+            cache.set_policy(
+                cn,
+                args.policyname,
+                args.seriesname
+            )
+        return make_response('', 201)
+
     # /formula cache
 
     return bp
