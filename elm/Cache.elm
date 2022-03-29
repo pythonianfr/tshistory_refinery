@@ -42,6 +42,7 @@ type alias Model =
     , adding : Maybe Policy
     , adderror : String
     , linking : Maybe Policy
+    , cachedseries : List String
     }
 
 
@@ -66,6 +67,18 @@ getpolicies model =
     { url = UB.crossOrigin model.baseurl
           [ "policies" ] [ ]
     , expect = Http.expectJson GotPolicies policiesdecoder
+    }
+
+
+seriesdecoder =
+    D.list D.string
+
+
+getcachedseries model policy =
+    Http.get
+    { url = UB.crossOrigin model.baseurl
+          [ "policy-series/" ++ policy.name ] [ ]
+    , expect = Http.expectJson GotCachedSeries seriesdecoder
     }
 
 
@@ -115,6 +128,7 @@ type Msg
     | CreatedPolicy (Result Http.Error String)
     | CancelPolicyCreation
     | LinkPolicySeries Policy
+    | GotCachedSeries (Result Http.Error (List String))
 
 
 update_policy_field policy fieldname value =
@@ -187,7 +201,15 @@ update msg model =
 
         -- link to series
         LinkPolicySeries policy ->
-            nocmd { model | linking = Just policy }
+            ( { model | linking = Just policy }
+            , getcachedseries model policy
+            )
+
+        GotCachedSeries (Ok cachedseries) ->
+            nocmd { model | cachedseries = cachedseries }
+
+        GotCachedSeries (Err err) ->
+            nocmd <| model
 
 
 viewdeletepolicyaction model policy =
@@ -281,8 +303,19 @@ newpolicy model =
         )
 
 
+viewcachedseries name =
+    H.li [] [ H.text name ]
+
+
+viewcachedserieslist model =
+    H.ul [] <| List.map viewcachedseries model.cachedseries
+
+
 viewlinkpolicy model policy =
-    H.div [] [ H.p [] [ H.text "Link policy" ] ]
+    H.div []
+        [ H.p [] [ H.text "Link policy" ]
+        , viewcachedserieslist model
+        ]
 
 
 viewpolicies model =
@@ -322,7 +355,7 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            let model = Model input.baseurl [] Nothing Nothing "" Nothing in
+            let model = Model input.baseurl [] Nothing Nothing "" Nothing [] in
             ( model
             , getpolicies model
             )
