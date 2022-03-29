@@ -357,3 +357,7 @@ def test_cacheable_formulas(client, tsh, engine):
 
     res = client.get('/cacheable-formulas')
     assert res.json == []
+
+    res = client.get('/policy-series/test-cacheable')
+    assert res.json == ['i-am-cacheable']
+

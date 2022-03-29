@@ -303,6 +303,13 @@ def refinery_bp(tsa):
                 tsa.tsh.cacheable_formulas(cn)
             )
 
+
+    @bp.route('/policy-series/<name>')
+    def policy_series(name):
+        return jsonify(
+            cache.policy_series(engine, name)
+        )
+
     # /formula cache
 
     return bp

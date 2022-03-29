@@ -648,6 +648,13 @@ def test_cache_coherency(engine, tsa):
     )
     assert not tsh.cache.exists(engine, 'invalidate-me')
 
+    names =  cache.policy_series(
+        engine,
+        'policy-4',
+        namespace=tsh.namespace
+    )
+    assert names == ['invalidate-me']
+
     cache.refresh(
         engine,
         tsa,
