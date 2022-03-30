@@ -47,6 +47,7 @@ type alias Model =
     , cachedseries : List String
     , freeseries : List String
     , addtocache : Set String
+    , removefromcache : Set String
     }
 
 
@@ -144,6 +145,7 @@ type Msg
     | GotCachedSeries (Result Http.Error (List String))
     | GotFreeSeries (Result Http.Error (List String))
     | AddToCache String
+    | RemoveFromCache String
 
 
 update_policy_field policy fieldname value =
@@ -238,7 +240,15 @@ update msg model =
         AddToCache series ->
             nocmd <| { model
                          | addtocache = Set.insert series model.addtocache
+                         , removefromcache = Set.remove series model.removefromcache
                          , freeseries = LE.remove series model.freeseries
+                     }
+
+        RemoveFromCache series ->
+            nocmd <| { model
+                         | addtocache = Set.remove series model.addtocache
+                         , removefromcache = Set.insert series model.removefromcache
+                         , freeseries = List.sort <| List.append model.freeseries [ series ]
                      }
 
 
@@ -334,7 +344,14 @@ newpolicy model =
 
 
 viewcachedseries name =
-    H.li [] [ H.text name ]
+    H.li []
+        [ H.text name
+        , H.button [ HA.class "btn btn-success"
+                    , HA.type_ "button"
+                    , HE.onClick <| RemoveFromCache name
+                    ]
+            [ H.text "remove from cache" ]
+        ]
 
 
 viewcachedserieslist model =
@@ -410,7 +427,7 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            let model = Model input.baseurl [] Nothing Nothing "" Nothing [] [] Set.empty in
+            let model = Model input.baseurl [] Nothing Nothing "" Nothing [] [] Set.empty Set.empty in
             ( model
             , getpolicies model
             )
