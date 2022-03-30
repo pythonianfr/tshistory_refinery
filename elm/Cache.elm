@@ -146,6 +146,7 @@ type Msg
     | GotFreeSeries (Result Http.Error (List String))
     | AddToCache String
     | RemoveFromCache String
+    | CancelLink
 
 
 update_policy_field policy fieldname value =
@@ -249,6 +250,15 @@ update msg model =
                          | addtocache = Set.remove series model.addtocache
                          , removefromcache = Set.insert series model.removefromcache
                          , freeseries = List.sort <| List.append model.freeseries [ series ]
+                     }
+
+        CancelLink ->
+            nocmd <| { model
+                         | addtocache = Set.empty
+                         , removefromcache = Set.empty
+                         , cachedseries = []
+                         , freeseries = []
+                         , linking = Nothing
                      }
 
 
@@ -387,6 +397,11 @@ viewlinkpolicy model policy =
         [ H.p [] [ H.text "Link policy" ]
         , viewcachedserieslist model
         , viewfreeserieslist model
+        , H.button [ HA.class "btn btn-warning"
+                   , HA.type_ "button"
+                   , HE.onClick CancelLink
+                   ]
+            [ H.text "cancel" ]
         ]
 
 
