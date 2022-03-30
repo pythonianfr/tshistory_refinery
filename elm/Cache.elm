@@ -328,7 +328,10 @@ viewcachedseries name =
 
 
 viewcachedserieslist model =
-    H.ul [] <| List.map viewcachedseries model.cachedseries
+    H.div []
+        [ H.h3 [] [ H.text "cached series" ]
+        , H.ul [] <| List.map viewcachedseries model.cachedseries
+        ]
 
 
 viewfreeseries name =
@@ -336,7 +339,10 @@ viewfreeseries name =
 
 
 viewfreeserieslist model =
-    H.ul [] <| List.map viewfreeseries model.freeseries
+    H.div []
+        [ H.h3 [] [ H.text "free series" ]
+        , H.ul [] <| List.map viewfreeseries model.freeseries
+        ]
 
 
 viewlinkpolicy model policy =
