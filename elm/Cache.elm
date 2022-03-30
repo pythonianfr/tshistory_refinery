@@ -95,6 +95,33 @@ getfreeseries model policy =
     }
 
 
+setcache model policyname seriesname =
+    let payload_encoder =
+            [ ("policyname" , E.string policyname)
+            , ("seriesname", E.string seriesname)
+            ]
+    in Http.request
+    { url = UB.crossOrigin model.baseurl [ "set-series-policy" ] [ ]
+    , method = "PUT"
+    , headers = []
+    , body = Http.jsonBody <| E.object payload_encoder
+    , expect = Http.expectString CacheWasSet
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
+unsetcache model name =
+    Http.request
+    { url = UB.crossOrigin model.baseurl [ "unset-series-policy/" ++ name ] [ ]
+    , method = "PUT"
+    , headers = []
+    , body = Http.emptyBody
+    , expect = Http.expectString CacheWasUnset
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
 
 sendpolicy model policy =
     let policy_encoder =
@@ -147,6 +174,9 @@ type Msg
     | AddToCache String
     | RemoveFromCache String
     | CancelLink
+    | ValidateLink
+    | CacheWasSet (Result Http.Error String)
+    | CacheWasUnset (Result Http.Error String)
 
 
 update_policy_field policy fieldname value =
@@ -260,6 +290,24 @@ update msg model =
                          , freeseries = []
                          , linking = Nothing
                      }
+
+        ValidateLink ->
+            case model.linking of
+                Nothing -> nocmd model
+                Just policy ->
+                    let
+                        set = setcache model policy.name
+                        unset = unsetcache model
+                    in
+                    ( model
+                    , Cmd.batch <| List.concat
+                        [ List.map set (Set.toList model.addtocache)
+                        , List.map unset (Set.toList model.removefromcache)
+                        ]
+                    )
+
+        CacheWasSet _ -> nocmd model
+        CacheWasUnset _ -> nocmd model
 
 
 viewdeletepolicyaction model policy =
@@ -397,6 +445,15 @@ viewlinkpolicy model policy =
         [ H.p [] [ H.text "Link policy" ]
         , viewcachedserieslist model
         , viewfreeserieslist model
+        , if (not <| Set.isEmpty model.addtocache) ||
+             (not <| Set.isEmpty model.removefromcache) then
+              H.button [ HA.class "btn btn-success"
+                   , HA.type_ "button"
+                   , HE.onClick ValidateLink
+                   ]
+            [ H.text "apply" ]
+          else
+              H.span [] []
         , H.button [ HA.class "btn btn-warning"
                    , HA.type_ "button"
                    , HE.onClick CancelLink
