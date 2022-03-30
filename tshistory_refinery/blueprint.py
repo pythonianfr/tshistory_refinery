@@ -327,6 +327,12 @@ def refinery_bp(tsa):
             )
         return make_response('', 201)
 
+    @bp.route('/unset-series-policy/<name>', methods=['PUT'])
+    def unset_series_policy(name):
+        with engine.begin() as cn:
+            tsa.tsh.unset_cache_policy(cn, name)
+        return make_response('', 204)
+
     # /formula cache
 
     return bp

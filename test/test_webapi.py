@@ -360,3 +360,12 @@ def test_cacheable_formulas(client, tsh, engine):
     res = client.get('/policy-series/test-cacheable')
     assert res.json == ['i-am-cacheable']
 
+    # unset cache policy
+    res = client.put('/unset-series-policy/i-am-cacheable')
+    assert res.status_code == 204
+
+    res = client.get('/cacheable-formulas')
+    assert res.json == ['i-am-cacheable']
+
+    res = client.get('/policy-series/test-cacheable')
+    assert res.json == []
