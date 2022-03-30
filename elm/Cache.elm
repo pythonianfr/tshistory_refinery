@@ -269,16 +269,24 @@ update msg model =
             nocmd <| model
 
         AddToCache series ->
+            let waspending = Set.member series model.removefromcache in
             nocmd <| { model
-                         | addtocache = Set.insert series model.addtocache
+                         | addtocache = if waspending then
+                                            model.addtocache
+                                        else
+                                            Set.insert series model.addtocache
                          , removefromcache = Set.remove series model.removefromcache
                          , freeseries = LE.remove series model.freeseries
                      }
 
         RemoveFromCache series ->
+            let waspending = Set.member series model.addtocache in
             nocmd <| { model
                          | addtocache = Set.remove series model.addtocache
-                         , removefromcache = Set.insert series model.removefromcache
+                         , removefromcache = if waspending then
+                                                 model.removefromcache
+                                             else
+                                                 Set.insert series model.removefromcache
                          , freeseries = List.sort <| List.append model.freeseries [ series ]
                      }
 
