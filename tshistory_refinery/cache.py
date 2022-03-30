@@ -191,6 +191,20 @@ def set_policy(cn, policy_name, series_name, namespace='tsh'):
     )
 
 
+def unset_policy(cn, series_name, namespace='tsh'):
+    q = (
+        f'delete from "{namespace}".cache_policy_series '
+        f'where series_id in ('
+        f' select id from "{namespace}".formula where '
+        f' name = %(name)s'
+        f')'
+    )
+    cn.execute(
+        q,
+        name=series_name
+    )
+
+
 def ready(cn, series_name, namespace='tsh'):
     """ Return the cache readiness for a series """
     q = (

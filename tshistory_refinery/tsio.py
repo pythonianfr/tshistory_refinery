@@ -102,6 +102,11 @@ class timeseries(xlts):
             self.cache.delete(cn, name)
 
     @tx
+    def unset_cache_policy(self, cn, name):
+        cache.unset_policy(cn, name, namespace=self.namespace)
+        self.cache.delete(cn, name)
+
+    @tx
     def cacheable_formulas(self, cn, unlinked=True):
         q = select(
             'f.name', 'f.text'

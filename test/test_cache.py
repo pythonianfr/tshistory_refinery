@@ -196,6 +196,13 @@ def test_cache_a_series(engine, tsa):
     names = cache.policy_series(engine, 'a-policy', namespace=tsh.namespace)
     assert len(names) == 2
 
+    tsh.unset_cache_policy(
+        engine,
+        'over-ground-0'
+    )
+    names = cache.policy_series(engine, 'a-policy', namespace=tsh.namespace)
+    assert len(names) == 1
+
 
 def test_cache_refresh(engine, tsa):
     tsh = tsa.tsh
