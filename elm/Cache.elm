@@ -277,6 +277,7 @@ update msg model =
                                             Set.insert series model.addtocache
                          , removefromcache = Set.remove series model.removefromcache
                          , freeseries = LE.remove series model.freeseries
+                         , cachedseries = List.sort <| List.append model.cachedseries [ series ]
                      }
 
         RemoveFromCache series ->
@@ -288,6 +289,7 @@ update msg model =
                                              else
                                                  Set.insert series model.removefromcache
                          , freeseries = List.sort <| List.append model.freeseries [ series ]
+                         , cachedseries = LE.remove series model.cachedseries
                      }
 
         CancelLink ->
@@ -421,12 +423,9 @@ viewcachedseries name =
 
 
 viewcachedserieslist model =
-    let
-        allcached = List.sort <| List.append model.cachedseries (Set.toList model.addtocache)
-    in
     H.div []
         [ H.h3 [] [ H.text "cached series" ]
-        , H.ul [] <| List.map viewcachedseries allcached
+        , H.ul [] <| List.map viewcachedseries model.cachedseries
         ]
 
 
