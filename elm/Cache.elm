@@ -43,6 +43,7 @@ type alias Model =
     , adderror : String
     , linking : Maybe Policy
     , cachedseries : List String
+    , freeseries : List String
     }
 
 
@@ -80,6 +81,15 @@ getcachedseries model policy =
           [ "policy-series/" ++ policy.name ] [ ]
     , expect = Http.expectJson GotCachedSeries seriesdecoder
     }
+
+
+getfreeseries model policy =
+    Http.get
+    { url = UB.crossOrigin model.baseurl
+          [ "cacheable-formulas" ] [ ]
+    , expect = Http.expectJson GotFreeSeries seriesdecoder
+    }
+
 
 
 sendpolicy model policy =
@@ -129,6 +139,7 @@ type Msg
     | CancelPolicyCreation
     | LinkPolicySeries Policy
     | GotCachedSeries (Result Http.Error (List String))
+    | GotFreeSeries (Result Http.Error (List String))
 
 
 update_policy_field policy fieldname value =
@@ -202,13 +213,22 @@ update msg model =
         -- link to series
         LinkPolicySeries policy ->
             ( { model | linking = Just policy }
-            , getcachedseries model policy
+            , Cmd.batch
+                [ getcachedseries model policy
+                , getfreeseries model policy
+                ]
             )
 
         GotCachedSeries (Ok cachedseries) ->
             nocmd { model | cachedseries = cachedseries }
 
         GotCachedSeries (Err err) ->
+            nocmd <| model
+
+        GotFreeSeries (Ok freeseries) ->
+            nocmd { model | freeseries = freeseries }
+
+        GotFreeSeries (Err err) ->
             nocmd <| model
 
 
@@ -311,10 +331,19 @@ viewcachedserieslist model =
     H.ul [] <| List.map viewcachedseries model.cachedseries
 
 
+viewfreeseries name =
+    H.li [] [ H.text name ]
+
+
+viewfreeserieslist model =
+    H.ul [] <| List.map viewfreeseries model.freeseries
+
+
 viewlinkpolicy model policy =
     H.div []
         [ H.p [] [ H.text "Link policy" ]
         , viewcachedserieslist model
+        , viewfreeserieslist model
         ]
 
 
@@ -355,7 +384,7 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            let model = Model input.baseurl [] Nothing Nothing "" Nothing [] in
+            let model = Model input.baseurl [] Nothing Nothing "" Nothing [] [] in
             ( model
             , getpolicies model
             )
