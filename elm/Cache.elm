@@ -7,6 +7,8 @@ import Html.Events as HE
 import Http
 import Json.Decode as D
 import Json.Encode as E
+import List.Extra as LE
+import Set exposing (..)
 import Url.Builder as UB
 
 
@@ -44,6 +46,7 @@ type alias Model =
     , linking : Maybe Policy
     , cachedseries : List String
     , freeseries : List String
+    , addtocache : Set String
     }
 
 
@@ -140,6 +143,7 @@ type Msg
     | LinkPolicySeries Policy
     | GotCachedSeries (Result Http.Error (List String))
     | GotFreeSeries (Result Http.Error (List String))
+    | AddToCache String
 
 
 update_policy_field policy fieldname value =
@@ -230,6 +234,12 @@ update msg model =
 
         GotFreeSeries (Err err) ->
             nocmd <| model
+
+        AddToCache series ->
+            nocmd <| { model
+                         | addtocache = Set.insert series model.addtocache
+                         , freeseries = LE.remove series model.freeseries
+                     }
 
 
 viewdeletepolicyaction model policy =
@@ -328,14 +338,24 @@ viewcachedseries name =
 
 
 viewcachedserieslist model =
+    let
+        allcached = List.sort <| List.append model.cachedseries (Set.toList model.addtocache)
+    in
     H.div []
         [ H.h3 [] [ H.text "cached series" ]
-        , H.ul [] <| List.map viewcachedseries model.cachedseries
+        , H.ul [] <| List.map viewcachedseries allcached
         ]
 
 
 viewfreeseries name =
-    H.li [] [ H.text name ]
+    H.li []
+        [ H.text name
+        , H.button [ HA.class "btn btn-success"
+                    , HA.type_ "button"
+                    , HE.onClick <| AddToCache name
+                    ]
+            [ H.text "add to cache" ]
+        ]
 
 
 viewfreeserieslist model =
@@ -390,7 +410,7 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            let model = Model input.baseurl [] Nothing Nothing "" Nothing [] [] in
+            let model = Model input.baseurl [] Nothing Nothing "" Nothing [] [] Set.empty in
             ( model
             , getpolicies model
             )
