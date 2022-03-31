@@ -512,7 +512,18 @@ main : Program Input Model Msg
 main =
     let
         init input =
-            let model = Model input.baseurl [] Nothing Nothing "" Nothing [] [] Set.empty Set.empty in
+            let model = Model
+                        input.baseurl
+                        []
+                        Nothing
+                        Nothing
+                        ""
+                        Nothing
+                        []
+                        []
+                        Set.empty
+                        Set.empty
+            in
             ( model
             , getpolicies model
             )
