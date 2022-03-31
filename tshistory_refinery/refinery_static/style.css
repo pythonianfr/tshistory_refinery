@@ -58,3 +58,21 @@ section:hover {
 .gridded_policy:hover {
     background-color: lightblue;
 }
+
+
+.link_policy {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 1rem;
+    grid-auto-rows: 5fr;
+    align-items: top;
+}
+
+.link_policy ul {
+    list-style: none;
+    padding-left: 1rem;
+}
+
+.link_policy button {
+    margin-right: 1rem;
+}

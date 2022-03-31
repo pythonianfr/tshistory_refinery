@@ -443,20 +443,21 @@ filterbywords filterme query =
 
 viewcachedseries name =
     H.li []
-        [ H.text name
-        , H.button [ HA.class "btn btn-success"
+        [ H.button [ HA.class "btn btn-success"
                     , HA.type_ "button"
                     , HE.onClick <| RemoveFromCache name
                     ]
-            [ H.text "remove from cache" ]
+            [ H.text "remove" ]
+        , H.text name
         ]
 
 
 viewcachedserieslist model =
     H.div []
-        [ H.h3 [] [ H.text "cached series" ]
+        [ H.h5 [] [ H.text "Cached series" ]
         , H.p [] [ H.input [ HA.class "form-control"
                            , HE.onInput CachedSeriesQuery
+                           , HA.placeholder "type here to filter the series list"
                            ] []
                  ]
         , H.ul [] <|
@@ -468,20 +469,21 @@ viewcachedserieslist model =
 
 viewfreeseries name =
     H.li []
-        [ H.text name
-        , H.button [ HA.class "btn btn-success"
+        [ H.button [ HA.class "btn btn-success"
                     , HA.type_ "button"
                     , HE.onClick <| AddToCache name
                     ]
-            [ H.text "add to cache" ]
+            [ H.text "add" ]
+        , H.text name
         ]
 
 
 viewfreeserieslist model =
-    H.div []
-        [ H.h3 [] [ H.text "free series" ]
+    H.div [ ]
+        [ H.h5 [] [ H.text "Free series" ]
         , H.p [] [ H.input [ HA.class "form-control"
                            , HE.onInput FreeSeriesQuery
+                           , HA.placeholder "type here to filter the series list"
                            ] []
                  ]
         , H.ul [] <|
@@ -508,8 +510,10 @@ viewlinkpolicy model policy =
                    , HE.onClick CancelLink
                    ]
             [ H.text "cancel" ]
-        , viewcachedserieslist model
-        , viewfreeserieslist model
+        , H.div [ HA.class "link_policy" ]
+            [ viewcachedserieslist model
+            , viewfreeserieslist model
+            ]
         ]
 
 
