@@ -368,24 +368,24 @@ viewlinkseriesaction model policy =
                , HA.type_ "button"
                , HE.onClick (LinkPolicySeries policy)
                ]
-          [ H.text "link to formulas" ]
+          [ H.text "formulas" ]
     ]
 
 
 viewpolicy model policy =
-    H.li [] (
-        [ H.p [] [ H.text <| "name → " ++ policy.name ]
-        , H.p [] [ H.text <| "ready → " ++ if policy.ready then "true" else "false" ]
-        , H.p [] [ H.text <| "initial rev date → " ++ policy.initial_revdate ]
-        , H.p [] [ H.text <| "from date → " ++ policy.from_date ]
-        , H.p [] [ H.text <| "look before → " ++ policy.look_before ]
-        , H.p [] [ H.text <| "look after → " ++ policy.look_after ]
-        , H.p [] [ H.text <| "rev date rule → " ++ policy.revdate_rule ]
-        , H.p [] [ H.text <| "schedule rule → " ++ policy.schedule_rule ]
+    H.li [  HA.class "gridded_policy" ]
+        [ H.span [] [ H.text <| policy.name ]
+        , H.span [] [ H.text <| if policy.ready then "true" else "false" ]
+        , H.span [] [ H.text <| policy.initial_revdate ]
+        , H.span [] [ H.text <| policy.from_date ]
+        , H.span [] [ H.text <| policy.look_before ]
+        , H.span [] [ H.text <| policy.look_after ]
+        , H.span [] [ H.text <| policy.revdate_rule ]
+        , H.span [] [ H.text <| policy.schedule_rule ]
+        , H.div [] ([] ++ viewlinkseriesaction model policy ++
+                    viewdeletepolicyaction model policy
+                   )
         ]
-            ++ (viewlinkseriesaction model policy)
-            ++ (viewdeletepolicyaction model policy)
-            )
 
 
 newpolicy model =
@@ -513,6 +513,17 @@ viewlinkpolicy model policy =
         ]
 
 
+viewpoliciesheader =
+    let columns =
+            [ "name", "ready", "initial revision date"
+            , "from date", "look before", "look after"
+            , "rev date rule", "schedule rule", "actions"
+            ]
+    in [ H.li [ HA.class "gridded_policy" ]
+             <| List.map (\item -> H.span [] [ H.text item ]) columns
+       ]
+
+
 viewpolicies model =
     case model.adding of
         Nothing ->
@@ -524,7 +535,10 @@ viewpolicies model =
                                    , HE.onClick NewPolicy
                                    ]
                               [ H.text "create a cache policy" ]
-                        , H.ul [] <| List.map (viewpolicy model) model.policies
+                        , H.ul [ HA.class "policy_list" ]
+                            <| (++)
+                                viewpoliciesheader
+                                <| List.map (viewpolicy model) model.policies
                         ]
                 Just policy ->
                     viewlinkpolicy model policy

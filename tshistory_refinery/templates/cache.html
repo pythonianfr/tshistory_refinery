@@ -10,6 +10,7 @@
     </head>
     <body>
         <div id="tshistory-cache"></div>
+        <link rel="stylesheet" href="{{ url_for('refinery.static', filename='style.css') }}"/>
         <script src="{{ url_for('refinery.static', filename='cache.js') }}"></script>
         <script>
           var app = Elm.Cache.init({
