@@ -400,32 +400,31 @@ newpolicy model =
             ]
 
         makeinput (fieldname, displayname, placeholder) =
-            [ H.input
+            [ H.label
+                [ HA.for fieldname]
+                [ H.text displayname ]
+            , H.input
                 [ HA.class "form-control"
                 , HA.placeholder placeholder
                 , HE.onInput  (PolicyField fieldname)
                 ] []
-            , H.label
-                [ HA.class "form-check-label"
-                , HA.for fieldname]
-                [ H.text displayname ]
             ]
     in
-    H.div [] <| ( List.concat <| List.map makeinput inputs ) ++
-        (
-         [ H.button [ HA.class "btn btn-success"
-                    , HA.type_ "button"
-                    , HE.onClick CreatePolicy
-                    ]
-               [ H.text "create" ]
-         , H.button [ HA.class "btn btn-warning"
-                    , HA.type_ "button"
-                    , HE.onClick CancelPolicyCreation
-                    ]
-               [ H.text "cancel" ]
-         , H.p [] [ H.text model.adderror ]
-         ]
-        )
+    H.div []
+        [ H.h3 [] [ H.text "Create a fresh formula cache policy" ]
+        , H.button [ HA.class "btn btn-success"
+                   , HA.type_ "button"
+                   , HE.onClick CreatePolicy
+                   ]
+            [ H.text "create" ]
+        , H.button [ HA.class "btn btn-warning"
+                   , HA.type_ "button"
+                   , HE.onClick CancelPolicyCreation
+                   ]
+            [ H.text "cancel" ]
+        , H.p [] [ H.text model.adderror ]
+        , H.form [] <| ( List.concat <| List.map makeinput inputs )
+        ]
 
 
 filterbywords filterme query =
