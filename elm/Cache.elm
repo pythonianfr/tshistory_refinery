@@ -45,6 +45,7 @@ type alias Model =
     , adderror : String
     , linking : Maybe Policy
     , cachedseries : List String
+    , cachedseriesquery : String
     , freeseries : List String
     , addtocache : Set String
     , removefromcache : Set String
@@ -173,6 +174,7 @@ type Msg
     | GotFreeSeries (Result Http.Error (List String))
     | AddToCache String
     | RemoveFromCache String
+    | CachedSeriesQuery String
     | CancelLink
     | ValidateLink
     | CacheWasSet (Result Http.Error String)
@@ -292,6 +294,9 @@ update msg model =
                          , cachedseries = LE.remove series model.cachedseries
                      }
 
+        CachedSeriesQuery filter ->
+            nocmd { model | cachedseriesquery = filter }
+
         CancelLink ->
             nocmd <| { model
                          | addtocache = Set.empty
@@ -313,6 +318,7 @@ update msg model =
                           | addtocache = Set.empty
                           , removefromcache = Set.empty
                           , cachedseries = []
+                          , cachedseriesquery = ""
                           , freeseries = []
                           , linking = Nothing
                       }
@@ -429,9 +435,24 @@ viewcachedseries name =
 
 
 viewcachedserieslist model =
+    let
+        querywords =
+            String.words model.cachedseriesquery
+        filterstep word wordlist =
+            List.filter (\item -> String.contains word item) wordlist
+        filterall words wordlist =
+            case words of
+                [] -> wordlist
+                head::tail -> filterall tail <| filterstep head wordlist
+        filtered = filterall querywords model.cachedseries
+    in
     H.div []
         [ H.h3 [] [ H.text "cached series" ]
-        , H.ul [] <| List.map viewcachedseries model.cachedseries
+        , H.p [] [ H.input [ HA.class "form-control"
+                           , HE.onInput CachedSeriesQuery
+                           ] []
+                 ]
+        , H.ul [] <| List.map viewcachedseries filtered
         ]
 
 
@@ -520,6 +541,7 @@ main =
                         ""
                         Nothing
                         []
+                        ""
                         []
                         Set.empty
                         Set.empty
