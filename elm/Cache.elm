@@ -309,7 +309,13 @@ update msg model =
                         set = setcache model policy.name
                         unset = unsetcache model
                     in
-                    ( model
+                    ( { model
+                          | addtocache = Set.empty
+                          , removefromcache = Set.empty
+                          , cachedseries = []
+                          , freeseries = []
+                          , linking = Nothing
+                      }
                     , Cmd.batch <| List.concat
                         [ List.map set (Set.toList model.addtocache)
                         , List.map unset (Set.toList model.removefromcache)
