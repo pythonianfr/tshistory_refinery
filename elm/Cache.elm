@@ -47,6 +47,7 @@ type alias Model =
     , cachedseries : List String
     , cachedseriesquery : String
     , freeseries : List String
+    , freeseriesquery : String
     , addtocache : Set String
     , removefromcache : Set String
     }
@@ -175,6 +176,7 @@ type Msg
     | AddToCache String
     | RemoveFromCache String
     | CachedSeriesQuery String
+    | FreeSeriesQuery String
     | CancelLink
     | ValidateLink
     | CacheWasSet (Result Http.Error String)
@@ -296,6 +298,9 @@ update msg model =
 
         CachedSeriesQuery filter ->
             nocmd { model | cachedseriesquery = filter }
+
+        FreeSeriesQuery filter ->
+            nocmd { model | freeseriesquery = filter }
 
         CancelLink ->
             nocmd <| { model
@@ -423,6 +428,19 @@ newpolicy model =
         )
 
 
+filterbywords filterme query =
+    let
+        querywords =
+            String.words query
+        filterstep word wordlist =
+            List.filter (\item -> String.contains word item) wordlist
+        filterall words wordlist =
+            case words of
+                [] -> wordlist
+                head::tail -> filterall tail <| filterstep head wordlist
+    in filterall querywords filterme
+
+
 viewcachedseries name =
     H.li []
         [ H.text name
@@ -435,24 +453,16 @@ viewcachedseries name =
 
 
 viewcachedserieslist model =
-    let
-        querywords =
-            String.words model.cachedseriesquery
-        filterstep word wordlist =
-            List.filter (\item -> String.contains word item) wordlist
-        filterall words wordlist =
-            case words of
-                [] -> wordlist
-                head::tail -> filterall tail <| filterstep head wordlist
-        filtered = filterall querywords model.cachedseries
-    in
     H.div []
         [ H.h3 [] [ H.text "cached series" ]
         , H.p [] [ H.input [ HA.class "form-control"
                            , HE.onInput CachedSeriesQuery
                            ] []
                  ]
-        , H.ul [] <| List.map viewcachedseries filtered
+        , H.ul [] <|
+            List.map
+                viewcachedseries
+                (filterbywords model.cachedseries model.cachedseriesquery)
         ]
 
 
@@ -470,7 +480,14 @@ viewfreeseries name =
 viewfreeserieslist model =
     H.div []
         [ H.h3 [] [ H.text "free series" ]
-        , H.ul [] <| List.map viewfreeseries model.freeseries
+        , H.p [] [ H.input [ HA.class "form-control"
+                           , HE.onInput FreeSeriesQuery
+                           ] []
+                 ]
+        , H.ul [] <|
+            List.map
+                viewfreeseries
+                (filterbywords model.freeseries model.freeseriesquery)
         ]
 
 
@@ -543,6 +560,7 @@ main =
                         []
                         ""
                         []
+                        ""
                         Set.empty
                         Set.empty
             in
