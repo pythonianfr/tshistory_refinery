@@ -493,9 +493,7 @@ viewfreeserieslist model =
 
 viewlinkpolicy model policy =
     H.div []
-        [ H.p [] [ H.text "Link policy" ]
-        , viewcachedserieslist model
-        , viewfreeserieslist model
+        [ H.h3 [] [ H.text ("Link policy " ++ policy.name) ]
         , if (not <| Set.isEmpty model.addtocache) ||
              (not <| Set.isEmpty model.removefromcache) then
               H.button [ HA.class "btn btn-success"
@@ -510,6 +508,8 @@ viewlinkpolicy model policy =
                    , HE.onClick CancelLink
                    ]
             [ H.text "cancel" ]
+        , viewcachedserieslist model
+        , viewfreeserieslist model
         ]
 
 
