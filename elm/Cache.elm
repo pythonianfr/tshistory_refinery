@@ -539,14 +539,20 @@ filterbywords filterme query =
     in filterall querywords filterme
 
 
-viewcachedseries name =
+viewcachedseries model name =
     H.li []
         [ H.button [ HA.class "btn btn-success"
                     , HA.type_ "button"
                     , HE.onClick <| RemoveFromCache name
                     ]
             [ H.text "remove" ]
-        , H.text name
+        , H.a
+            [ HA.href <| UB.crossOrigin model.baseurl
+                  [ "tsinfo" ]
+                  [ UB.string "name" name ]
+            , HA.target "_blank"
+            ]
+            [ H.text name ]
         ]
 
 
@@ -560,7 +566,7 @@ viewcachedserieslist model =
                  ]
         , H.ul [] <|
             List.map
-                viewcachedseries
+                (viewcachedseries model)
                 (filterbywords model.cachedseries model.cachedseriesquery)
         ]
 
