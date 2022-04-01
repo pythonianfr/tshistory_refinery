@@ -429,18 +429,14 @@ viewdeletepolicyaction model policy =
                    else askdelete
 
 
-viewlinkseriesaction model policy =
-    [ H.button [ HA.class "btn btn-primary"
-               , HA.type_ "button"
-               , HE.onClick (LinkPolicySeries policy)
-               ]
-          [ H.text "formulas" ]
-    ]
-
-
 viewpolicy model policy =
     H.li [  HA.class "gridded_policy" ]
-        [ H.span [] [ H.text <| policy.name ]
+        [ H.span []
+              [ H.a [ HA.href "#"
+                    , HE.onClick (LinkPolicySeries policy)
+                    ]
+                    [ H.text policy.name ]
+              ]
         , H.span [] [ H.text <| if policy.ready then "true" else "false" ]
         , H.span [] [ H.text <| policy.initial_revdate ]
         , H.span [] [ H.text <| policy.from_date ]
@@ -448,9 +444,7 @@ viewpolicy model policy =
         , H.span [] [ H.text <| policy.look_after ]
         , H.span [] [ H.text <| policy.revdate_rule ]
         , H.span [] [ H.text <| policy.schedule_rule ]
-        , H.div [] ([] ++ viewlinkseriesaction model policy ++
-                    viewdeletepolicyaction model policy
-                   )
+        , H.div [] <| viewdeletepolicyaction model policy
         ]
 
 
