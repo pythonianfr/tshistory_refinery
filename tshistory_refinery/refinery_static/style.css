@@ -76,3 +76,7 @@ section:hover {
 .link_policy button {
     margin-right: 1rem;
 }
+
+.field_error {
+    background: tomato;
+}

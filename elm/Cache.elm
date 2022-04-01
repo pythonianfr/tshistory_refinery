@@ -283,10 +283,12 @@ update msg model =
         ValidatedPolicy (Ok val) ->
             let
                 newmodel =
-                    case D.decodeString policy_error_decoder val of
-                        Ok polerror -> { model | adderror = Just polerror }
-                        Err err -> model
-
+                    if String.startsWith "{}" val
+                    then { model | adderror = Nothing }
+                    else
+                        case D.decodeString policy_error_decoder val of
+                            Ok polerror -> { model | adderror = Just polerror }
+                            Err err -> model
             in
             nocmd newmodel
 
@@ -309,7 +311,11 @@ update msg model =
             nocmd { model | adderrormsg = emsg }
 
         CancelPolicyCreation ->
-            nocmd { model | adderrormsg = "", adding = Nothing }
+            nocmd { model
+                      | adderror = Nothing
+                      , adderrormsg = ""
+                      , adding = Nothing
+                  }
 
         -- link to series
         LinkPolicySeries policy ->
@@ -459,9 +465,43 @@ newpolicy model =
             , ("schedule_rule", "schedule rule", "in crontab format" )
             ]
 
+        -- error display per field
+        haserror fieldname =
+            case model.adderror of
+                Nothing -> False
+                Just polerror ->
+                    case fieldname of
+                        "initial_revdate" ->
+                            case polerror.initial_revdate of
+                                Nothing -> False
+                                _ -> True
+                        "from_date" ->
+                            case polerror.from_date of
+                                Nothing -> False
+                                _ -> True
+                        "look_before" ->
+                            case polerror.look_before of
+                                Nothing -> False
+                                _ -> True
+                        "look_after" ->
+                            case polerror.look_after of
+                                Nothing -> False
+                                _ -> True
+                        "revdate_rule" ->
+                            case polerror.revdate_rule of
+                                Nothing -> False
+                                _ -> True
+                        "schedule_rule" ->
+                            case polerror.schedule_rule of
+                                Nothing -> False
+                                _ -> True
+                        _ -> False
+
         makeinput (fieldname, displayname, placeholder) =
             [ H.label
-                [ HA.for fieldname]
+                ([ HA.for fieldname] ++ if haserror fieldname
+                                        then [ HA.class "field_error" ]
+                                        else [])
                 [ H.text displayname ]
             , H.input
                 [ HA.class "form-control"
@@ -472,10 +512,8 @@ newpolicy model =
 
         creator =
             case model.adderror of
-                Nothing -> []
-                Just polerror -> [ HA.disabled True
-                                 , HE.onClick CreatePolicy
-                                 ]
+                Nothing -> [ HE.onClick CreatePolicy ]
+                Just polerror -> [ HA.disabled True ]
 
     in
     H.div []
