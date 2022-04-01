@@ -37,12 +37,23 @@ type alias Policy =
     }
 
 
+type alias PolicyError =
+    { initial_revdate : Maybe String
+    , from_date : Maybe String
+    , look_before : Maybe String
+    , look_after : Maybe String
+    , revdate_rule : Maybe String
+    , schedule_rule : Maybe String
+    }
+
+
 type alias Model =
     { baseurl : String
     , policies : List Policy
     , deleting : Maybe String
     , adding : Maybe Policy
-    , adderror : String
+    , adderror : Maybe PolicyError
+    , adderrormsg : String
     , linking : Maybe Policy
     , cachedseries : List String
     , cachedseriesquery : String
@@ -63,6 +74,16 @@ policydecoder =
         (D.field "look_after" D.string)
         (D.field "revdate_rule" D.string)
         (D.field "schedule_rule" D.string)
+
+
+policy_error_decoder =
+    D.map6 PolicyError
+        (D.maybe (D.field "initial_revdate" D.string))
+        (D.maybe (D.field "from_date" D.string))
+        (D.maybe (D.field "look_before" D.string))
+        (D.maybe (D.field "look_after" D.string))
+        (D.maybe (D.field "revdate_rule" D.string))
+        (D.maybe (D.field "schedule_rule" D.string))
 
 
 policiesdecoder =
@@ -125,6 +146,26 @@ unsetcache model name =
     }
 
 
+validatepolicy model policy =
+    let policy_encoder =
+            [ ("initial_revdate", E.string policy.initial_revdate)
+            , ("from_date", E.string policy.from_date)
+            , ("look_before", E.string policy.look_before)
+            , ("look_after", E.string policy.look_after)
+            , ("revdate_rule", E.string policy.revdate_rule)
+            , ("schedule_rule", E.string policy.schedule_rule)
+            ]
+    in Http.request
+    { url = UB.crossOrigin model.baseurl [ "validate-policy" ] [ ]
+    , method = "PUT"
+    , headers = []
+    , body = Http.jsonBody <| E.object policy_encoder
+    , expect = Http.expectString ValidatedPolicy
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
 sendpolicy model policy =
     let policy_encoder =
             [ ("name" , E.string policy.name)
@@ -167,6 +208,7 @@ type Msg
     | DeletedPolicy (Result Http.Error String)
     | NewPolicy
     | PolicyField String String
+    | ValidatedPolicy (Result Http.Error String)
     | CreatePolicy
     | CreatedPolicy (Result Http.Error String)
     | CancelPolicyCreation
@@ -231,7 +273,25 @@ update msg model =
             case model.adding of
                 Nothing -> nocmd model
                 Just p ->
-                    nocmd { model | adding = Just <| update_policy_field p field value }
+                    let updated = update_policy_field p field value
+                        newmodel = { model | adding = Just <| updated }
+                    in
+                    ( newmodel
+                    , validatepolicy newmodel updated
+                    )
+
+        ValidatedPolicy (Ok val) ->
+            let
+                newmodel =
+                    case D.decodeString policy_error_decoder val of
+                        Ok polerror -> { model | adderror = Just polerror }
+                        Err err -> model
+
+            in
+            nocmd newmodel
+
+        ValidatedPolicy (Err err) ->
+            nocmd model
 
         CreatePolicy ->
             case model.adding of
@@ -240,16 +300,16 @@ update msg model =
                     ( model, sendpolicy model policy )
 
         CreatedPolicy (Ok _) ->
-            ( { model | adderror = "", adding = Nothing }
+            ( { model | adderrormsg = "", adding = Nothing }
             , getpolicies model
             )
 
         CreatedPolicy (Err err) ->
             let emsg = unwraperror err in
-            nocmd { model | adderror = emsg }
+            nocmd { model | adderrormsg = emsg }
 
         CancelPolicyCreation ->
-            nocmd { model | adderror = "", adding = Nothing }
+            nocmd { model | adderrormsg = "", adding = Nothing }
 
         -- link to series
         LinkPolicySeries policy ->
@@ -409,20 +469,27 @@ newpolicy model =
                 , HE.onInput  (PolicyField fieldname)
                 ] []
             ]
+
+        creator =
+            case model.adderror of
+                Nothing -> []
+                Just polerror -> [ HA.disabled True
+                                 , HE.onClick CreatePolicy
+                                 ]
+
     in
     H.div []
         [ H.h3 [] [ H.text "Create a fresh formula cache policy" ]
-        , H.button [ HA.class "btn btn-success"
-                   , HA.type_ "button"
-                   , HE.onClick CreatePolicy
-                   ]
+        , H.button ([ HA.class "btn btn-success"
+                    , HA.type_ "button"
+                    ] ++ creator)
             [ H.text "create" ]
         , H.button [ HA.class "btn btn-warning"
                    , HA.type_ "button"
                    , HE.onClick CancelPolicyCreation
                    ]
             [ H.text "cancel" ]
-        , H.p [] [ H.text model.adderror ]
+        , H.p [] [ H.text model.adderrormsg ]
         , H.form [] <| ( List.concat <| List.map makeinput inputs )
         ]
 
@@ -570,6 +637,7 @@ main =
             let model = Model
                         input.baseurl
                         []
+                        Nothing
                         Nothing
                         Nothing
                         ""
