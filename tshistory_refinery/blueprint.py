@@ -307,14 +307,18 @@ def refinery_bp(tsa):
     def cacheable_formulas():
         with tsa.engine.begin() as cn:
             return jsonify(
-                tsa.tsh.cacheable_formulas(cn)
+                sorted(
+                    tsa.tsh.cacheable_formulas(cn)
+                )
             )
 
 
     @bp.route('/policy-series/<name>')
     def policy_series(name):
         return jsonify(
-            cache.policy_series(engine, name)
+            sorted(
+                cache.policy_series(engine, name)
+            )
         )
 
     class set_policy_args(_args):
