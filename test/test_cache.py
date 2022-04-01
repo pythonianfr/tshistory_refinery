@@ -23,14 +23,14 @@ def test_invalid_cache():
         'not a cron rule',
         'you guessed it right'
     )
-    assert bad == [
-        ('initial_revdate', 'not a moment'),
-        ('from_date', 'not a moment'),
-        ('look_before', 'not a moment'),
-        ('look_after', 'not a moment either'),
-        ('revdate_rule', 'not a cron rule'),
-        ('schedule_rule', 'you guessed it right')
-    ]
+    assert bad == {
+        'from_date': 'not a moment',
+        'initial_revdate': 'not a moment',
+        'look_after': 'not a moment either',
+        'look_before': 'not a moment',
+        'revdate_rule': 'not a cron rule',
+        'schedule_rule': 'you guessed it right'
+    }
 
     with pytest.raises(ValueError):
         cache.new_policy(

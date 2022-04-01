@@ -299,7 +299,7 @@ def test_create_policies(client, engine):
         'schedule_rule': '0 8-18 * * *'
     })
     assert res.status_code == 400
-    assert res.text == "Bad inputs for the cache policy: [('initial_revdate', 'BOGUS')]"
+    assert res.text == "Bad inputs for the cache policy: {'initial_revdate': 'BOGUS'}"
 
 
 def test_cacheable_formulas(client, tsh, engine):
@@ -369,3 +369,17 @@ def test_cacheable_formulas(client, tsh, engine):
 
     res = client.get('/policy-series/test-cacheable')
     assert res.json == []
+
+
+def test_validate_policy(client):
+    res = client.put_json('/validate-policy', {
+        'from_date': '(date "2010-1-1")',
+        'initial_revdate': 'BOGUS',
+        'look_after': '(shifted (today) #:days -10)',
+        'look_before': '(shifted (today) #:days 15)',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    })
+    assert res.status_code == 200
+    assert res.json == {'initial_revdate': 'BOGUS'}
+

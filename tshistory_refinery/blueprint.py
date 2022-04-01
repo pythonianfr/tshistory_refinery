@@ -279,6 +279,13 @@ def refinery_bp(tsa):
             'schedule_rule': str
         }
 
+    @bp.route('/validate-policy', methods=['PUT'])
+    def validate_policy():
+        args = policy_args(request.json)
+        return jsonify(
+            cache.validate_policy(**args)
+        )
+
     @bp.route('/create-policy', methods=['PUT'])
     def create_policy():
         args = policy_args(request.json)

@@ -44,7 +44,7 @@ def validate_policy(
         badinputs.append(('revdate_rule', revdate_rule))
     if not croniter.is_valid(schedule_rule):
         badinputs.append(('schedule_rule', schedule_rule))
-    return badinputs
+    return dict(badinputs)
 
 
 def new_policy(
