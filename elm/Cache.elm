@@ -539,13 +539,13 @@ filterbywords filterme query =
     in filterall querywords filterme
 
 
-viewcachedseries model name =
+viewseriesinlist model text event name  =
     H.li []
         [ H.button [ HA.class "btn btn-success"
                     , HA.type_ "button"
-                    , HE.onClick <| RemoveFromCache name
+                    , HE.onClick <| event name
                     ]
-            [ H.text "remove" ]
+            [ H.text text ]
         , H.a
             [ HA.href <| UB.crossOrigin model.baseurl
                   [ "tsinfo" ]
@@ -566,25 +566,8 @@ viewcachedserieslist model =
                  ]
         , H.ul [] <|
             List.map
-                (viewcachedseries model)
+                (viewseriesinlist model "remove" RemoveFromCache)
                 (filterbywords model.cachedseries model.cachedseriesquery)
-        ]
-
-
-viewfreeseries model name =
-    H.li []
-        [ H.button [ HA.class "btn btn-success"
-                    , HA.type_ "button"
-                    , HE.onClick <| AddToCache name
-                    ]
-            [ H.text "add" ]
-        , H.a
-            [ HA.href <| UB.crossOrigin model.baseurl
-                  [ "tsinfo" ]
-                  [ UB.string "name" name ]
-            , HA.target "_blank"
-            ]
-            [ H.text name ]
         ]
 
 
@@ -598,7 +581,7 @@ viewfreeserieslist model =
                  ]
         , H.ul [] <|
             List.map
-                (viewfreeseries model)
+                (viewseriesinlist model "add" AddToCache)
                 (filterbywords model.freeseries model.freeseriesquery)
         ]
 
