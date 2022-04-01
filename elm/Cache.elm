@@ -571,14 +571,20 @@ viewcachedserieslist model =
         ]
 
 
-viewfreeseries name =
+viewfreeseries model name =
     H.li []
         [ H.button [ HA.class "btn btn-success"
                     , HA.type_ "button"
                     , HE.onClick <| AddToCache name
                     ]
             [ H.text "add" ]
-        , H.text name
+        , H.a
+            [ HA.href <| UB.crossOrigin model.baseurl
+                  [ "tsinfo" ]
+                  [ UB.string "name" name ]
+            , HA.target "_blank"
+            ]
+            [ H.text name ]
         ]
 
 
@@ -592,7 +598,7 @@ viewfreeserieslist model =
                  ]
         , H.ul [] <|
             List.map
-                viewfreeseries
+                (viewfreeseries model)
                 (filterbywords model.freeseries model.freeseriesquery)
         ]
 
