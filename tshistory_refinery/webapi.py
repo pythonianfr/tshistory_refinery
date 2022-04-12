@@ -28,39 +28,6 @@ def make_app(config, tsa, editor_callback=None, more_sections=None):
     def has_permission(perm):
         return True
 
-    @app.route('/')
-    def welcome():
-        title = 'Refinery cockpit'
-        sections = {
-            'Time series': {
-                'Series Catalog': url_for('tsview.tssearch'),
-                'Series Quick-View': url_for('tsview.home'),
-                'Import Log': url_for('tsview.tslog'),
-                'Rename Series': url_for('tsview.tsrename'),
-                'Delete Series': url_for('tsview.tsdelete'),
-            },
-            'Formula': {
-                'All Formulas': url_for('refinery.formulas'),
-                'Upload New Formulas': url_for('refinery.addformulas'),
-                'Edit a new Formula': url_for('tsview.tsformula'),
-                'Edit the formula cache': url_for('refinery.formulacache'),
-                'Formula operators documentation': url_for('tsview.formula_operators'),
-            },
-            'Tasks': {
-                'Monitoring': url_for('reworkui.home')
-            }
-        }
-
-        if more_sections is not None:
-            sections.update(more_sections())
-
-        return render_template(
-            'summary.html',
-            title=title,
-            sections=sections,
-            has_write_permission=has_permission('write')
-        )
-
     app.register_blueprint(
         tsview(
             tsa,
@@ -98,7 +65,10 @@ def make_app(config, tsa, editor_callback=None, more_sections=None):
     )
 
     app.register_blueprint(
-        blueprint.refinery_bp(tsa)
+        blueprint.refinery_bp(
+            tsa,
+            more_sections=more_sections
+        )
     )
 
     return app

@@ -61,7 +61,15 @@ def format_metadata(meta):
     return str(h)
 
 
-def refinery_bp(tsa):
+def homeurl():
+    homeurl = url_for('refinery.welcome')
+    baseurl = homeurl[:homeurl.rindex('/')]
+    if len(baseurl):
+        return baseurl
+    return baseurl
+
+
+def refinery_bp(tsa, more_sections=None):
     engine = tsa.engine
 
     bp = Blueprint(
@@ -70,6 +78,38 @@ def refinery_bp(tsa):
         template_folder='templates',
         static_folder='refinery_static',
     )
+
+    @bp.route('/')
+    def welcome():
+        title = 'Refinery cockpit'
+        sections = {
+            'Time series': {
+                'Series Catalog': url_for('tsview.tssearch'),
+                'Series Quick-View': url_for('tsview.home'),
+                'Import Log': url_for('tsview.tslog'),
+                'Rename Series': url_for('tsview.tsrename'),
+                'Delete Series': url_for('tsview.tsdelete'),
+            },
+            'Formula': {
+                'All Formulas': url_for('refinery.formulas'),
+                'Upload New Formulas': url_for('refinery.addformulas'),
+                'Edit a new Formula': url_for('tsview.tsformula'),
+                'Edit the formula cache': url_for('refinery.formulacache'),
+                'Formula operators documentation': url_for('tsview.formula_operators'),
+            },
+            'Tasks': {
+                'Monitoring': url_for('reworkui.home')
+            }
+        }
+
+        if more_sections is not None:
+            sections.update(more_sections())
+
+        return render_template(
+            'summary.html',
+            title=title,
+            sections=sections
+        )
 
     # extra formula handling
 
@@ -237,7 +277,10 @@ def refinery_bp(tsa):
 
     @bp.route('/formulacache')
     def formulacache():
-        return render_template('cache.html')
+        return render_template(
+            'cache.html',
+            homeurl=homeurl()
+        )
 
     # /formula
     # formula cache
