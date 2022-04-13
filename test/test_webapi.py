@@ -190,7 +190,8 @@ def test_get_policies(client, engine):
 
     res = client.get('/policies')
     assert res.json == [
-        {'from_date': '(date "2010-1-1")',
+        {'active': False,
+         'from_date': '(date "2010-1-1")',
          'initial_revdate': '(date "2020-1-1")',
          'look_after': '(shifted (today) #:days -10)',
          'look_before': '(shifted (today) #:days 15)',
@@ -258,7 +259,8 @@ def test_create_policies(client, engine):
 
     res = client.get('/policies')
     assert res.json == [
-        {'from_date': '(date "2010-1-1")',
+        {'active': False,
+         'from_date': '(date "2010-1-1")',
          'initial_revdate': '(date "2020-1-1")',
          'look_after': '(shifted (today) #:days -10)',
          'look_before': '(shifted (today) #:days 15)',

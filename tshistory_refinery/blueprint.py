@@ -294,12 +294,14 @@ def refinery_bp(tsa, more_sections=None):
             'revdate_rule', 'schedule_rule'
         ).table('tsh.cache_policy')
 
-        return jsonify(
-            [
-                dict(item)
-                for item in q.do(engine).fetchall()
-            ]
-        )
+        out = [
+            dict(item)
+            for item in q.do(engine).fetchall()
+        ]
+        for item in out:
+            item['active'] = cache.scheduled_policy(engine, item['name'])
+
+        return jsonify(out)
 
     @bp.route('/delete-policy/<name>', methods=['DELETE'])
     def delete_policy(name):
