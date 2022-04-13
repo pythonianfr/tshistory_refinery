@@ -449,3 +449,17 @@ def test_schedule_policy(client, tsh, engine):
         'name': 'test-schedule'
     })
     assert res.text == 'nothing changed'
+
+    res = client.put_json('/unschedule-policy', {
+        'name': 'test-schedule'
+    })
+    assert res.status_code == 201
+    res = client.put_json('/unschedule-policy', {
+        'name': 'test-schedule'
+    })
+    assert res.text  == 'nothing changed'
+
+    res = client.get('/scheduled-policy', params={
+        'name': 'test-schedule'
+    })
+    assert not res.json

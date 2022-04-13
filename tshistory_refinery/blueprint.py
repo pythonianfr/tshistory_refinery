@@ -364,6 +364,15 @@ def refinery_bp(tsa, more_sections=None):
             cache.scheduled_policy(engine, args.name)
         )
 
+    @bp.route('/unschedule-policy', methods=['PUT'])
+    def unschedule_policy():
+        args = policy_args(request.json)
+        if not cache.scheduled_policy(engine, args.name):
+            return make_response('nothing changed', 200)
+
+        cache.unschedule_policy(engine, args.name)
+        return make_response('', 201)
+
     @bp.route('/cacheable-formulas')
     def cacheable_formulas():
         with tsa.engine.begin() as cn:
