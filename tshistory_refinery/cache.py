@@ -110,6 +110,20 @@ def schedule_policy(engine, name, namespace='tsh'):
         )
 
 
+def scheduled_policy(engine, name, namespace='tsh'):
+    with engine.begin() as cn:
+        return bool(
+            cn.execute(
+                f'select cps.prepared_task_id '
+                f'from "{namespace}".cache_policy_sched as cps, '
+                f'     "{namespace}".cache_policy as cp '
+                f'where cp.name = %(name)s and '
+                f'      cps.cache_policy_id = cp.id',
+                name=name
+            ).scalar()
+        )
+
+
 def unschedule_policy(engine, name, namespace='tsh'):
     with engine.begin() as cn:
         cn.execute(
