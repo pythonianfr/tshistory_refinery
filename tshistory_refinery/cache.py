@@ -124,8 +124,21 @@ def scheduled_policy(engine, name, namespace='tsh'):
         )
 
 
+def _remove_scheduled_tasks(cn, name, namespace):
+    cn.execute(
+        f'delete from rework.sched as s '
+        f'using "{namespace}".cache_policy_sched as cs, '
+        f'      "{namespace}".cache_policy as c '
+        f'where c.name = %(name)s and '
+        f'      cs.cache_policy_id = c.id and '
+        f'      cs.prepared_task_id = s.id',
+        name=name
+    )
+
+
 def unschedule_policy(engine, name, namespace='tsh'):
     with engine.begin() as cn:
+        _remove_scheduled_tasks(cn, name, namespace)
         cn.execute(
             f'delete from "{namespace}".cache_policy_sched as cps '
             f'using "{namespace}".cache_policy as cp '
@@ -137,15 +150,7 @@ def unschedule_policy(engine, name, namespace='tsh'):
 
 def delete_policy(engine, name, namespace='tsh'):
     with engine.begin() as cn:
-        cn.execute(
-            f'delete from rework.sched as s '
-            f'using "{namespace}".cache_policy_sched as cs, '
-            f'      "{namespace}".cache_policy as c '
-            f'where c.name = %(name)s and '
-            f'      cs.cache_policy_id = c.id and '
-            f'      cs.prepared_task_id = s.id',
-            name=name
-        )
+        _remove_scheduled_tasks(cn, name, namespace)
 
         cn.execute(
             f'delete from "{namespace}".cache_policy '
