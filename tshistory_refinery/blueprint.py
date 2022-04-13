@@ -346,6 +346,22 @@ def refinery_bp(tsa, more_sections=None):
 
         return make_response('', 201)
 
+    @bp.route('/schedule-policy', methods=['PUT'])
+    def schedule_policy():
+        args = policy_args(request.json)
+        if cache.scheduled_policy(engine, args.name):
+            return make_response('nothing changed', 200)
+
+        cache.schedule_policy(engine, args.name)
+        return make_response('', 201)
+
+    @bp.route('/scheduled-policy')
+    def scheduled_policy():
+        args = policy_args(request.args)
+        return jsonify(
+            cache.scheduled_policy(engine, args.name)
+        )
+
     @bp.route('/cacheable-formulas')
     def cacheable_formulas():
         with tsa.engine.begin() as cn:

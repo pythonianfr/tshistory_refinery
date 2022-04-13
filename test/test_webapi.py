@@ -383,3 +383,67 @@ def test_validate_policy(client):
     assert res.status_code == 200
     assert res.json == {'initial_revdate': 'BOGUS'}
 
+
+def test_schedule_policy(client, tsh, engine):
+    with engine.begin() as cn:
+        cn.execute('delete from tsh.formula')
+        cn.execute('delete from tsh.cache_policy')
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(pd.Timestamp('2022-1-1', tz='UTC'), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        ts,
+        'schedulable-base',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'schedule-me',
+        '(series "schedulable-base")',
+    )
+
+    res = client.put_json('/create-policy', {
+        'name': 'test-schedule',
+        'from_date': '(date "2010-1-1")',
+        'initial_revdate': '(date "2020-1-1")',
+        'look_after': '(shifted (today) #:days -10)',
+        'look_before': '(shifted (today) #:days 15)',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    })
+    assert res.status_code == 201
+
+    res = client.get('/scheduled-policy', {
+        'name': 'test-schedule'
+    })
+    assert not res.json
+
+    res = client.put_json('/set-series-policy', {
+        'policyname': 'test-schedule',
+        'seriesname': 'schedule-me'
+    })
+    assert res.status_code == 201
+    res = client.get('/scheduled-policy', {
+        'name': 'test-schedule'
+    })
+    assert not res.json
+
+    res = client.put_json('/schedule-policy', {
+        'name': 'test-schedule'
+    })
+    assert res.status_code == 201
+
+    res = client.get('/scheduled-policy', params={
+        'name': 'test-schedule'
+    })
+    assert res.json
+
+    res = client.put_json('/schedule-policy', {
+        'name': 'test-schedule'
+    })
+    assert res.text == 'nothing changed'
