@@ -40,8 +40,8 @@ def migrate_to_cache(db_uri, namespace='tsh'):
     engine = create_engine(dburi)
 
     exists = engine.execute(
-        'select 1 from information_schema.schemata where schema_name = %(name)s',
-        name=f'{namespace}.cache_policy'
+        "select 1 from pg_tables where schemaname = 'tsh' and tablename = %(name)s",
+        name=f'cache_policy'
     ).scalar()
 
     if not exists:
