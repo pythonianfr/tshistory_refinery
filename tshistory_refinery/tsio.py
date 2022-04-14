@@ -1,7 +1,10 @@
 from psyl import lisp
 from sqlhelp import select
 
-from tshistory.util import tx
+from tshistory.util import (
+    threadpool,
+    tx
+)
 from tshistory.tsio import timeseries as basets
 from tshistory_xl.tsio import timeseries as xlts
 
@@ -130,8 +133,17 @@ class timeseries(xlts):
             ).fetchall()
         }
 
-        def only_local(formula):
-            tree = self._expanded_formula(cn, formula)
+        trees = {}
+        engine = cn.engine
+        def tree(name, formula):
+            with engine.begin() as innercn:
+                trees[name] = self._expanded_formula(innercn, formula)
+
+        par = threadpool(16)
+        par(tree, [(name, text) for name, text in formulas.items()])
+
+        def only_local(name, formula):
+            tree = trees[name]
             for name in self.find_series(cn, tree):
                 if name in formulas or name in primaries:
                     continue
@@ -141,7 +153,7 @@ class timeseries(xlts):
         return [
             name
             for name, text in formulas.items()
-            if only_local(text)
+            if only_local(name, text)
         ]
 
     @tx
