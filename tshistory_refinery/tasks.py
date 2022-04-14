@@ -23,13 +23,16 @@ def refresh_formula_cache(task):
         namespace=tsa.tsh.namespace
     )
 
-    # sort series by dependency order
-    # we want the leafs to be computed
-    tsh = tsa.tsh
-    engine = tsa.engine
+    with task.capturelogs(std=True):
+        print(f'refreshin series: {names}')
+        # sort series by dependency order
+        # we want the leafs to be computed
+        tsh = tsa.tsh
+        engine = tsa.engine
 
-    cmp = helper.comparator(tsh, engine)
-    names.sort(key=cmp_to_key(cmp))
+        cmp = helper.comparator(tsh, engine)
+        names.sort(key=cmp_to_key(cmp))
 
-    for name in names:
-        cache.refresh(engine, tsa, name)
+        for name in names:
+            print('refresh', name)
+            cache.refresh(engine, tsa, name)
