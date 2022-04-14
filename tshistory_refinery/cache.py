@@ -334,6 +334,7 @@ def refresh(engine, tsa, name, now=None, final_revdate=None):
     ):
         if exists and revdate == initial_revdate:
             continue
+        print(revdate)
         ts = tsa.get(
             name,
             revision_date=revdate,
@@ -341,13 +342,14 @@ def refresh(engine, tsa, name, now=None, final_revdate=None):
             to_value_date=to_value_date,
             nocache=True
         )
-        tsh.cache.update(
-            engine,
-            ts,
-            name,
-            'formula-cacher',
-            insertion_date=revdate
-        )
+        if len(ts):
+            tsh.cache.update(
+                engine,
+                ts,
+                name,
+                'formula-cacher',
+                insertion_date=revdate
+            )
 
     with engine.begin() as cn:
         cn.execute(f'update "{tsh.namespace}".cache_policy set ready = true')
