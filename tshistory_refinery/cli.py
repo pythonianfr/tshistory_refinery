@@ -44,13 +44,14 @@ def migrate_to_cache(db_uri, namespace='tsh'):
         name=f'{namespace}.cache_policy'
     ).scalar()
 
-    if exists:
-        print('nothing to do.')
-        return
+    if not exists:
+        cache_policy = Path(__file__).parent.parent / 'tshistory_refinery/schema.sql'
+        with engine.begin() as cn:
+            cn.execute(sqlfile(cache_policy, ns=namespace))
 
-    cache_policy = Path(__file__).parent.parent / 'tshistory_refinery/schema.sql'
-    with engine.begin() as cn:
-        cn.execute(sqlfile(cache_policy, ns=namespace))
+    from tshistory.schema import tsschema
+    schem = tsschema(f'{namespace}-cache')
+    schem.create(engine)
 
 
 @click.command('init-db')
