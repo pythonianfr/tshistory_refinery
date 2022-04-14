@@ -34,6 +34,7 @@ type alias Policy =
     , look_after : String
     , revdate_rule : String
     , schedule_rule : String
+    , active : Bool
     }
 
 
@@ -64,8 +65,15 @@ type alias Model =
     }
 
 
+map9 func da db dc dd de df dg dh di =
+    let
+        map1 funci = D.map funci di
+    in
+    D.map8 func da db dc dd de df dg dh |> D.andThen map1
+
+
 policydecoder =
-    D.map8 Policy
+    map9 Policy
         (D.field "name" D.string)
         (D.field "ready" D.bool)
         (D.field "initial_revdate" D.string)
@@ -74,6 +82,7 @@ policydecoder =
         (D.field "look_after" D.string)
         (D.field "revdate_rule" D.string)
         (D.field "schedule_rule" D.string)
+        (D.field "active" D.bool)
 
 
 policy_error_decoder =
@@ -199,6 +208,39 @@ deletepolicy model name =
     }
 
 
+activate model policy =
+    let policy_name_encoder =
+            [ ("name" , E.string policy.name) ]
+    in
+    Http.request
+    { url = UB.crossOrigin model.baseurl
+          [ "schedule-policy" ]
+          [ UB.string "name" policy.name ]
+    , method = "PUT"
+    , headers = []
+    , body = Http.jsonBody <| E.object policy_name_encoder
+    , expect = Http.expectString ToggledActivation
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
+deactivate model policy =
+    let policy_name_encoder =
+            [ ("name" , E.string policy.name) ]
+    in
+    Http.request
+    { url = UB.crossOrigin model.baseurl
+          [ "unschedule-policy" ]
+          [ UB.string "name" policy.name ]
+    , method = "PUT"
+    , headers = []
+    , body = Http.jsonBody <| E.object policy_name_encoder
+    , expect = Http.expectString ToggledActivation
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
 
 type Msg
     = GotPolicies (Result Http.Error (List Policy))
@@ -223,6 +265,8 @@ type Msg
     | ValidateLink
     | CacheWasSet (Result Http.Error String)
     | CacheWasUnset (Result Http.Error String)
+    | ToggleActivation Policy
+    | ToggledActivation (Result Http.Error String)
 
 
 update_policy_field policy fieldname value =
@@ -265,7 +309,7 @@ update msg model =
 
         -- addition
         NewPolicy ->
-            ( { model | adding = Just <| Policy "" False "" "" "" "" "" "" }
+            ( { model | adding = Just <| Policy "" False "" "" "" "" "" "" False }
             , Cmd.none
             )
 
@@ -402,6 +446,23 @@ update msg model =
         CacheWasSet _ -> nocmd model
         CacheWasUnset _ -> nocmd model
 
+        -- activation
+
+        ToggleActivation policy ->
+            case policy.active of
+                True -> (model
+                        , deactivate model policy
+                        )
+                False -> (model
+                         , activate model policy
+                         )
+
+        ToggledActivation (Ok _) ->
+            ( model , getpolicies model )
+
+        ToggledActivation (Err _) -> nocmd model
+
+
 
 viewdeletepolicyaction model policy =
     let askdelete =
@@ -429,6 +490,15 @@ viewdeletepolicyaction model policy =
                    else askdelete
 
 
+viewactivatepolicyaction model policy =
+    [ H.button [ HA.class <| if policy.active then "btn btn-warning" else "btn btn-success"
+               , HA.type_ "button"
+               , HE.onClick (ToggleActivation policy)
+               ]
+          [ H.text <| if policy.active then "deactivate" else "activate" ]
+    ]
+
+
 viewpolicy model policy =
     H.li [  HA.class "gridded_policy" ]
         [ H.span []
@@ -444,7 +514,10 @@ viewpolicy model policy =
         , H.span [] [ H.text <| policy.look_after ]
         , H.span [] [ H.text <| policy.revdate_rule ]
         , H.span [] [ H.text <| policy.schedule_rule ]
-        , H.div [] <| viewdeletepolicyaction model policy
+        , H.div [] <|
+            (viewactivatepolicyaction model policy)
+            ++
+            (viewdeletepolicyaction model policy)
         ]
 
 
