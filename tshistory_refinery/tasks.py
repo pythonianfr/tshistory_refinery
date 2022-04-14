@@ -19,7 +19,7 @@ def refresh_formula_cache(task):
     )
     names = cache.policy_series(
         tsa.engine,
-        task.inputs['policy'],
+        task.input['policy'],
         namespace=tsa.tsh.namespace
     )
 
