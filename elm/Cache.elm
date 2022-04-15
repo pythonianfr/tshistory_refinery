@@ -669,7 +669,7 @@ makeinput model policy (fieldname, displayname, placeholder) =
     ]
 
 
-editpolicyform model pol basetext doitmsg cancelmsg =
+editpolicyform model pol basetext actiontext doitmsg cancelmsg =
     let
         editor =
             case model.editerror of
@@ -682,7 +682,7 @@ editpolicyform model pol basetext doitmsg cancelmsg =
         , H.button ([ HA.class "btn btn-success"
                     , HA.type_ "button"
                     ] ++ editor)
-            [ H.text "create" ]
+            [ H.text actiontext ]
         , H.button [ HA.class "btn btn-warning"
                    , HA.type_ "button"
                    , HE.onClick cancelmsg
@@ -701,6 +701,7 @@ editpolicy model =
                 model
                 policy
                 "Edit a formula cache policy"
+                "edit"
                 UpdatePolicy
                 CancelPolicyEdition
 
@@ -713,6 +714,7 @@ newpolicy model =
             model
             policy
             "Create a fresh formula cache policy"
+            "create"
             CreatePolicy
             CancelPolicyCreation
 
