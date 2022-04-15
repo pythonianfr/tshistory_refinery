@@ -3,6 +3,7 @@ import json
 import traceback
 from collections import defaultdict
 from contextlib import redirect_stdout
+from operator import itemgetter
 
 import numpy as np
 import pandas as pd
@@ -296,7 +297,10 @@ def refinery_bp(tsa, more_sections=None):
 
         out = [
             dict(item)
-            for item in q.do(engine).fetchall()
+            for item in sorted(
+                    q.do(engine).fetchall(),
+                    key=itemgetter('name')
+            )
         ]
         for item in out:
             item['active'] = cache.scheduled_policy(engine, item['name'])
