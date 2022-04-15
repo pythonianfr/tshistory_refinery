@@ -197,6 +197,27 @@ sendpolicy model policy =
     }
 
 
+updatepolicy model policy =
+    let policy_encoder =
+            [ ("name" , E.string policy.name)
+            , ("initial_revdate", E.string policy.initial_revdate)
+            , ("from_date", E.string policy.from_date)
+            , ("look_before", E.string policy.look_before)
+            , ("look_after", E.string policy.look_after)
+            , ("revdate_rule", E.string policy.revdate_rule)
+            , ("schedule_rule", E.string policy.schedule_rule)
+            ]
+    in Http.request
+    { url = UB.crossOrigin model.baseurl [ "edit-policy" ] [ ]
+    , method = "PUT"
+    , headers = []
+    , body = Http.jsonBody <| E.object policy_encoder
+    , expect = Http.expectString UpdatedPolicy
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
 deletepolicy model name =
     Http.request
     { url = UB.crossOrigin model.baseurl [ "delete-policy", name ] [ ]
@@ -251,11 +272,12 @@ type Msg
     | DeletedPolicy (Result Http.Error String)
     | NewPolicy
     | EditPolicy Policy
-    | UpdatePolicy
     | PolicyField Policy String String
     | ValidatedPolicy (Result Http.Error String)
     | CreatePolicy
     | CreatedPolicy (Result Http.Error String)
+    | UpdatePolicy
+    | UpdatedPolicy (Result Http.Error String)
     | CancelPolicyCreation
     | CancelPolicyEdition
     | LinkPolicySeries Policy
@@ -382,7 +404,20 @@ update msg model =
         EditPolicy policy ->
             nocmd { model | editing = Just policy }
 
-        UpdatePolicy -> nocmd model
+        UpdatePolicy ->
+            case model.editing of
+                Nothing -> nocmd model
+                Just policy ->
+                    ( model, updatepolicy model policy )
+
+        UpdatedPolicy (Ok _) ->
+            ( { model | editerrormsg = "", editing = Nothing }
+            , getpolicies model
+            )
+
+        UpdatedPolicy (Err err) ->
+            let emsg = unwraperror err in
+            nocmd { model | editerrormsg = emsg }
 
         CancelPolicyEdition ->
             nocmd { model
