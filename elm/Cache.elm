@@ -360,7 +360,7 @@ update msg model =
                         { model | adding = Just <| updated }
             in
             ( newmodel
-            , validatepolicy newmodel policy
+            , validatepolicy newmodel updated
             )
 
         ValidatedPolicy (Ok val) ->
