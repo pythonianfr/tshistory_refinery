@@ -53,6 +53,7 @@ type alias Model =
     , policies : List Policy
     , deleting : Maybe String
     , adding : Maybe Policy
+    , editing : Maybe Policy
     , adderror : Maybe PolicyError
     , adderrormsg : String
     , linking : Maybe Policy
@@ -249,6 +250,7 @@ type Msg
     | DeletePolicy String
     | DeletedPolicy (Result Http.Error String)
     | NewPolicy
+    | EditPolicy Policy
     | PolicyField String String
     | ValidatedPolicy (Result Http.Error String)
     | CreatePolicy
@@ -360,6 +362,10 @@ update msg model =
                       , adderrormsg = ""
                       , adding = Nothing
                   }
+
+        -- edition
+        EditPolicy policy ->
+            nocmd { model | editing = Just policy }
 
         -- link to series
         LinkPolicySeries policy ->
@@ -499,6 +505,16 @@ viewactivatepolicyaction model policy =
     ]
 
 
+vieweditpolicyaction model policy =
+    if policy.active then [] else
+    [ H.button [ HA.class "btn btn-primary"
+               , HA.type_ "button"
+               , HE.onClick (EditPolicy policy)
+               ]
+          [ H.text "edit" ]
+    ]
+
+
 viewpolicy model policy =
     H.li [  HA.class "gridded_policy" ]
         [ H.span []
@@ -516,6 +532,8 @@ viewpolicy model policy =
         , H.span [] [ H.text <| policy.schedule_rule ]
         , H.div [] <|
             (viewactivatepolicyaction model policy)
+            ++
+            (vieweditpolicyaction model policy)
             ++
             (viewdeletepolicyaction model policy)
         ]
@@ -737,6 +755,7 @@ main =
             let model = Model
                         input.baseurl
                         []
+                        Nothing
                         Nothing
                         Nothing
                         Nothing
