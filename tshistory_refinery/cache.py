@@ -10,7 +10,10 @@ from rework import (
     api as rapi,
     io as rio
 )
-from sqlhelp import insert
+from sqlhelp import (
+    insert,
+    update
+)
 
 
 def eval_moment(expr, env={}):
@@ -85,6 +88,46 @@ def new_policy(
             schedule_rule=schedule_rule
         )
         q.do(cn).scalar()
+
+
+def edit_policy(
+        engine,
+        name,
+        initial_revdate,
+        from_date,
+        look_before,
+        look_after,
+        revdate_rule,
+        schedule_rule,
+        namespace='tsh'
+):
+    """ Edit a cache policy """
+    badinputs = validate_policy(
+        initial_revdate,
+        from_date,
+        look_before,
+        look_after,
+        revdate_rule,
+        schedule_rule
+    )
+    if badinputs:
+        raise ValueError(
+            f'Bad inputs for the cache policy: {badinputs}'
+        )
+
+    with engine.begin() as cn:
+        q = update(
+            f'"{namespace}".cache_policy'
+        ).where(name=name
+        ).values(
+            initial_revdate=initial_revdate,
+            from_date=from_date,
+            look_before=look_before,
+            look_after=look_after,
+            revdate_rule=revdate_rule,
+            schedule_rule=schedule_rule
+        )
+        q.do(cn)
 
 
 def schedule_policy(engine, name, namespace='tsh'):

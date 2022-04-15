@@ -88,12 +88,31 @@ def test_good_cache(engine):
     assert engine.execute('select count(*) from rework.sched').scalar() == 0
     assert not cache.scheduled_policy(engine, 'my-policy')
 
+    cache.edit_policy(
+        engine,
+        'my-policy',
+        initial_revdate='(date "2022-1-1")',
+        from_date='(date "2012-1-1")',
+        look_before='(shifted (today) #:days -15)',
+        look_after='(shifted (today) #:days 10)',
+        revdate_rule='0 1 * * *',
+        schedule_rule='0 8-18 * * *',
+    )
+    p = cache.policy_by_name(engine, 'my-policy')
+    assert p == {
+        'initial_revdate': '(date "2022-1-1")',
+        'from_date': '(date "2012-1-1")',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    }
+
     cache.schedule_policy(engine, 'my-policy')
     cache.delete_policy(engine, 'my-policy')
     assert not cache.scheduled_policy(engine, 'my-policy')
 
     assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 0
     assert engine.execute('select count(*) from rework.sched').scalar() == 0
+
 
 
 def test_cache_a_series(engine, tsa):
