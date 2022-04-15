@@ -54,8 +54,8 @@ type alias Model =
     , deleting : Maybe String
     , adding : Maybe Policy
     , editing : Maybe Policy
-    , adderror : Maybe PolicyError
-    , adderrormsg : String
+    , editerror : Maybe PolicyError
+    , editerrormsg : String
     , linking : Maybe Policy
     , cachedseries : List String
     , cachedseriesquery : String
@@ -330,10 +330,10 @@ update msg model =
             let
                 newmodel =
                     if String.startsWith "{}" val
-                    then { model | adderror = Nothing }
+                    then { model | editerror = Nothing }
                     else
                         case D.decodeString policy_error_decoder val of
-                            Ok polerror -> { model | adderror = Just polerror }
+                            Ok polerror -> { model | editerror = Just polerror }
                             Err err -> model
             in
             nocmd newmodel
@@ -348,18 +348,18 @@ update msg model =
                     ( model, sendpolicy model policy )
 
         CreatedPolicy (Ok _) ->
-            ( { model | adderrormsg = "", adding = Nothing }
+            ( { model | editerrormsg = "", adding = Nothing }
             , getpolicies model
             )
 
         CreatedPolicy (Err err) ->
             let emsg = unwraperror err in
-            nocmd { model | adderrormsg = emsg }
+            nocmd { model | editerrormsg = emsg }
 
         CancelPolicyCreation ->
             nocmd { model
-                      | adderror = Nothing
-                      , adderrormsg = ""
+                      | editerror = Nothing
+                      , editerrormsg = ""
                       , adding = Nothing
                   }
 
@@ -539,82 +539,90 @@ viewpolicy model policy =
         ]
 
 
-newpolicy model =
-    let inputs =
-            [ ("name", "name", "policy name" )
-            , ("initial_revdate", "initial revision date", "e.g. (date \"2022-1-1\")" )
-            , ("from_date", "from date", "e.g. (date \"2022-1-1\")" )
-            , ("look_before", "look before", "e.g. (shifted (today) #:days -15)" )
-            , ("look_after", "look after", "e.g. (shifted (today) #:days 15)" )
-            , ("revdate_rule", "revision date rule", "in crontab format" )
-            , ("schedule_rule", "schedule rule", "in crontab format" )
-            ]
+haserror editerror fieldname =
+    case editerror of
+        Nothing -> False
+        Just polerror ->
+            case fieldname of
+                "initial_revdate" ->
+                    case polerror.initial_revdate of
+                        Nothing -> False
+                        _ -> True
+                "from_date" ->
+                    case polerror.from_date of
+                        Nothing -> False
+                        _ -> True
+                "look_before" ->
+                    case polerror.look_before of
+                        Nothing -> False
+                        _ -> True
+                "look_after" ->
+                    case polerror.look_after of
+                        Nothing -> False
+                        _ -> True
+                "revdate_rule" ->
+                    case polerror.revdate_rule of
+                        Nothing -> False
+                        _ -> True
+                "schedule_rule" ->
+                    case polerror.schedule_rule of
+                        Nothing -> False
+                        _ -> True
+                _ -> False
 
-        -- error display per field
-        haserror fieldname =
-            case model.adderror of
-                Nothing -> False
-                Just polerror ->
-                    case fieldname of
-                        "initial_revdate" ->
-                            case polerror.initial_revdate of
-                                Nothing -> False
-                                _ -> True
-                        "from_date" ->
-                            case polerror.from_date of
-                                Nothing -> False
-                                _ -> True
-                        "look_before" ->
-                            case polerror.look_before of
-                                Nothing -> False
-                                _ -> True
-                        "look_after" ->
-                            case polerror.look_after of
-                                Nothing -> False
-                                _ -> True
-                        "revdate_rule" ->
-                            case polerror.revdate_rule of
-                                Nothing -> False
-                                _ -> True
-                        "schedule_rule" ->
-                            case polerror.schedule_rule of
-                                Nothing -> False
-                                _ -> True
-                        _ -> False
 
-        makeinput (fieldname, displayname, placeholder) =
-            [ H.label
-                ([ HA.for fieldname] ++ if haserror fieldname
-                                        then [ HA.class "field_error" ]
-                                        else [])
-                [ H.text displayname ]
-            , H.input
-                [ HA.class "form-control"
-                , HA.placeholder placeholder
-                , HE.onInput  (PolicyField fieldname)
-                ] []
-            ]
+inputs =
+    [ ("name", "name", "policy name" )
+    , ("initial_revdate", "initial revision date", "e.g. (date \"2022-1-1\")" )
+    , ("from_date", "from date", "e.g. (date \"2022-1-1\")" )
+    , ("look_before", "look before", "e.g. (shifted (today) #:days -15)" )
+    , ("look_after", "look after", "e.g. (shifted (today) #:days 15)" )
+    , ("revdate_rule", "revision date rule", "in crontab format" )
+    , ("schedule_rule", "schedule rule", "in crontab format" )
+    ]
 
-        creator =
-            case model.adderror of
-                Nothing -> [ HE.onClick CreatePolicy ]
+
+makeinput model (fieldname, displayname, placeholder) =
+    [ H.label
+          ([ HA.for fieldname] ++ if haserror model.editerror fieldname
+                                  then [ HA.class "field_error" ]
+                                  else [])
+          [ H.text displayname ]
+    , H.input
+        [ HA.class "form-control"
+        , HA.placeholder placeholder
+        , HE.onInput  (PolicyField fieldname)
+        ] []
+    ]
+
+
+editpolicyform model basetext doitmsg cancelmsg =
+    let
+        editor =
+            case model.editerror of
+                Nothing -> [ HE.onClick doitmsg ]
                 Just polerror -> [ HA.disabled True ]
 
     in
     H.div []
-        [ H.h3 [] [ H.text "Create a fresh formula cache policy" ]
+        [ H.h3 [] [ H.text basetext  ]
         , H.button ([ HA.class "btn btn-success"
                     , HA.type_ "button"
-                    ] ++ creator)
+                    ] ++ editor)
             [ H.text "create" ]
         , H.button [ HA.class "btn btn-warning"
                    , HA.type_ "button"
-                   , HE.onClick CancelPolicyCreation
+                   , HE.onClick cancelmsg
                    ]
             [ H.text "cancel" ]
-        , H.p [] [ H.text model.adderrormsg ]
-        , H.form [] <| ( List.concat <| List.map makeinput inputs )
+        , H.p [] [ H.text model.editerrormsg ]
+        , H.form [] <| ( List.concat <| List.map (makeinput model) inputs )
         ]
+
+
+newpolicy model =
+    editpolicyform
+        model "Create a fresh formula cache policy" CreatePolicy CancelPolicyCreation
 
 
 filterbywords filterme query =
