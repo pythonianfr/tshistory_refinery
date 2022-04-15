@@ -463,3 +463,45 @@ def test_schedule_policy(client, tsh, engine):
         'name': 'test-schedule'
     })
     assert not res.json
+
+
+def test_edit_policy(client, engine):
+    with engine.begin() as cn:
+        cn.execute('delete from tsh.formula')
+        cn.execute('delete from tsh.cache_policy')
+
+    res = client.put_json('/create-policy', {
+        'name': 'test-edit',
+        'from_date': '(date "2010-1-1")',
+        'initial_revdate': '(date "2010-1-1")',
+        'look_after': '(shifted (today) #:days -10)',
+        'look_before': '(shifted (today) #:days 15)',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    })
+    assert res.status_code == 201
+
+    res = client.put_json('/edit-policy', {
+        'name': 'test-edit',
+        'from_date': '(date "2012-1-1")',
+        'initial_revdate': '(date "2012-1-1")',
+        'look_after': '(shifted (today) #:days -15)',
+        'look_before': '(shifted (today) #:days 20)',
+        'revdate_rule': '10 1 * * *',
+        'schedule_rule': '10 8-18 * * *'
+    })
+    assert res.status_code == 200
+
+    res = client.get('/policies')
+    assert res.json == [
+        {'active': False,
+         'from_date': '(date "2012-1-1")',
+         'initial_revdate': '(date "2012-1-1")',
+         'look_after': '(shifted (today) #:days -15)',
+         'look_before': '(shifted (today) #:days 20)',
+         'name': 'test-edit',
+         'ready': False,
+         'revdate_rule': '10 1 * * *',
+         'schedule_rule': '10 8-18 * * *'
+         }
+    ]

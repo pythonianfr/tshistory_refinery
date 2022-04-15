@@ -348,6 +348,23 @@ def refinery_bp(tsa, more_sections=None):
 
         return make_response('', 201)
 
+    @bp.route('/edit-policy', methods=['PUT'])
+    def edit_policy():
+        args = policy_args(request.json)
+        try:
+            cache.edit_policy(engine, **args)
+        except ValueError as err:
+            return make_response(str(err), 400)
+        except TypeError:
+            return make_response('Missing fields', 400)
+        except sqlalchemy.exc.IntegrityError as err:
+            return make_response(
+                'A policy with identical parameters already exists',
+                400
+            )
+
+        return make_response('', 200)
+
     @bp.route('/schedule-policy', methods=['PUT'])
     def schedule_policy():
         args = policy_args(request.json)
