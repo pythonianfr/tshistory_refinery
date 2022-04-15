@@ -251,11 +251,13 @@ type Msg
     | DeletedPolicy (Result Http.Error String)
     | NewPolicy
     | EditPolicy Policy
-    | PolicyField String String
+    | UpdatePolicy
+    | PolicyField Policy String String
     | ValidatedPolicy (Result Http.Error String)
     | CreatePolicy
     | CreatedPolicy (Result Http.Error String)
     | CancelPolicyCreation
+    | CancelPolicyEdition
     | LinkPolicySeries Policy
     | GotCachedSeries (Result Http.Error (List String))
     | GotFreeSeries (Result Http.Error (List String))
@@ -281,6 +283,15 @@ update_policy_field policy fieldname value =
         "revdate_rule" -> { policy | revdate_rule = value }
         "schedule_rule" -> { policy | schedule_rule = value }
         _ -> policy
+
+
+mode model =
+    case model.adding of
+        Nothing ->
+            case model.editing of
+                Nothing -> "unknown"
+                Just _ -> "edit"
+        Just _ -> "create"
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -315,16 +326,20 @@ update msg model =
             , Cmd.none
             )
 
-        PolicyField field value ->
-            case model.adding of
-                Nothing -> nocmd model
-                Just p ->
-                    let updated = update_policy_field p field value
-                        newmodel = { model | adding = Just <| updated }
-                    in
-                    ( newmodel
-                    , validatepolicy newmodel updated
-                    )
+        PolicyField policy field value ->
+            let
+                updated = update_policy_field policy field value
+                newmodel =
+                    if (mode model) == "edit" then
+                        { model
+                            | editing = Just <| if field == "name" then policy else updated
+                        }
+                    else
+                        { model | adding = Just <| updated }
+            in
+            ( newmodel
+            , validatepolicy newmodel policy
+            )
 
         ValidatedPolicy (Ok val) ->
             let
@@ -366,6 +381,15 @@ update msg model =
         -- edition
         EditPolicy policy ->
             nocmd { model | editing = Just policy }
+
+        UpdatePolicy -> nocmd model
+
+        CancelPolicyEdition ->
+            nocmd { model
+                      | editerror = Nothing
+                      , editerrormsg = ""
+                      , editing = Nothing
+                  }
 
         -- link to series
         LinkPolicySeries policy ->
@@ -582,7 +606,20 @@ inputs =
     ]
 
 
-makeinput model (fieldname, displayname, placeholder) =
+
+polget pol name =
+    case name of
+        "name" -> pol.name
+        "initial_revdate" -> pol.initial_revdate
+        "from_date" -> pol.from_date
+        "look_before" -> pol.look_before
+        "look_after" -> pol.look_after
+        "revdate_rule" -> pol.revdate_rule
+        "schedule_rule" -> pol.schedule_rule
+        _ -> ""
+
+
+makeinput model policy (fieldname, displayname, placeholder) =
     [ H.label
           ([ HA.for fieldname] ++ if haserror model.editerror fieldname
                                   then [ HA.class "field_error" ]
@@ -591,12 +628,13 @@ makeinput model (fieldname, displayname, placeholder) =
     , H.input
         [ HA.class "form-control"
         , HA.placeholder placeholder
-        , HE.onInput  (PolicyField fieldname)
+        , HE.onInput (PolicyField policy fieldname)
+        , HA.value <| polget policy fieldname
         ] []
     ]
 
 
-editpolicyform model basetext doitmsg cancelmsg =
+editpolicyform model pol basetext doitmsg cancelmsg =
     let
         editor =
             case model.editerror of
@@ -616,13 +654,32 @@ editpolicyform model basetext doitmsg cancelmsg =
                    ]
             [ H.text "cancel" ]
         , H.p [] [ H.text model.editerrormsg ]
-        , H.form [] <| ( List.concat <| List.map (makeinput model) inputs )
+        , H.form [] <| ( List.concat <| List.map (makeinput model pol) inputs )
         ]
 
 
+editpolicy model =
+    case model.editing of
+        Nothing -> H.div [] []
+        Just policy ->
+            editpolicyform
+                model
+                policy
+                "Edit a formula cache policy"
+                UpdatePolicy
+                CancelPolicyEdition
+
+
 newpolicy model =
-    editpolicyform
-        model "Create a fresh formula cache policy" CreatePolicy CancelPolicyCreation
+    case model.adding of
+        Nothing -> H.div [] []
+        Just policy ->
+            editpolicyform
+            model
+            policy
+            "Create a fresh formula cache policy"
+            CreatePolicy
+            CancelPolicyCreation
 
 
 filterbywords filterme query =
@@ -723,21 +780,25 @@ viewpoliciesheader =
 viewpolicies model =
     case model.adding of
         Nothing ->
-            case model.linking of
+            case model.editing of
                 Nothing ->
-                    H.div []
-                        [ H.button [ HA.class "btn btn-primary"
-                                   , HA.type_ "button"
-                                   , HE.onClick NewPolicy
-                                   ]
-                              [ H.text "create a cache policy" ]
-                        , H.ul [ HA.class "policy_list" ]
-                            <| (++)
-                                viewpoliciesheader
-                                <| List.map (viewpolicy model) model.policies
-                        ]
+                    case model.linking of
+                        Nothing ->
+                            H.div []
+                                [ H.button [ HA.class "btn btn-primary"
+                                           , HA.type_ "button"
+                                           , HE.onClick NewPolicy
+                                           ]
+                                      [ H.text "create a cache policy" ]
+                                , H.ul [ HA.class "policy_list" ]
+                                    <| (++)
+                                        viewpoliciesheader
+                                        <| List.map (viewpolicy model) model.policies
+                                ]
+                        Just policy ->
+                            viewlinkpolicy model policy
                 Just policy ->
-                    viewlinkpolicy model policy
+                    editpolicy model
         Just policy ->
             newpolicy model
 
