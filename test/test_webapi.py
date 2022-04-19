@@ -331,13 +331,13 @@ def test_cacheable_formulas(client, tsh, engine):
     )
     tsh.register_formula(
         engine,
-        'i-am-not-cacheable',
+        'i-am-broken',
         '(series "no-there")',
         reject_unknown=False
     )
 
     res = client.get('/cacheable-formulas')
-    assert res.json == ['i-am-cacheable']
+    assert res.json == ['i-am-broken', 'i-am-cacheable']
 
     res = client.put_json('/create-policy', {
         'name': 'test-cacheable',
@@ -357,7 +357,7 @@ def test_cacheable_formulas(client, tsh, engine):
     assert res.status_code == 201
 
     res = client.get('/cacheable-formulas')
-    assert res.json == []
+    assert res.json == ['i-am-broken']
 
     res = client.get('/policy-series/test-cacheable')
     assert res.json == ['i-am-cacheable']
@@ -367,7 +367,7 @@ def test_cacheable_formulas(client, tsh, engine):
     assert res.status_code == 204
 
     res = client.get('/cacheable-formulas')
-    assert res.json == ['i-am-cacheable']
+    assert res.json == ['i-am-broken', 'i-am-cacheable']
 
     res = client.get('/policy-series/test-cacheable')
     assert res.json == []

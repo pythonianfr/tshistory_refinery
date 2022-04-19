@@ -112,7 +112,7 @@ class timeseries(xlts):
     @tx
     def cacheable_formulas(self, cn, unlinked=True):
         q = select(
-            'f.name', 'f.text'
+            'f.name'
         ).table(
             f'"{self.namespace}".formula as f'
         )
@@ -125,35 +125,8 @@ class timeseries(xlts):
                 f')'
             )
 
-        formulas = dict(q.do(cn).fetchall())
-        primaries = {
-            name
-            for name, in cn.execute(
-                    f'select seriesname from "{self.namespace}".registry'
-            ).fetchall()
-        }
-
-        trees = {}
-        engine = cn.engine
-        def tree(name, formula):
-            with engine.begin() as innercn:
-                trees[name] = self._expanded_formula(innercn, formula)
-
-        par = threadpool(16)
-        par(tree, [(name, text) for name, text in formulas.items()])
-
-        def only_local(name, formula):
-            tree = trees[name]
-            for name in self.find_series(cn, tree):
-                if name in formulas or name in primaries:
-                    continue
-                return False
-            return True
-
         return [
-            name
-            for name, text in formulas.items()
-            if only_local(name, text)
+            name for name, in q.do(cn).fetchall()
         ]
 
     @tx

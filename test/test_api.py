@@ -745,23 +745,28 @@ def test_cacheable_formulas(tsa1, tsa2):
     tsa2.update('cacheable-base-remote', ts, 'Celeste')
 
     tsa1.register_formula(
-        'cacheable',
+        'cacheable-0',
         '(series "cacheable-base-local")'
     )
     tsa1.register_formula(
-        'un-cacheable-1',
+        'cacheable-1',
         '(series "cacheable-base-remote")'
     )
     tsa1.register_formula(
-        'un-cacheable-2',
+        'cacheable-2',
         '(add (series "cacheable-base-local") (series "cacheable-base-remote"))'
     )
     tsa1.register_formula(
-        'un-cacheable-3',
-        '(series "un-cacheable-2")'
+        'cacheable-3',
+        '(series "cacheable-2")'
     )
 
     tsh = tsa1.tsh
     engine = tsa1.engine
 
-    assert tsh.cacheable_formulas(engine) == ['cacheable']
+    assert tsh.cacheable_formulas(engine) == [
+        'cacheable-0',
+        'cacheable-1',
+        'cacheable-2',
+        'cacheable-3'
+    ]
