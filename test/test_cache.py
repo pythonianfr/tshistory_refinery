@@ -679,7 +679,7 @@ def test_cache_coherency(engine, tsa):
     )
     assert not tsh.cache.exists(engine, 'invalidate-me')
 
-    names =  cache.policy_series(
+    names = cache.policy_series(
         engine,
         'policy-4',
         namespace=tsh.namespace
@@ -724,6 +724,90 @@ def test_cache_coherency(engine, tsa):
 2022-01-02 00:00:00+00:00    3.0
 2022-01-03 00:00:00+00:00    4.0
 """, tsa.get('invalidate-me'))
+
+
+def test_federation_cache_coherency(engine, federated, remote):
+    tsh = federated.tsh
+    engine = federated.engine
+    with engine.begin() as cn:
+        cn.execute(f'delete from "{tsh.namespace}".cache_policy')
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(
+            utcdt(2022, 1, 1),
+            freq='D',
+            periods=3
+        )
+    )
+    remote.update(
+        'ground-remote',
+        ts,
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-1')
+    )
+
+    remote.register_formula(
+        'remote-formula',
+        '(series "ground-remote")'
+    )
+
+    federated.register_formula(
+        'invalidate-me',
+        '(series "remote-formula")'
+    )
+
+    cache.new_policy(
+        engine,
+        'policy-5',
+        initial_revdate='(date "2022-1-1")',
+        from_date='(date "2022-1-1")',
+        look_before='(shifted now #:days -1)',
+        look_after='(shifted now #:days 1)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *',
+        namespace=tsh.namespace
+    )
+    cache.set_policy(
+        engine,
+        'policy-5',
+        'invalidate-me',
+        namespace=tsh.namespace
+    )
+    assert not tsh.cache.exists(engine, 'invalidate-me')
+
+    cache.refresh(
+        engine,
+        federated,
+        'invalidate-me',
+        final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
+    )
+    assert tsh.cache.exists(engine, 'invalidate-me')
+
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    2.0
+2022-01-03 00:00:00+00:00    3.0
+""", federated.get('invalidate-me'))
+
+    # update without change
+    remote.register_formula(
+        'remote-formula',
+        '(series "ground-remote")'
+    )
+    assert tsh.cache.exists(engine, 'invalidate-me')
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    2.0
+2022-01-03 00:00:00+00:00    3.0
+""", federated.get('invalidate-me'))
+
+    remote.register_formula(
+        'remote-formula',
+        '(+ 1 (series "ground-remote"))'
+    )
+    # we don't want that but this is currently unavoidable
+    assert tsh.cache.exists(engine, 'invalidate-me')
 
 
 def test_formula_order(engine, tsh):

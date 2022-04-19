@@ -56,6 +56,29 @@ def tsa(request, engine):
     )
 
 
+@pytest.fixture(scope='session')
+def federated(request, engine):
+    _initschema(engine, 'tsh')
+
+    return timeseries(
+        str(engine.url),
+        namespace='tsh',
+        handler=tsio.timeseries,
+        sources=[(str(engine.url), 'remote')]
+    )
+
+
+@pytest.fixture(scope='session')
+def remote(request, engine):
+    _initschema(engine, 'remote')
+
+    return timeseries(
+        str(engine.url),
+        namespace='remote',
+        handler=tsio.timeseries
+    )
+
+
 class NonSuckingWebTester(webtest.TestApp):
 
     def _check_status(self, status, res):
