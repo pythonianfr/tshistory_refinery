@@ -24,7 +24,7 @@ def refresh_formula_cache(task):
     )
 
     with task.capturelogs(std=True):
-        print(f'refreshin series: {names}')
+        print(f'refreshing series: {names}')
         # sort series by dependency order
         # we want the leafs to be computed
         tsh = tsa.tsh
@@ -35,4 +35,8 @@ def refresh_formula_cache(task):
 
         for name in names:
             print('refresh', name)
+            with engine.begin() as cn:
+                if tsh.live_content_hash(cn, name) != tsh.content_hash(cn, name):
+                    tsh.invalidate_cache(cn, name)
+
             cache.refresh(engine, tsa, name)
