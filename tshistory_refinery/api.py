@@ -29,3 +29,26 @@ def new_cache_policy(
         schedule_rule
     )
 
+
+@extend(mainsource)
+def edit_cache_policy(
+        self,
+        name: str,
+        initial_revdate: str,
+        from_date: str,
+        look_before: str,
+        look_after: str,
+        revdate_rule: str,
+        schedule_rule: str) -> NONETYPE:
+
+    cache.edit_policy(
+        self.engine,
+        name,
+        initial_revdate,
+        from_date,
+        look_before,
+        look_after,
+        revdate_rule,
+        schedule_rule
+    )
+

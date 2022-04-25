@@ -82,10 +82,28 @@ class refinery_httpapi(xl_httpapi):
             @onerror
             def put(self):
                 args = newcp.parse_args()
-
                 try:
-                    cache.new_policy(
-                        tsa.engine,
+                    tsa.new_cache_policy(
+                        args.name,
+                        args.initial_revdate,
+                        args.from_date,
+                        args.look_before,
+                        args.look_after,
+                        args.revdate_rule,
+                        args.schedule_rule
+                    )
+                except Exception as e:
+                    api.abort(409, str(e))
+
+                return '', 204
+
+
+            @api.expect(newcp)
+            @onerror
+            def patch(self):
+                args = newcp.parse_args()
+                try:
+                    tsa.edit_cache_policy(
                         args.name,
                         args.initial_revdate,
                         args.from_date,
@@ -117,6 +135,35 @@ class RefineryClient(XLClient):
             schedule_rule):
 
         res = self.session.put(f'{self.uri}/cache/policy', data={
+            'name': name,
+            'initial_revdate': initial_revdate,
+            'from_date': from_date,
+            'look_before': look_before,
+            'look_after': look_after,
+            'revdate_rule': revdate_rule,
+            'schedule_rule': schedule_rule
+        })
+
+        if res.status_code == 409:
+            raise ValueError(res.json()['message'])
+
+        if res.status_code == 204:
+            return
+
+        return res
+
+    @unwraperror
+    def edit_cache_policy(
+            self,
+            name,
+            initial_revdate,
+            from_date,
+            look_before,
+            look_after,
+            revdate_rule,
+            schedule_rule):
+
+        res = self.session.patch(f'{self.uri}/cache/policy', data={
             'name': name,
             'initial_revdate': initial_revdate,
             'from_date': from_date,
