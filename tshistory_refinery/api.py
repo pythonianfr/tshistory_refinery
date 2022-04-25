@@ -76,3 +76,10 @@ def set_cache_policy(
             policyname,
             name
         )
+
+
+@extend(mainsource)
+def unset_cache_policy(self, seriesnames: List[str]) -> NONETYPE:
+
+    for name in seriesnames:
+        cache.unset_policy(self.engine, name)

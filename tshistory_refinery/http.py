@@ -74,8 +74,17 @@ mapcp.add_argument(
     'seriesnames',
     type=jsonlist,
     required=True,
-    help='series list'
+    help='series list to associate with a cache policy'
 )
+
+unmapcp = reqparse.RequestParser()
+unmapcp.add_argument(
+    'seriesnames',
+    type=jsonlist,
+    required=True,
+    help='series list to remove from their cache policy'
+)
+
 
 
 class refinery_httpapi(xl_httpapi):
@@ -152,6 +161,16 @@ class refinery_httpapi(xl_httpapi):
                 args = mapcp.parse_args()
                 tsa.set_cache_policy(
                     args.name,
+                    args.seriesnames
+                )
+
+                return '', 204
+
+            @api.expect(unmapcp)
+            @onerror
+            def delete(self):
+                args = unmapcp.parse_args()
+                tsa.unset_cache_policy(
                     args.seriesnames
                 )
 
@@ -236,6 +255,16 @@ class RefineryClient(XLClient):
     def set_cache_policy(self, policyname, seriesnames):
         res = self.session.put(f'{self.uri}/cache/mapping', data={
             'name': policyname,
+            'seriesnames': json.dumps(seriesnames)
+        })
+        if res.status_code == 204:
+            return
+
+        return res
+
+    @unwraperror
+    def unset_cache_policy(self, seriesnames):
+        res = self.session.delete(f'{self.uri}/cache/mapping', data={
             'seriesnames': json.dumps(seriesnames)
         })
         if res.status_code == 204:

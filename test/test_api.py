@@ -781,6 +781,14 @@ insertion_date             value_date
     assert len(tsx.history('over-ground-1')) == 3
     assert len(tsx.history('over-ground-1', nocache=True)) == 5
 
+    # unset
+    tsx.unset_cache_policy(
+        ['over-ground-1', 'over-ground-2']
+    )
+    assert cache.policy_series(
+        engine,
+        'another-policy'
+    ) == []
 
     # delete
     tsx.delete_cache_policy(
