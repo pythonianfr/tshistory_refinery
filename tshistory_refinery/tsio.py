@@ -9,6 +9,7 @@ from tshistory.tsio import timeseries as basets
 from tshistory_xl.tsio import timeseries as xlts
 
 from tshistory_refinery import cache
+from tshistory_refinery import api  # trigger registration
 
 
 class timeseries(xlts):
