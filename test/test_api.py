@@ -704,12 +704,22 @@ insertion_date             value_date
         'over-ground-1',
         '(series "ground-1")'
     )
-
-    cache.set_policy(
-        engine,
-        'another-policy',
-        'over-ground-1'
+    tsx.register_formula(
+        'over-ground-2',
+        '(series "ground-1")'
     )
+
+    tsx.set_cache_policy(
+        'another-policy',
+        ['over-ground-1', 'over-ground-2']
+    )
+    assert cache.policy_series(
+        engine,
+        'another-policy'
+    ) == [
+        'over-ground-1',
+        'over-ground-2'
+    ]
     r = cache.ready(
         engine,
         'over-ground-1'

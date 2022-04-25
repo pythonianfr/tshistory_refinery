@@ -1,3 +1,5 @@
+from typing import List
+
 from tshistory.util import extend
 from tshistory.api import mainsource
 
@@ -61,3 +63,16 @@ def delete_cache_policy(self, name: str) -> NONETYPE:
         name
     )
 
+
+@extend(mainsource)
+def set_cache_policy(
+        self,
+        policyname: str,
+        seriesnames: List[str]) -> NONETYPE:
+
+    for name in seriesnames:
+        cache.set_policy(
+            self.engine,
+            policyname,
+            name
+        )

@@ -1,3 +1,5 @@
+import json
+
 from flask_restx import (
     inputs,
     Resource,
@@ -63,6 +65,19 @@ newcp.add_argument(
 deletecp = cp.copy()
 
 
+def jsonlist(thing):
+    return json.loads(thing)
+
+
+mapcp = cp.copy()
+mapcp.add_argument(
+    'seriesnames',
+    type=jsonlist,
+    required=True,
+    help='series list'
+)
+
+
 class refinery_httpapi(xl_httpapi):
     __slots__ = 'tsa', 'bp', 'api', 'nss', 'nsg'
 
@@ -77,7 +92,7 @@ class refinery_httpapi(xl_httpapi):
         )
 
         @nsc.route('/policy')
-        class formula_cache(Resource):
+        class cache_policy(Resource):
 
             @api.expect(newcp)
             @onerror
@@ -124,6 +139,20 @@ class refinery_httpapi(xl_httpapi):
                 args = deletecp.parse_args()
                 tsa.delete_cache_policy(
                     args.name
+                )
+
+                return '', 204
+
+        @nsc.route('/mapping')
+        class policy_mapping(Resource):
+
+            @api.expect(mapcp)
+            @onerror
+            def put(self):
+                args = mapcp.parse_args()
+                tsa.set_cache_policy(
+                    args.name,
+                    args.seriesnames
                 )
 
                 return '', 204
@@ -198,6 +227,17 @@ class RefineryClient(XLClient):
             'name': name,
         })
 
+        if res.status_code == 204:
+            return
+
+        return res
+
+    @unwraperror
+    def set_cache_policy(self, policyname, seriesnames):
+        res = self.session.put(f'{self.uri}/cache/mapping', data={
+            'name': policyname,
+            'seriesnames': json.dumps(seriesnames)
+        })
         if res.status_code == 204:
             return
 
