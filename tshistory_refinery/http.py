@@ -60,6 +60,7 @@ newcp.add_argument(
     help='cron rule to schedule the refresher'
 )
 
+deletecp = cp.copy()
 
 
 class refinery_httpapi(xl_httpapi):
@@ -114,6 +115,16 @@ class refinery_httpapi(xl_httpapi):
                     )
                 except Exception as e:
                     api.abort(409, str(e))
+
+                return '', 204
+
+            @api.expect(deletecp)
+            @onerror
+            def delete(self):
+                args = deletecp.parse_args()
+                tsa.delete_cache_policy(
+                    args.name
+                )
 
                 return '', 204
 
@@ -175,6 +186,17 @@ class RefineryClient(XLClient):
 
         if res.status_code == 409:
             raise ValueError(res.json()['message'])
+
+        if res.status_code == 204:
+            return
+
+        return res
+
+    @unwraperror
+    def delete_cache_policy(self, name):
+        res = self.session.delete(f'{self.uri}/cache/policy', data={
+            'name': name,
+        })
 
         if res.status_code == 204:
             return

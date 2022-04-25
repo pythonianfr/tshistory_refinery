@@ -772,6 +772,15 @@ insertion_date             value_date
     assert len(tsx.history('over-ground-1', nocache=True)) == 5
 
 
+    # delete
+    tsx.delete_cache_policy(
+        'another-policy'
+    )
+    assert not engine.execute(
+        'select id from tsh.cache_policy'
+    ).scalar()
+
+
 def test_cacheable_formulas(tsa1, tsa2):
     ts = pd.Series(
         [1, 2, 3],

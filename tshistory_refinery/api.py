@@ -52,3 +52,12 @@ def edit_cache_policy(
         schedule_rule
     )
 
+
+@extend(mainsource)
+def delete_cache_policy(self, name: str) -> NONETYPE:
+
+    cache.delete_policy(
+        self.engine,
+        name
+    )
+
