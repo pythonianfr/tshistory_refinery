@@ -773,7 +773,7 @@ viewlinkpolicy model policy =
                    , HA.type_ "button"
                    , HE.onClick CancelLink
                    ]
-            [ H.text "cancel" ]
+            [ H.text "exit" ]
         , H.div [ HA.class "link_policy" ]
             [ viewcachedserieslist model
             , viewfreeserieslist model
