@@ -129,7 +129,10 @@ def test_cache_a_series(engine, tsa):
         )
     )
 
-    tsh.update(engine, ts, 'ground-0', 'Babar')
+    tsh.update(
+        engine, ts, 'ground-0', 'Babar',
+        insertion_date=pd.Timestamp('2022-1-1', tz='utc')
+    )
     tsh.register_formula(
         engine,
         'over-ground-0',
@@ -139,7 +142,7 @@ def test_cache_a_series(engine, tsa):
     cache.new_policy(
         engine,
         'a-policy',
-        '(date "2023-1-1")',
+        '(date "2022-1-1")',
         '(date "2022-1-1")',
         '(shifted now #:days -10)',
         '(shifted now #:days 10)',
@@ -175,7 +178,7 @@ def test_cache_a_series(engine, tsa):
     )
     assert p == {
         'from_date': '(date "2022-1-1")',
-        'initial_revdate': '(date "2023-1-1")',
+        'initial_revdate': '(date "2022-1-1")',
         'look_after': '(shifted now #:days 10)',
         'look_before': '(shifted now #:days -10)',
         'revdate_rule': '0 1 * * *',
@@ -186,7 +189,7 @@ def test_cache_a_series(engine, tsa):
         engine,
         tsa,
         'over-ground-0',
-        final_revdate=pd.Timestamp('2023-1-5', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
     )
 
     r = cache.ready(
@@ -234,7 +237,7 @@ def test_cache_refresh(engine, tsa):
     cache.new_policy(
         engine,
         'another-policy',
-        initial_revdate='(date "2023-1-1")',
+        initial_revdate='(date "2022-1-1")',
         from_date='(date "2022-1-1")',
         look_before='(shifted now #:days -10)',
         look_after='(shifted now #:days 10)',
@@ -246,7 +249,7 @@ def test_cache_refresh(engine, tsa):
     # let's prepare a 3 points series with 5 revisions
     for idx, idate in enumerate(
             pd.date_range(
-                utcdt(2023, 1, 1),
+                utcdt(2022, 1, 1),
                 freq='D',
                 periods=5
             )
@@ -268,25 +271,25 @@ def test_cache_refresh(engine, tsa):
 
     assert_hist("""
 insertion_date             value_date               
-2023-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    2.0
                            2022-01-03 00:00:00+00:00    3.0
-2023-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    2.0
                            2022-01-04 00:00:00+00:00    3.0
-2023-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    2.0
                            2022-01-05 00:00:00+00:00    3.0
-2023-01-04 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    1.0
                            2022-01-05 00:00:00+00:00    2.0
                            2022-01-06 00:00:00+00:00    3.0
-2023-01-05 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    1.0
@@ -319,8 +322,7 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
-        now=pd.Timestamp('2022-1-7'),
-        final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
 
     r = cache.ready(
@@ -333,14 +335,14 @@ insertion_date             value_date
     # indeed, we have 3 revs in cache
     assert_hist("""
 insertion_date             value_date               
-2023-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    2.0
                            2022-01-03 00:00:00+00:00    3.0
-2023-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    2.0
                            2022-01-04 00:00:00+00:00    3.0
-2023-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    2.0
@@ -369,18 +371,18 @@ insertion_date             value_date
     # insertion dates: only 3 vs 5
     idates = tsa.insertion_dates('over-ground-1')
     assert idates == [
-        pd.Timestamp('2023-01-01 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-02 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-03 00:00:00+0000', tz='UTC')
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC')
     ]
 
     idates = tsa.insertion_dates('over-ground-1', nocache=True)
     assert idates == [
-        pd.Timestamp('2023-01-01 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-02 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-03 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-04 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-05 00:00:00+0000', tz='UTC')
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-04 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-05 00:00:00+0000', tz='UTC')
     ]
 
     # history points: only 3 vs 5
@@ -392,32 +394,31 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
-        now=pd.Timestamp('2022-1-7'),
-        final_revdate=pd.Timestamp('2023-1-5', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
     )
 
     hist = tsh.cache.history(engine, 'over-ground-1')
     assert_hist("""
 insertion_date             value_date               
-2023-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    2.0
                            2022-01-03 00:00:00+00:00    3.0
-2023-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    2.0
                            2022-01-04 00:00:00+00:00    3.0
-2023-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    2.0
                            2022-01-05 00:00:00+00:00    3.0
-2023-01-04 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    1.0
                            2022-01-05 00:00:00+00:00    2.0
                            2022-01-06 00:00:00+00:00    3.0
-2023-01-05 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    1.0
@@ -448,8 +449,7 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
-        now=pd.Timestamp('2022-1-7'),
-        final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
     r = cache.ready(
         engine,
@@ -480,8 +480,7 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
-        now=pd.Timestamp('2022-1-7'),
-        final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
     r = cache.ready(
         engine,
@@ -505,7 +504,7 @@ insertion_date             value_date
     # WITH DIFFERENT VALUES THIS TIME
     for idx, idate in enumerate(
             pd.date_range(
-                utcdt(2023, 1, 1),
+                utcdt(2022, 1, 1),
                 freq='D',
                 periods=5
             )
@@ -530,33 +529,32 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
-        now=pd.Timestamp('2022-1-7'),
-        final_revdate=pd.Timestamp('2023-1-5', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
     )
 
     # at this point we have a weird mix in the cache
     # but hey, that's life
     assert_hist("""
 insertion_date             value_date               
-2023-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.0
+2022-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.0
                            2022-01-02 00:00:00+00:00    3.0
                            2022-01-03 00:00:00+00:00    4.0
-2023-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.0
+2022-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.0
                            2022-01-02 00:00:00+00:00    2.0
                            2022-01-03 00:00:00+00:00    3.0
                            2022-01-04 00:00:00+00:00    4.0
-2023-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.0
+2022-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.0
                            2022-01-02 00:00:00+00:00    2.0
                            2022-01-03 00:00:00+00:00    2.0
                            2022-01-04 00:00:00+00:00    3.0
                            2022-01-05 00:00:00+00:00    4.0
-2023-01-04 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.1
+2022-01-04 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.1
                            2022-01-02 00:00:00+00:00    2.1
                            2022-01-03 00:00:00+00:00    2.1
                            2022-01-04 00:00:00+00:00    2.1
                            2022-01-05 00:00:00+00:00    3.1
                            2022-01-06 00:00:00+00:00    4.1
-2023-01-05 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.1
+2022-01-05 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.1
                            2022-01-02 00:00:00+00:00    2.1
                            2022-01-03 00:00:00+00:00    2.1
                            2022-01-04 00:00:00+00:00    2.1
@@ -575,7 +573,7 @@ def test_rename_delete(engine, tsa):
     cache.new_policy(
         engine,
         'policy-3',
-        initial_revdate='(date "2023-1-1")',
+        initial_revdate='(date "2022-1-1")',
         from_date='(date "2022-1-1")',
         look_before='(shifted now #:days -10)',
         look_after='(shifted now #:days 10)',
@@ -596,7 +594,7 @@ def test_rename_delete(engine, tsa):
         'ground-2',
         ts,
         'Babar',
-        insertion_date=pd.Timestamp('2023-1-1')
+        insertion_date=pd.Timestamp('2022-1-1')
     )
 
     # the formula that refers to the series
@@ -617,7 +615,7 @@ def test_rename_delete(engine, tsa):
         engine,
         tsa,
         'over-ground-2',
-        final_revdate=pd.Timestamp('2023-1-1', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-1', tz='UTC')
     )
 
     assert tsh.cache.exists(engine, 'over-ground-2')

@@ -639,10 +639,10 @@ def test_cache(engine, tsx, tsa3):
 
     tsx.edit_cache_policy(
         'another-policy',
-        initial_revdate='(date "2023-1-1")',
+        initial_revdate='(date "2022-1-1")',
         from_date='(date "2022-1-1")',
         look_before='(shifted now #:days -10)',
-        look_after='(shifted now #:days 10)',
+        look_after='(shifted now #:days 2)',
         revdate_rule='0 0 * * *',
         schedule_rule='0 8-18 * * *'
     )
@@ -650,7 +650,7 @@ def test_cache(engine, tsx, tsa3):
     # let's prepare a 3 points series with 5 revisions
     for idx, idate in enumerate(
             pd.date_range(
-                utcdt(2023, 1, 1),
+                utcdt(2022, 1, 1),
                 freq='D',
                 periods=5
             )
@@ -672,25 +672,25 @@ def test_cache(engine, tsx, tsa3):
 
     assert_hist("""
 insertion_date             value_date               
-2023-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    2.0
                            2022-01-03 00:00:00+00:00    3.0
-2023-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    2.0
                            2022-01-04 00:00:00+00:00    3.0
-2023-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    2.0
                            2022-01-05 00:00:00+00:00    3.0
-2023-01-04 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    1.0
                            2022-01-05 00:00:00+00:00    2.0
                            2022-01-06 00:00:00+00:00    3.0
-2023-01-05 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00  2022-01-01 00:00:00+00:00    1.0
                            2022-01-02 00:00:00+00:00    1.0
                            2022-01-03 00:00:00+00:00    1.0
                            2022-01-04 00:00:00+00:00    1.0
@@ -731,8 +731,7 @@ insertion_date             value_date
         engine,
         tsa3,
         'over-ground-1',
-        now=pd.Timestamp('2022-1-7'),
-        final_revdate=pd.Timestamp('2023-1-3', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
 
     r = cache.ready(
@@ -763,18 +762,18 @@ insertion_date             value_date
     # insertion dates: only 3 vs 5
     idates = tsx.insertion_dates('over-ground-1')
     assert idates == [
-        pd.Timestamp('2023-01-01 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-02 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-03 00:00:00+0000', tz='UTC')
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC')
     ]
 
     idates = tsx.insertion_dates('over-ground-1', nocache=True)
     assert idates == [
-        pd.Timestamp('2023-01-01 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-02 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-03 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-04 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2023-01-05 00:00:00+0000', tz='UTC')
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-04 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-05 00:00:00+0000', tz='UTC')
     ]
 
     # history points: only 3 vs 5

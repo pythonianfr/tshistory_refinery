@@ -342,33 +342,20 @@ def invalidate(cn, series_name, namespace='tsh'):
     )
 
 
-def refresh(engine, tsa, name, now=None, final_revdate=None):
+def refresh(engine, tsa, name, final_revdate=None):
     """ Refresh a series cache """
     tsh = tsa.tsh
     policy = series_policy(engine, name, tsh.namespace)
-    now = now or pd.Timestamp(datetime.utcnow(), tz='utc')
 
     exists = tsh.cache.exists(engine, name)
     if exists:
         idates = tsh.cache.insertion_dates(engine, name)
         initial_revdate = idates[-1]
-        from_value_date = eval_moment(
-            policy['look_before'],
-            {'now': now}
-        )
     else:
         initial_revdate = pd.Timestamp(
             eval_moment(policy['initial_revdate']),
             tz='UTC'
         )
-        from_value_date = pd.Timestamp(
-            eval_moment(policy['from_date']),
-            tz='UTC'
-        )
-    to_value_date = eval_moment(
-        policy['look_after'],
-        {'now': now}
-    )
 
     for revdate in croniter_range(
         initial_revdate,
@@ -377,6 +364,16 @@ def refresh(engine, tsa, name, now=None, final_revdate=None):
     ):
         if exists and revdate == initial_revdate:
             continue
+
+        from_value_date = eval_moment(
+            policy['look_before'],
+            {'now': revdate}
+        )
+        to_value_date = eval_moment(
+            policy['look_after'],
+            {'now': revdate}
+        )
+
         print(revdate)
         ts = tsa.get(
             name,
