@@ -32,12 +32,6 @@ newcp.add_argument(
     help='initial revision date'
 )
 newcp.add_argument(
-    'from_date',
-    type=str,
-    required=True,
-    help='initial value date'
-)
-newcp.add_argument(
     'look_before',
     type=str,
     required=True,
@@ -111,7 +105,6 @@ class refinery_httpapi(xl_httpapi):
                     tsa.new_cache_policy(
                         args.name,
                         args.initial_revdate,
-                        args.from_date,
                         args.look_before,
                         args.look_after,
                         args.revdate_rule,
@@ -131,7 +124,6 @@ class refinery_httpapi(xl_httpapi):
                     tsa.edit_cache_policy(
                         args.name,
                         args.initial_revdate,
-                        args.from_date,
                         args.look_before,
                         args.look_after,
                         args.revdate_rule,
@@ -187,7 +179,6 @@ class RefineryClient(XLClient):
             self,
             name,
             initial_revdate,
-            from_date,
             look_before,
             look_after,
             revdate_rule,
@@ -196,7 +187,6 @@ class RefineryClient(XLClient):
         res = self.session.put(f'{self.uri}/cache/policy', data={
             'name': name,
             'initial_revdate': initial_revdate,
-            'from_date': from_date,
             'look_before': look_before,
             'look_after': look_after,
             'revdate_rule': revdate_rule,
@@ -216,7 +206,6 @@ class RefineryClient(XLClient):
             self,
             name,
             initial_revdate,
-            from_date,
             look_before,
             look_after,
             revdate_rule,
@@ -225,7 +214,6 @@ class RefineryClient(XLClient):
         res = self.session.patch(f'{self.uri}/cache/policy', data={
             'name': name,
             'initial_revdate': initial_revdate,
-            'from_date': from_date,
             'look_before': look_before,
             'look_after': look_after,
             'revdate_rule': revdate_rule,

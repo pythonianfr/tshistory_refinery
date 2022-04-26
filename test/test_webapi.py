@@ -181,7 +181,6 @@ def test_get_policies(client, engine):
         engine,
         'pol-1',
         initial_revdate='(date "2020-1-1")',
-        from_date='(date "2010-1-1")',
         look_before='(shifted (today) #:days 15)',
         look_after='(shifted (today) #:days -10)',
         revdate_rule='0 1 * * *',
@@ -191,7 +190,6 @@ def test_get_policies(client, engine):
     res = client.get('/policies')
     assert res.json == [
         {'active': False,
-         'from_date': '(date "2010-1-1")',
          'initial_revdate': '(date "2020-1-1")',
          'look_after': '(shifted (today) #:days -10)',
          'look_before': '(shifted (today) #:days 15)',
@@ -248,7 +246,6 @@ def test_create_policies(client, engine):
 
     res = client.put_json('/create-policy', {
         'name': 'web-pol',
-        'from_date': '(date "2010-1-1")',
         'initial_revdate': '(date "2020-1-1")',
         'look_after': '(shifted (today) #:days -10)',
         'look_before': '(shifted (today) #:days 15)',
@@ -260,7 +257,6 @@ def test_create_policies(client, engine):
     res = client.get('/policies')
     assert res.json == [
         {'active': False,
-         'from_date': '(date "2010-1-1")',
          'initial_revdate': '(date "2020-1-1")',
          'look_after': '(shifted (today) #:days -10)',
          'look_before': '(shifted (today) #:days 15)',
@@ -280,7 +276,6 @@ def test_create_policies(client, engine):
     # identical to the first
     res = client.put_json('/create-policy', {
         'name': 'web-pol-bis',
-        'from_date': '(date "2010-1-1")',
         'initial_revdate': '(date "2020-1-1")',
         'look_after': '(shifted (today) #:days -10)',
         'look_before': '(shifted (today) #:days 15)',
@@ -293,7 +288,6 @@ def test_create_policies(client, engine):
     # with a bogus field
     res = client.put_json('/create-policy', {
         'name': 'web-pol-bis',
-        'from_date': '(date "2010-1-1")',
         'initial_revdate': 'BOGUS',
         'look_after': '(shifted (today) #:days -10)',
         'look_before': '(shifted (today) #:days 15)',
@@ -341,7 +335,6 @@ def test_cacheable_formulas(client, tsh, engine):
 
     res = client.put_json('/create-policy', {
         'name': 'test-cacheable',
-        'from_date': '(date "2010-1-1")',
         'initial_revdate': '(date "2020-1-1")',
         'look_after': '(shifted (today) #:days -10)',
         'look_before': '(shifted (today) #:days 15)',
@@ -375,7 +368,6 @@ def test_cacheable_formulas(client, tsh, engine):
 
 def test_validate_policy(client):
     res = client.put_json('/validate-policy', {
-        'from_date': '(date "2010-1-1")',
         'initial_revdate': 'BOGUS',
         'look_after': '(shifted (today) #:days -10)',
         'look_before': '(shifted (today) #:days 15)',
@@ -411,7 +403,6 @@ def test_schedule_policy(client, tsh, engine):
 
     res = client.put_json('/create-policy', {
         'name': 'test-schedule',
-        'from_date': '(date "2010-1-1")',
         'initial_revdate': '(date "2020-1-1")',
         'look_after': '(shifted (today) #:days -10)',
         'look_before': '(shifted (today) #:days 15)',
@@ -472,7 +463,6 @@ def test_edit_policy(client, engine):
 
     res = client.put_json('/create-policy', {
         'name': 'test-edit',
-        'from_date': '(date "2010-1-1")',
         'initial_revdate': '(date "2010-1-1")',
         'look_after': '(shifted (today) #:days -10)',
         'look_before': '(shifted (today) #:days 15)',
@@ -483,7 +473,6 @@ def test_edit_policy(client, engine):
 
     res = client.put_json('/edit-policy', {
         'name': 'test-edit',
-        'from_date': '(date "2012-1-1")',
         'initial_revdate': '(date "2012-1-1")',
         'look_after': '(shifted (today) #:days -15)',
         'look_before': '(shifted (today) #:days 20)',
@@ -495,7 +484,6 @@ def test_edit_policy(client, engine):
     res = client.get('/policies')
     assert res.json == [
         {'active': False,
-         'from_date': '(date "2012-1-1")',
          'initial_revdate': '(date "2012-1-1")',
          'look_after': '(shifted (today) #:days -15)',
          'look_before': '(shifted (today) #:days 20)',

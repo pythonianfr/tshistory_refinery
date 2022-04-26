@@ -290,7 +290,7 @@ def refinery_bp(tsa, more_sections=None):
     def cache_policies():
         q = select(
             'name', 'ready',
-            'initial_revdate', 'from_date',
+            'initial_revdate',
             'look_before', 'look_after',
             'revdate_rule', 'schedule_rule'
         ).table('tsh.cache_policy')

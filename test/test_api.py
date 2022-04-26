@@ -606,19 +606,17 @@ def test_cache(engine, tsx, tsa3):
     with pytest.raises(ValueError) as err:
         tsx.new_cache_policy(
             'another-policy',
-            initial_revdate='(date "2023-1-1")',
-            from_date='BOGUS',
+            initial_revdate='BOGUS',
             look_before='(shifted now #:days -10)',
             look_after='(shifted now #:days 10)',
             revdate_rule='0 0 * * *',
             schedule_rule='0 8-18 * * *'
         )
-    assert err.value.args[0] == "Bad inputs for the cache policy: {'from_date': 'BOGUS'}"
+    assert err.value.args[0] == "Bad inputs for the cache policy: {'initial_revdate': 'BOGUS'}"
 
     tsx.new_cache_policy(
         'another-policy',
         initial_revdate='(date "2023-1-1")',
-        from_date='(date "2022-1-1")',
         look_before='(shifted now #:days -15)',
         look_after='(shifted now #:days 10)',
         revdate_rule='0 0 * * *',
@@ -628,19 +626,17 @@ def test_cache(engine, tsx, tsa3):
     with pytest.raises(ValueError) as err:
         tsx.edit_cache_policy(
             'another-policy',
-            initial_revdate='(date "2023-1-1")',
-            from_date='BOGUS',
+            initial_revdate='BOGUS',
             look_before='(shifted now #:days -10)',
             look_after='(shifted now #:days 10)',
             revdate_rule='0 0 * * *',
             schedule_rule='0 8-18 * * *'
         )
-    assert err.value.args[0] == "Bad inputs for the cache policy: {'from_date': 'BOGUS'}"
+    assert err.value.args[0] == "Bad inputs for the cache policy: {'initial_revdate': 'BOGUS'}"
 
     tsx.edit_cache_policy(
         'another-policy',
         initial_revdate='(date "2022-1-1")',
-        from_date='(date "2022-1-1")',
         look_before='(shifted now #:days -10)',
         look_after='(shifted now #:days 2)',
         revdate_rule='0 0 * * *',

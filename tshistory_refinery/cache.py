@@ -24,7 +24,6 @@ def eval_moment(expr, env={}):
 
 def validate_policy(
         initial_revdate,
-        from_date,
         look_before,
         look_after,
         revdate_rule,
@@ -35,7 +34,6 @@ def validate_policy(
     env = {'now': datetime.utcnow()}
     for name, val in (
             ('initial_revdate', initial_revdate),
-            ('from_date', from_date),
             ('look_before', look_before),
             ('look_after', look_after)):
         try:
@@ -54,7 +52,6 @@ def new_policy(
         engine,
         name,
         initial_revdate,
-        from_date,
         look_before,
         look_after,
         revdate_rule,
@@ -64,7 +61,6 @@ def new_policy(
     """ Create a new cache policy """
     badinputs = validate_policy(
         initial_revdate,
-        from_date,
         look_before,
         look_after,
         revdate_rule,
@@ -81,7 +77,6 @@ def new_policy(
         ).values(
             name=name,
             initial_revdate=initial_revdate,
-            from_date=from_date,
             look_before=look_before,
             look_after=look_after,
             revdate_rule=revdate_rule,
@@ -94,7 +89,6 @@ def edit_policy(
         engine,
         name,
         initial_revdate,
-        from_date,
         look_before,
         look_after,
         revdate_rule,
@@ -104,7 +98,6 @@ def edit_policy(
     """ Edit a cache policy """
     badinputs = validate_policy(
         initial_revdate,
-        from_date,
         look_before,
         look_after,
         revdate_rule,
@@ -121,7 +114,6 @@ def edit_policy(
         ).where(name=name
         ).values(
             initial_revdate=initial_revdate,
-            from_date=from_date,
             look_before=look_before,
             look_after=look_after,
             revdate_rule=revdate_rule,
@@ -206,7 +198,7 @@ def policy_by_name(engine, name, namespace='tsh'):
     """ Return a cache policy by name, as a dict """
     with engine.begin() as cn:
         p = cn.execute(
-            f'select initial_revdate, from_date, '
+            f'select initial_revdate, '
             f'       revdate_rule, schedule_rule '
             f'from "{namespace}".cache_policy'
         ).fetchone()
@@ -287,7 +279,7 @@ def ready(cn, series_name, namespace='tsh'):
 def series_policy(cn, series_name, namespace='tsh'):
     """ Return the cache policy for a series """
     q = (
-        f'select initial_revdate, from_date, '
+        f'select initial_revdate, '
         f'       look_before, look_after, '
         f'       revdate_rule, schedule_rule '
         f'from "{namespace}".cache_policy as cache, '

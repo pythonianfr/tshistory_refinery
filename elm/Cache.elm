@@ -29,7 +29,6 @@ type alias Policy =
     { name : String
     , ready : Bool
     , initial_revdate : String
-    , from_date : String
     , look_before : String
     , look_after : String
     , revdate_rule : String
@@ -40,7 +39,6 @@ type alias Policy =
 
 type alias PolicyError =
     { initial_revdate : Maybe String
-    , from_date : Maybe String
     , look_before : Maybe String
     , look_after : Maybe String
     , revdate_rule : Maybe String
@@ -66,19 +64,11 @@ type alias Model =
     }
 
 
-map9 func da db dc dd de df dg dh di =
-    let
-        map1 funci = D.map funci di
-    in
-    D.map8 func da db dc dd de df dg dh |> D.andThen map1
-
-
 policydecoder =
-    map9 Policy
+    D.map8 Policy
         (D.field "name" D.string)
         (D.field "ready" D.bool)
         (D.field "initial_revdate" D.string)
-        (D.field "from_date" D.string)
         (D.field "look_before" D.string)
         (D.field "look_after" D.string)
         (D.field "revdate_rule" D.string)
@@ -87,9 +77,8 @@ policydecoder =
 
 
 policy_error_decoder =
-    D.map6 PolicyError
+    D.map5 PolicyError
         (D.maybe (D.field "initial_revdate" D.string))
-        (D.maybe (D.field "from_date" D.string))
         (D.maybe (D.field "look_before" D.string))
         (D.maybe (D.field "look_after" D.string))
         (D.maybe (D.field "revdate_rule" D.string))
@@ -159,7 +148,6 @@ unsetcache model name =
 validatepolicy model policy =
     let policy_encoder =
             [ ("initial_revdate", E.string policy.initial_revdate)
-            , ("from_date", E.string policy.from_date)
             , ("look_before", E.string policy.look_before)
             , ("look_after", E.string policy.look_after)
             , ("revdate_rule", E.string policy.revdate_rule)
@@ -180,7 +168,6 @@ sendpolicy model policy =
     let policy_encoder =
             [ ("name" , E.string policy.name)
             , ("initial_revdate", E.string policy.initial_revdate)
-            , ("from_date", E.string policy.from_date)
             , ("look_before", E.string policy.look_before)
             , ("look_after", E.string policy.look_after)
             , ("revdate_rule", E.string policy.revdate_rule)
@@ -201,7 +188,6 @@ updatepolicy model policy =
     let policy_encoder =
             [ ("name" , E.string policy.name)
             , ("initial_revdate", E.string policy.initial_revdate)
-            , ("from_date", E.string policy.from_date)
             , ("look_before", E.string policy.look_before)
             , ("look_after", E.string policy.look_after)
             , ("revdate_rule", E.string policy.revdate_rule)
@@ -299,7 +285,6 @@ update_policy_field policy fieldname value =
     case fieldname of
         "name" -> { policy | name = value }
         "initial_revdate" -> { policy | initial_revdate = value }
-        "from_date" -> { policy | from_date = value }
         "look_before" -> { policy | look_before = value }
         "look_after" -> { policy | look_after = value }
         "revdate_rule" -> { policy | revdate_rule = value }
@@ -344,7 +329,7 @@ update msg model =
 
         -- addition
         NewPolicy ->
-            ( { model | adding = Just <| Policy "" False "" "" "" "" "" "" False }
+            ( { model | adding = Just <| Policy "" False "" "" "" "" "" False }
             , Cmd.none
             )
 
@@ -584,7 +569,6 @@ viewpolicy model policy =
               ]
         , H.span [] [ H.text <| if policy.ready then "true" else "false" ]
         , H.span [] [ H.text <| policy.initial_revdate ]
-        , H.span [] [ H.text <| policy.from_date ]
         , H.span [] [ H.text <| policy.look_before ]
         , H.span [] [ H.text <| policy.look_after ]
         , H.span [] [ H.text <| policy.revdate_rule ]
@@ -605,10 +589,6 @@ haserror editerror fieldname =
             case fieldname of
                 "initial_revdate" ->
                     case polerror.initial_revdate of
-                        Nothing -> False
-                        _ -> True
-                "from_date" ->
-                    case polerror.from_date of
                         Nothing -> False
                         _ -> True
                 "look_before" ->
@@ -633,7 +613,6 @@ haserror editerror fieldname =
 inputs =
     [ ("name", "name", "policy name" )
     , ("initial_revdate", "initial revision date", "e.g. (date \"2022-1-1\")" )
-    , ("from_date", "from date", "e.g. (date \"2022-1-1\")" )
     , ("look_before", "look before", "e.g. (shifted (today) #:days -15)" )
     , ("look_after", "look after", "e.g. (shifted (today) #:days 15)" )
     , ("revdate_rule", "revision date rule", "in crontab format" )
@@ -646,7 +625,6 @@ polget pol name =
     case name of
         "name" -> pol.name
         "initial_revdate" -> pol.initial_revdate
-        "from_date" -> pol.from_date
         "look_before" -> pol.look_before
         "look_after" -> pol.look_after
         "revdate_rule" -> pol.revdate_rule
@@ -806,7 +784,7 @@ viewlinkpolicy model policy =
 viewpoliciesheader =
     let columns =
             [ "name", "ready", "initial revision date"
-            , "from date", "look before", "look after"
+            , "look before", "look after"
             , "rev date rule", "schedule rule", "actions"
             ]
     in [ H.li [ HA.class "gridded_policy" ]

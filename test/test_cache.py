@@ -18,13 +18,11 @@ def test_invalid_cache():
     bad = cache.validate_policy(
         'not a moment',
         'not a moment',
-        'not a moment',
         'not a moment either',
         'not a cron rule',
         'you guessed it right'
     )
     assert bad == {
-        'from_date': 'not a moment',
         'initial_revdate': 'not a moment',
         'look_after': 'not a moment either',
         'look_before': 'not a moment',
@@ -58,7 +56,6 @@ def test_good_cache(engine):
         engine,
         'my-policy',
         initial_revdate='(date "2020-1-1")',
-        from_date='(date "2010-1-1")',
         look_before='(shifted (today) #:days 15)',
         look_after='(shifted (today) #:days -10)',
         revdate_rule='0 1 * * *',
@@ -68,7 +65,6 @@ def test_good_cache(engine):
     p = cache.policy_by_name(engine, 'my-policy')
     assert p == {
         'initial_revdate': '(date "2020-1-1")',
-        'from_date': '(date "2010-1-1")',
         'revdate_rule': '0 1 * * *',
         'schedule_rule': '0 8-18 * * *'
     }
@@ -92,7 +88,6 @@ def test_good_cache(engine):
         engine,
         'my-policy',
         initial_revdate='(date "2022-1-1")',
-        from_date='(date "2012-1-1")',
         look_before='(shifted (today) #:days -15)',
         look_after='(shifted (today) #:days 10)',
         revdate_rule='0 1 * * *',
@@ -101,7 +96,6 @@ def test_good_cache(engine):
     p = cache.policy_by_name(engine, 'my-policy')
     assert p == {
         'initial_revdate': '(date "2022-1-1")',
-        'from_date': '(date "2012-1-1")',
         'revdate_rule': '0 1 * * *',
         'schedule_rule': '0 8-18 * * *'
     }
@@ -143,7 +137,6 @@ def test_cache_a_series(engine, tsa):
         engine,
         'a-policy',
         '(date "2022-1-1")',
-        '(date "2022-1-1")',
         '(shifted now #:days -10)',
         '(shifted now #:days 10)',
         '0 1 * * *',
@@ -177,7 +170,6 @@ def test_cache_a_series(engine, tsa):
         namespace=tsh.namespace
     )
     assert p == {
-        'from_date': '(date "2022-1-1")',
         'initial_revdate': '(date "2022-1-1")',
         'look_after': '(shifted now #:days 10)',
         'look_before': '(shifted now #:days -10)',
@@ -238,7 +230,6 @@ def test_cache_refresh(engine, tsa):
         engine,
         'another-policy',
         initial_revdate='(date "2022-1-1")',
-        from_date='(date "2022-1-1")',
         look_before='(shifted now #:days -10)',
         look_after='(shifted now #:days 10)',
         revdate_rule='0 0 * * *',
@@ -574,7 +565,6 @@ def test_rename_delete(engine, tsa):
         engine,
         'policy-3',
         initial_revdate='(date "2022-1-1")',
-        from_date='(date "2022-1-1")',
         look_before='(shifted now #:days -10)',
         look_after='(shifted now #:days 10)',
         revdate_rule='0 0 * * *',
@@ -662,7 +652,6 @@ def test_cache_coherency(engine, tsa):
         engine,
         'policy-4',
         initial_revdate='(date "2022-1-1")',
-        from_date='(date "2022-1-1")',
         look_before='(shifted now #:days -1)',
         look_after='(shifted now #:days 1)',
         revdate_rule='0 0 * * *',
@@ -759,7 +748,6 @@ def test_federation_cache_coherency(engine, federated, remote):
         engine,
         'policy-5',
         initial_revdate='(date "2022-1-1")',
-        from_date='(date "2022-1-1")',
         look_before='(shifted now #:days -1)',
         look_after='(shifted now #:days 1)',
         revdate_rule='0 0 * * *',
