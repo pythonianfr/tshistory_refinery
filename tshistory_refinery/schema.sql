@@ -12,17 +12,10 @@ create table "{ns}".cache_policy (
 
   -- two cron expressions
   revdate_rule text not null,
-  schedule_rule text not null,
-
-  unique (initial_revdate,
-          look_before, look_after,
-          revdate_rule, schedule_rule)
+  schedule_rule text not null
 );
 
-create index on "{ns}".cache_policy (look_before);
-create index on "{ns}".cache_policy (look_after);
-create index on "{ns}".cache_policy (revdate_rule);
-create index on "{ns}".cache_policy (schedule_rule);
+create index on "{ns}".cache_policy (name);
 
 
 create table "{ns}".cache_policy_sched (

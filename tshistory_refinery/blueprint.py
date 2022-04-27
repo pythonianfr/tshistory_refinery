@@ -15,7 +15,6 @@ from flask import (
     request,
     url_for
 )
-import sqlalchemy
 from pml import HTML
 from rework_ui.helper import argsdict as _args
 from psyl.lisp import (
@@ -344,11 +343,6 @@ def refinery_bp(tsa, more_sections=None):
             return make_response(str(err), 400)
         except TypeError:
             return make_response('Missing fields', 400)
-        except sqlalchemy.exc.IntegrityError as err:
-            return make_response(
-                'A policy with identical parameters already exists',
-                400
-            )
 
         return make_response('', 201)
 
@@ -361,11 +355,6 @@ def refinery_bp(tsa, more_sections=None):
             return make_response(str(err), 400)
         except TypeError:
             return make_response('Missing fields', 400)
-        except sqlalchemy.exc.IntegrityError as err:
-            return make_response(
-                'A policy with identical parameters already exists',
-                400
-            )
 
         return make_response('', 200)
 

@@ -273,18 +273,6 @@ def test_create_policies(client, engine):
     assert res.status_code == 400
     assert res.text == 'Missing fields'
 
-    # identical to the first
-    res = client.put_json('/create-policy', {
-        'name': 'web-pol-bis',
-        'initial_revdate': '(date "2020-1-1")',
-        'look_after': '(shifted (today) #:days -10)',
-        'look_before': '(shifted (today) #:days 15)',
-        'revdate_rule': '0 1 * * *',
-        'schedule_rule': '0 8-18 * * *'
-    })
-    assert res.status_code == 400
-    assert res.text == 'A policy with identical parameters already exists'
-
     # with a bogus field
     res = client.put_json('/create-policy', {
         'name': 'web-pol-bis',
