@@ -354,6 +354,9 @@ def refresh(engine, tsa, name, final_revdate=None):
         final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC'),
         policy['revdate_rule']
     ):
+        # native python datetimes lack some method
+        revdate = pd.Timestamp(revdate)
+
         if exists and revdate == initial_revdate:
             continue
 
