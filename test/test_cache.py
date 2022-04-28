@@ -224,6 +224,7 @@ def test_cache_a_series(engine, tsa):
 
 
 def test_cache_refresh(engine, tsa):
+    tsa.delete('over-ground-1')
     tsh = tsa.tsh
 
     cache.new_policy(
@@ -236,7 +237,6 @@ def test_cache_refresh(engine, tsa):
         schedule_rule='0 8-18 * * *',
         namespace=tsh.namespace
     )
-
     # let's prepare a 3 points series with 5 revisions
     for idx, idate in enumerate(
             pd.date_range(
@@ -301,6 +301,8 @@ insertion_date             value_date
         'over-ground-1',
         namespace=tsh.namespace
     )
+    assert cache.series_policy(engine, 'over-ground-1', namespace=tsh.namespace)
+
     r = cache.ready(
         engine,
         'over-ground-1',
@@ -315,6 +317,7 @@ insertion_date             value_date
         'over-ground-1',
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
+    assert cache.series_policy(engine, 'over-ground-1', namespace=tsh.namespace)
 
     r = cache.ready(
         engine,
@@ -340,7 +343,7 @@ insertion_date             value_date
                            2022-01-05 00:00:00+00:00    3.0
 """, tsh.cache.history(engine, 'over-ground-1'))
 
-    # get: cache vs nocache
+    # get: cache + no live
     assert_df("""
 2022-01-01 00:00:00+00:00    1.0
 2022-01-02 00:00:00+00:00    1.0
@@ -349,6 +352,18 @@ insertion_date             value_date
 2022-01-05 00:00:00+00:00    3.0
 """, tsa.get('over-ground-1'))
 
+    # get: cache + live
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00    1.0
+2022-01-06 00:00:00+00:00    2.0
+2022-01-07 00:00:00+00:00    3.0
+""", tsa.get('over-ground-1', live=True, revision_date=pd.Timestamp('2022-1-5')))
+
+    # get: nocache
     assert_df("""
 2022-01-01 00:00:00+00:00    1.0
 2022-01-02 00:00:00+00:00    1.0
@@ -486,7 +501,7 @@ insertion_date             value_date
 2022-01-03 00:00:00+00:00    2.0
 2022-01-04 00:00:00+00:00    3.0
 2022-01-05 00:00:00+00:00    4.0
-""", tsa.get('over-ground-1'))
+""", tsa.get('over-ground-1', live=False))
 
     # now, let's pretend upstream does something obnoxious
     tsa.delete('ground-1')

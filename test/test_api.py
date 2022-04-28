@@ -733,7 +733,7 @@ insertion_date             value_date
     )
     assert r
 
-    # get: cache vs nocache
+    # get: cache (not live patching)
     assert_df("""
 2022-01-01 00:00:00+00:00    1.0
 2022-01-02 00:00:00+00:00    1.0
@@ -741,6 +741,17 @@ insertion_date             value_date
 2022-01-04 00:00:00+00:00    2.0
 2022-01-05 00:00:00+00:00    3.0
 """, tsx.get('over-ground-1'))
+
+    # get: cache + live patching
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00    1.0
+2022-01-06 00:00:00+00:00    2.0
+2022-01-07 00:00:00+00:00    3.0
+""", tsx.get('over-ground-1', live=True, revision_date=pd.Timestamp('2022-1-5')))
 
     assert_df("""
 2022-01-01 00:00:00+00:00    1.0

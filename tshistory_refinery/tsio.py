@@ -1,7 +1,11 @@
+from datetime import timedelta
+
+import pandas as pd
 from psyl import lisp
 from sqlhelp import select
 
 from tshistory.util import (
+    patch,
     threadpool,
     tx
 )
@@ -12,6 +16,17 @@ from tshistory_refinery import cache
 from tshistory_refinery import api  # trigger registration
 
 
+def _munge_value_dates(self, cn, name, fvd, tvd):
+    # munge query to satisfy pandas idiocy
+    if fvd or tvd:
+        tzaware = self.metadata(cn, name)['tzaware']
+        if fvd:
+            fvd = compatible_date(tzaware, fvd)
+        if tvd:
+            tvd = compatible_date(tzaware, tvd)
+    return fvd, tvd
+
+
 class timeseries(xlts):
 
     def __init__(self, *a, **kw):
@@ -19,14 +34,34 @@ class timeseries(xlts):
         self.cache = basets(namespace='{}-cache'.format(self.namespace))
 
     @tx
-    def get(self, cn, name, nocache=False, **kw):
+    def get(self, cn, name, nocache=False, live=False, **kw):
         if self.type(cn, name) != 'formula':
             return super().get(cn, name, **kw)
 
         if not nocache:
             ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None and ready:
-                return self.cache.get(cn, name, **kw)
+                cached = self.cache.get(cn, name, **kw)
+
+                if len(cached) and live:
+                    # save for later use
+                    fvd = kw.pop('from_value_date', None)
+                    tvd = kw.pop('to_value_date', None)
+                    policy = cache.series_policy(cn, name, namespace=self.namespace)
+                    now = kw.get('revision_date') or pd.Timestamp.utcnow()
+                    kw['from_value_date'] = cache.eval_moment(
+                        policy['look_before'],
+                        {'now': now}
+                    )
+                    kw['to_value_date'] = cache.eval_moment(
+                        policy['look_after'],
+                        {'now': now}
+                    )
+                    livets = super().get(cn, name, **kw)
+                    fvd, tvd = _munge_value_dates(self, cn, name, fvd, tvd)
+                    return patch(cached, livets).loc[fvd:tvd]
+
+                return cached
 
         return super().get(cn, name, **kw)
 
