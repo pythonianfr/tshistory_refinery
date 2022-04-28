@@ -79,6 +79,13 @@ unmapcp.add_argument(
     help='series list to remove from their cache policy'
 )
 
+shc = reqparse.RequestParser()
+shc.add_argument(
+    'name',
+    type=str,
+    required=True,
+    help='series name'
+)
 
 
 class refinery_httpapi(xl_httpapi):
@@ -190,6 +197,16 @@ class refinery_httpapi(xl_httpapi):
             def get(self):
                 args = cp.parse_args()
                 return tsa.cache_policy_series(args.name)
+
+        @nsc.route('/series-has-cache')
+        class series_has_cache(Resource):
+
+            @api.expect(shc)
+            @onerror
+            def get(self):
+                args = shc.parse_args()
+                return tsa.has_cache(args.name)
+
 
 
 class RefineryClient(XLClient):
@@ -303,6 +320,16 @@ class RefineryClient(XLClient):
     def cache_policy_series(self, policyname):
         res = self.session.get(f'{self.uri}/cache/policy-series', params={
             'name': policyname
+        })
+        if res.status_code == 200:
+            return res.json()
+
+        return res
+
+    @unwraperror
+    def has_cache(self, seriesname):
+        res = self.session.get(f'{self.uri}/cache/series-has-cache', params={
+            'name': seriesname
         })
         if res.status_code == 200:
             return res.json()

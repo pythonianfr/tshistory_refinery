@@ -752,6 +752,8 @@ insertion_date             value_date
 2022-01-07 00:00:00+00:00    3.0
 """, tsx.get('over-ground-1', nocache=True))
 
+    assert tsx.has_cache('over-ground-1')
+
     # insertion dates: only 3 vs 5
     idates = tsx.insertion_dates('over-ground-1')
     assert idates == [
@@ -789,6 +791,8 @@ insertion_date             value_date
 
     assert tsx.cache_free_series() == ['over-ground-1', 'over-ground-2']
     assert tsx.cache_policies() == []
+
+    assert tsx.has_cache('over-ground-1')
 
 
 def test_cacheable_formulas(tsa1, tsa2):
