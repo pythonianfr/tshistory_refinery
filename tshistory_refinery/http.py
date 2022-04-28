@@ -182,6 +182,15 @@ class refinery_httpapi(xl_httpapi):
             def get(self):
                 return tsa.cache_policies()
 
+        @nsc.route('/policy-series')
+        class cache_policy_series(Resource):
+
+            @api.expect(cp)
+            @onerror
+            def get(self):
+                args = cp.parse_args()
+                return tsa.cache_policy_series(args.name)
+
 
 class RefineryClient(XLClient):
 
@@ -285,6 +294,16 @@ class RefineryClient(XLClient):
     @unwraperror
     def cache_policies(self):
         res = self.session.get(f'{self.uri}/cache/policies')
+        if res.status_code == 200:
+            return res.json()
+
+        return res
+
+    @unwraperror
+    def cache_policy_series(self, policyname):
+        res = self.session.get(f'{self.uri}/cache/policy-series', params={
+            'name': policyname
+        })
         if res.status_code == 200:
             return res.json()
 

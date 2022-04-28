@@ -709,10 +709,7 @@ insertion_date             value_date
         'another-policy',
         ['over-ground-1', 'over-ground-2']
     )
-    assert cache.policy_series(
-        engine,
-        'another-policy'
-    ) == [
+    assert tsx.cache_policy_series('another-policy') == [
         'over-ground-1',
         'over-ground-2'
     ]
@@ -783,10 +780,7 @@ insertion_date             value_date
     tsx.unset_cache_policy(
         ['over-ground-1', 'over-ground-2']
     )
-    assert cache.policy_series(
-        engine,
-        'another-policy'
-    ) == []
+    assert tsx.cache_policy_series('another-policy') == []
 
     # delete
     tsx.delete_cache_policy(

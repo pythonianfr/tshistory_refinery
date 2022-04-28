@@ -94,3 +94,7 @@ def cache_policies(self):
         ).fetchall()
     ]
 
+
+@extend(mainsource)
+def cache_policy_series(self, policyname: str):
+    return cache.policy_series(self.engine, policyname)
