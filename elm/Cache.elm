@@ -526,16 +526,16 @@ viewdeletepolicyaction model policy =
            Nothing -> askdelete
            Just name ->
                if name == policy.name then
-                   [ H.button [ HA.class "btn btn-success"
+                   [H.button [ HA.class "btn btn-warning"
+                             , HA.type_ "button"
+                             , HE.onClick CancelDeletePolicy
+                             ]
+                        [ H.text "cancel" ]
+                   , H.button [ HA.class "btn btn-success"
                               , HA.type_ "button"
                               , HE.onClick (DeletePolicy name)
                               ]
-                         [ H.text "confirm" ]
-                   , H.button [ HA.class "btn btn-warning"
-                              , HA.type_ "button"
-                              , HE.onClick CancelDeletePolicy
-                              ]
-                       [ H.text "cancel" ]
+                       [ H.text "confirm" ]
                    ]
                    else askdelete
 
