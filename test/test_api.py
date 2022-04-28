@@ -776,6 +776,8 @@ insertion_date             value_date
     assert len(tsx.history('over-ground-1')) == 3
     assert len(tsx.history('over-ground-1', nocache=True)) == 5
 
+    assert tsx.cache_free_series() == []
+
     # unset
     tsx.unset_cache_policy(
         ['over-ground-1', 'over-ground-2']
@@ -792,6 +794,8 @@ insertion_date             value_date
     assert not engine.execute(
         'select id from tsh.cache_policy'
     ).scalar()
+
+    assert tsx.cache_free_series() == ['over-ground-1', 'over-ground-2']
 
 
 def test_cacheable_formulas(tsa1, tsa2):

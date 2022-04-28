@@ -79,3 +79,8 @@ def unset_cache_policy(self, seriesnames: List[str]) -> NONETYPE:
 
     for name in seriesnames:
         cache.unset_policy(self.engine, name)
+
+
+@extend(mainsource)
+def cache_free_series(self):
+    return self.tsh.cacheable_formulas(self.engine)

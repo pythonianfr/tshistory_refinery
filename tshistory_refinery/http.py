@@ -168,6 +168,14 @@ class refinery_httpapi(xl_httpapi):
 
                 return '', 204
 
+        @nsc.route('/cacheable')
+        class cacheable_series(Resource):
+
+            @onerror
+            def get(self):
+                return tsa.cache_free_series()
+
+
 
 class RefineryClient(XLClient):
 
@@ -257,5 +265,13 @@ class RefineryClient(XLClient):
         })
         if res.status_code == 204:
             return
+
+        return res
+
+    @unwraperror
+    def cache_free_series(self):
+        res = self.session.get(f'{self.uri}/cache/cacheable')
+        if res.status_code == 200:
+            return res.json()
 
         return res
