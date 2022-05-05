@@ -41,14 +41,23 @@ class timeseries(xlts):
         if not nocache:
             ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None and ready:
-                cached = self.cache.get(cn, name, **kw)
 
+                idates = self.cache.insertion_dates(
+                    cn, name,
+                    from_insertion_date=kw.get('revision_date')
+                )
+
+                cached = self.cache.get(cn, name, **kw)
                 if len(cached) and live:
                     # save for later use
                     fvd = kw.pop('from_value_date', None)
                     tvd = kw.pop('to_value_date', None)
                     policy = cache.series_policy(cn, name, namespace=self.namespace)
-                    now = kw.get('revision_date') or pd.Timestamp.utcnow()
+                    now = (
+                        kw.get('revision_date') or
+                        (idates and idates[-1]) or
+                        pd.Timestamp.utcnow()
+                    )
                     kw['from_value_date'] = cache.eval_moment(
                         policy['look_before'],
                         {'now': now}
