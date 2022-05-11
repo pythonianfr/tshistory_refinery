@@ -1,4 +1,7 @@
-from datetime import datetime
+from datetime import (
+    datetime,
+    timedelta
+)
 
 from croniter import (
     croniter,
@@ -343,6 +346,7 @@ def refresh(engine, tsa, name, final_revdate=None):
     if exists:
         idates = tsh.cache.insertion_dates(engine, name)
         initial_revdate = idates[-1]
+        lastidate = idates[0]
     else:
         initial_revdate = pd.Timestamp(
             eval_moment(policy['initial_revdate']),
@@ -366,6 +370,8 @@ def refresh(engine, tsa, name, final_revdate=None):
 
         if idates[0] > initial_revdate:
             initial_revdate = idates[0]
+        # we want to not filter out the first revdate
+        lastidate = initial_revdate - timedelta(days=1)
 
     for revdate in croniter_range(
         initial_revdate,
@@ -375,8 +381,18 @@ def refresh(engine, tsa, name, final_revdate=None):
         # native python datetimes lack some method
         revdate = pd.Timestamp(revdate)
 
-        if exists and revdate == initial_revdate:
-            continue
+        if exists:
+            if revdate == initial_revdate:
+                continue
+        else:
+            curidate = max(idate for idate in idates
+                           if idate <= revdate)
+            if curidate == lastidate:
+                # while revdate advances, the source idate is the same
+                # as before -> the current revdate is spurious,
+                # let's avoid a useless source query
+                continue
+            lastidate = curidate
 
         from_value_date = eval_moment(
             policy['look_before'],
