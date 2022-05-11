@@ -348,6 +348,24 @@ def refresh(engine, tsa, name, final_revdate=None):
             eval_moment(policy['initial_revdate']),
             tz='UTC'
         )
+        # That is well and nice but what if some autotrophic
+        # operator's earlier idates comes after the specified initial
+        # revdate ? In some timeseries systems, there is no idates api
+        # ...  and it costs a lot scanning over non-existent data (as
+        # absurd as it sounds). Hence, we will get the first known
+        # idate there and use that.
+        now = pd.Timestamp.utcnow()
+        idates = tsa.insertion_dates(
+            name,
+            from_insertion_date=initial_revdate,
+            to_insertion_date=now
+        )
+        if not idates:
+            print(f'no idate over {initial_revdate} -> {now}, no refresh')
+            return  # that's an odd series, let's bail out
+
+        if idates[0] > initial_revdate:
+            initial_revdate = idates[0]
 
     for revdate in croniter_range(
         initial_revdate,
