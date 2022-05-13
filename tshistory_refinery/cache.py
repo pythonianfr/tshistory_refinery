@@ -137,7 +137,10 @@ def schedule_policy(engine, name, namespace='tsh'):
             'refresh_formula_cache',
             domain='timeseries',
             rule='0 ' + schedule_rule,
-            inputdata={'policy': name}
+            inputdata={
+                'policy': name,
+                'initial': 0
+            },
         )
         cn.execute(
             f'insert into "{namespace}".cache_policy_sched '
@@ -146,6 +149,16 @@ def schedule_policy(engine, name, namespace='tsh'):
             policy_id=cid,
             sched_id=sid
         )
+    # immediately schedule the initial import
+    rapi.schedule(
+        engine,
+        'refresh_formula_cache',
+        domain='timeseries',
+        inputdata={
+            'policy': name,
+            'initial': 1
+        },
+    )
 
 
 def scheduled_policy(engine, name, namespace='tsh'):
@@ -337,12 +350,15 @@ def invalidate(cn, series_name, namespace='tsh'):
     )
 
 
-def refresh(engine, tsa, name, final_revdate=None):
+def refresh(engine, tsa, name, final_revdate=None, initial=False):
     """ Refresh a series cache """
     tsh = tsa.tsh
     policy = series_policy(engine, name, tsh.namespace)
 
     exists = tsh.cache.exists(engine, name)
+    if exists and not initial and not ready(engine, name):
+        print('Initial cache for `{name}` is already building, bailing out.')
+
     if exists:
         idates = tsh.cache.insertion_dates(engine, name)
         initial_revdate = idates[-1]
