@@ -292,6 +292,22 @@ def ready(cn, series_name, namespace='tsh'):
     ).scalar()
 
 
+def set_ready(engine, policy_name, val, namespace='tsh'):
+    """ Mark a cache policy as ready """
+    assert isinstance(val, bool)
+    q = (
+        f'update "{namespace}".cache_policy '
+        f'set ready = %(val)s '
+        f'where name = %(name)s'
+    )
+    with engine.begin() as cn:
+        cn.execute(
+            q,
+            name=policy_name,
+            val=val
+        )
+
+
 def series_policy(cn, series_name, namespace='tsh'):
     """ Return the cache policy for a series """
     q = (
@@ -356,8 +372,8 @@ def refresh(engine, tsa, name, final_revdate=None, initial=False):
     policy = series_policy(engine, name, tsh.namespace)
 
     exists = tsh.cache.exists(engine, name)
-    if exists and not initial and not ready(engine, name):
-        print('Initial cache for `{name}` is already building, bailing out.')
+    if exists and not initial and not ready(engine, name, namespace=tsh.namespace):
+        print(f'Initial cache for `{name}` is already building, bailing out.')
         return
 
     if exists:
@@ -440,6 +456,3 @@ def refresh(engine, tsa, name, final_revdate=None, initial=False):
                 'formula-cacher',
                 insertion_date=revdate
             )
-
-    with engine.begin() as cn:
-        cn.execute(f'update "{tsh.namespace}".cache_policy set ready = true')

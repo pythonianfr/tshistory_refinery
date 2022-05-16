@@ -726,6 +726,7 @@ insertion_date             value_date
         'over-ground-1',
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
+    cache.set_ready(engine, 'another-policy', True)
 
     r = cache.ready(
         engine,

@@ -43,3 +43,5 @@ def refresh_formula_cache(task):
                     tsh.invalidate_cache(cn, name)
 
             cache.refresh(engine, tsa, name, initial=task.input['initial'])
+
+        cache.set_ready(engine, task.input['policy'])

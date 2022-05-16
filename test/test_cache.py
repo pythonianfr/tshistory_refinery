@@ -184,6 +184,7 @@ def test_cache_a_series(engine, tsa):
         'over-ground-0',
         final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
     )
+    cache.set_ready(engine, 'a-policy', True, namespace=tsh.namespace)
 
     r = cache.ready(
         engine,
@@ -303,7 +304,6 @@ insertion_date             value_date
         namespace=tsh.namespace
     )
     assert cache.series_policy(engine, 'over-ground-1', namespace=tsh.namespace)
-
     r = cache.ready(
         engine,
         'over-ground-1',
@@ -316,8 +316,10 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
-        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-3', tz='UTC'),
+        initial=True
     )
+    cache.set_ready(engine, 'another-policy', True, namespace=tsh.namespace)
     assert cache.series_policy(engine, 'over-ground-1', namespace=tsh.namespace)
 
     r = cache.ready(
@@ -477,6 +479,8 @@ insertion_date             value_date
         'over-ground-1',
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
+    cache.set_ready(engine, 'another-policy', True, namespace=tsh.namespace)
+
     r = cache.ready(
         engine,
         'over-ground-1',
@@ -508,6 +512,7 @@ insertion_date             value_date
         'over-ground-1',
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
+    cache.set_ready(engine, 'another-policy', True, namespace=tsh.namespace)
     r = cache.ready(
         engine,
         'over-ground-1',
@@ -804,6 +809,7 @@ def test_federation_cache_coherency(engine, federated, remote):
         final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
     )
     assert tsh.cache.exists(engine, 'invalidate-me')
+    cache.set_ready(engine, 'policy-5', True, namespace=tsh.namespace)
 
     # Why are we missing the point of day 3 ?
     # Since the underlying series only has 1 revision, the refresher
