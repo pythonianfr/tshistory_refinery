@@ -358,6 +358,7 @@ def refresh(engine, tsa, name, final_revdate=None, initial=False):
     exists = tsh.cache.exists(engine, name)
     if exists and not initial and not ready(engine, name):
         print('Initial cache for `{name}` is already building, bailing out.')
+        return
 
     if exists:
         idates = tsh.cache.insertion_dates(engine, name)
@@ -389,9 +390,12 @@ def refresh(engine, tsa, name, final_revdate=None, initial=False):
         # we want to not filter out the first revdate
         lastidate = initial_revdate - timedelta(days=1)
 
+    final_revdate = final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC')
+    print('starting range refresh', initial_revdate, '->', final_revdate)
+
     for revdate in croniter_range(
         initial_revdate,
-        final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC'),
+        final_revdate,
         policy['revdate_rule']
     ):
         # native python datetimes lack some method
@@ -407,6 +411,7 @@ def refresh(engine, tsa, name, final_revdate=None, initial=False):
                 # while revdate advances, the source idate is the same
                 # as before -> the current revdate is spurious,
                 # let's avoid a useless source query
+                print('skip spurious revdate', revdate)
                 continue
             lastidate = curidate
 
