@@ -395,7 +395,8 @@ def refresh(engine, tsa, name, final_revdate=None, initial=False):
         idates = tsa.insertion_dates(
             name,
             from_insertion_date=initial_revdate,
-            to_insertion_date=now
+            to_insertion_date=now,
+            nocache=True
         )
         if not idates:
             print(f'no idate over {initial_revdate} -> {now}, no refresh')
