@@ -969,3 +969,9 @@ def test_refresh_policy(engine, tsa):
     assert cache.policy_ready(engine, 'test-refresh', namespace=tsh.namespace)
     for name in ('f1', 'f2'):
         assert cache.ready(engine, name, namespace=tsh.namespace)
+
+    for name in ('f1', 'f2'):
+        assert tsa.has_cache(name)
+    tsa.delete_cache_policy('test-refresh')
+    for name in ('f1', 'f2'):
+        assert not tsa.has_cache(name)

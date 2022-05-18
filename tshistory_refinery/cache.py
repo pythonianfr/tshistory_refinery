@@ -20,6 +20,7 @@ from sqlhelp import (
 )
 
 from tshistory_refinery import helper
+from tshistory_refinery import tsio
 
 
 def eval_moment(expr, env={}):
@@ -202,14 +203,18 @@ def unschedule_policy(engine, name, namespace='tsh'):
         )
 
 
-def delete_policy(engine, name, namespace='tsh'):
+def delete_policy(engine, policy_name, namespace='tsh'):
     with engine.begin() as cn:
-        _remove_scheduled_tasks(cn, name, namespace)
+        _remove_scheduled_tasks(cn, policy_name, namespace)
+
+        tsh = tsio.timeseries(namespace=namespace)
+        for name in policy_series(cn, policy_name, namespace=namespace):
+            tsh.cache.delete(cn, name)
 
         cn.execute(
             f'delete from "{namespace}".cache_policy '
             f'where name = %(name)s',
-            name=name
+            name=policy_name
         )
 
 
@@ -480,7 +485,11 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
         namespace=tsh.namespace
     )
 
-    print(f'Refreshing cache policy `{policy}` ({initial=}) series: {names}')
+    print(
+        f'Refreshing cache policy `{policy}` '
+        f'({initial=}) (ns={tsh.namespace}) '
+        f'series: {names}'
+    )
     # sort series by dependency order
     # we want the leafs to be computed
     engine = tsa.engine
@@ -533,3 +542,4 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
         )
 
     set_ready(engine, policy, True, namespace=tsh.namespace)
+    assert policy_ready(engine, policy, namespace=tsh.namespace)
