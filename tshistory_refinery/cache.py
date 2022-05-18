@@ -2,6 +2,7 @@ from datetime import (
     datetime,
     timedelta
 )
+from functools import cmp_to_key
 
 from croniter import (
     croniter,
@@ -17,6 +18,8 @@ from sqlhelp import (
     insert,
     update
 )
+
+from tshistory_refinery import helper
 
 
 def eval_moment(expr, env={}):
@@ -275,6 +278,19 @@ def unset_policy(cn, series_name, namespace='tsh'):
     )
 
 
+def policy_ready(cn, policyname, namespace='tsh'):
+    """ Return the cache readiness """
+    q = (
+        f'select ready '
+        f'from "{namespace}".cache_policy '
+        f'where name = %(policyname)s'
+    )
+    return cn.execute(
+        q,
+        policyname=policyname
+    ).scalar()
+
+
 def ready(cn, series_name, namespace='tsh'):
     """ Return the cache readiness for a series """
     q = (
@@ -295,6 +311,7 @@ def ready(cn, series_name, namespace='tsh'):
 def set_ready(engine, policy_name, val, namespace='tsh'):
     """ Mark a cache policy as ready """
     assert isinstance(val, bool)
+    print('set ready', policy_name, val, namespace)
     q = (
         f'update "{namespace}".cache_policy '
         f'set ready = %(val)s '
@@ -366,16 +383,12 @@ def invalidate(cn, series_name, namespace='tsh'):
     )
 
 
-def refresh(engine, tsa, name, final_revdate=None, initial=False):
+def refresh(engine, tsa, name, final_revdate=None):
     """ Refresh a series cache """
     tsh = tsa.tsh
     policy = series_policy(engine, name, tsh.namespace)
 
     exists = tsh.cache.exists(engine, name)
-    if exists and not initial and not ready(engine, name, namespace=tsh.namespace):
-        print(f'Initial cache for `{name}` is already building, bailing out.')
-        return
-
     if exists:
         idates = tsh.cache.insertion_dates(engine, name)
         initial_revdate = idates[-1]
@@ -457,3 +470,66 @@ def refresh(engine, tsa, name, final_revdate=None, initial=False):
                 'formula-cacher',
                 insertion_date=revdate
             )
+
+
+def refresh_policy(tsa, policy, initial, final_revdate=None):
+    tsh = tsa.tsh
+    names = policy_series(
+        tsa.engine,
+        policy,
+        namespace=tsh.namespace
+    )
+
+    print(f'Refreshing cache policy `{policy}` ({initial=}) series: {names}')
+    # sort series by dependency order
+    # we want the leafs to be computed
+    engine = tsa.engine
+
+    if not initial and not policy_ready(engine, policy, namespace=tsh.namespace):
+        print('Cache is not ready and this is not an initial run, stopping now.')
+        return
+
+    unames = set()
+    # put the uncached serie at the end
+    for name in names:
+        if not tsh.cache.exists(engine, name):
+            unames.add(name)
+
+    names = [
+        name for name in names
+        if name not in unames
+    ]
+
+    cmp = helper.comparator(tsh, engine)
+    names.sort(key=cmp_to_key(cmp))
+
+    unames = list(unames)
+    unames.sort(key=cmp_to_key(cmp))
+
+    # first batch (potentially just a refresh if not an initial run)
+    print(f'first batch (cache update) ({len(names)} series)')
+    for name in names:
+        print('refresh ->', name)
+        with engine.begin() as cn:
+            if tsh.live_content_hash(cn, name) != tsh.content_hash(cn, name):
+                tsh.invalidate_cache(cn, name)
+
+        refresh(
+            engine,
+            tsa,
+            name,
+            final_revdate=final_revdate
+        )
+
+    # second batch (potentially re-filling invalidated caches)
+    print(f'second batch (full cache construction) ({len(unames)} series)')
+    for name in unames:
+        print('refresh ->', name)
+        refresh(
+            engine,
+            tsa,
+            name,
+            final_revdate=final_revdate
+        )
+
+    set_ready(engine, policy, True, namespace=tsh.namespace)

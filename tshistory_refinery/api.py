@@ -26,7 +26,8 @@ def new_cache_policy(
         look_before,
         look_after,
         revdate_rule,
-        schedule_rule
+        schedule_rule,
+        namespace=self.tsh.namespace
     )
 
 
@@ -47,7 +48,8 @@ def edit_cache_policy(
         look_before,
         look_after,
         revdate_rule,
-        schedule_rule
+        schedule_rule,
+        namespace=self.tsh.namespace
     )
 
 
@@ -70,7 +72,8 @@ def set_cache_policy(
         cache.set_policy(
             self.engine,
             policyname,
-            name
+            name,
+            namespace=self.tsh.namespace
         )
 
 
@@ -78,7 +81,11 @@ def set_cache_policy(
 def unset_cache_policy(self, seriesnames: List[str]) -> NONETYPE:
 
     for name in seriesnames:
-        cache.unset_policy(self.engine, name)
+        cache.unset_policy(
+            self.engine,
+            name,
+            namespace=self.tsh.namespace
+        )
 
 
 @extend(mainsource)

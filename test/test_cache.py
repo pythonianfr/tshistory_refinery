@@ -316,8 +316,7 @@ insertion_date             value_date
         engine,
         tsa,
         'over-ground-1',
-        final_revdate=pd.Timestamp('2022-1-3', tz='UTC'),
-        initial=True
+        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
     cache.set_ready(engine, 'another-policy', True, namespace=tsh.namespace)
     assert cache.series_policy(engine, 'over-ground-1', namespace=tsh.namespace)
@@ -900,3 +899,73 @@ def test_formula_order(engine, tsh):
         'dep-middle-right',
         'dep-bottom'
     ]
+
+
+def test_refresh_policy(engine, tsa):
+    tsh = tsa.tsh
+    with engine.begin() as cn:
+        cn.execute(f'delete from "{tsh.namespace}".cache_policy')
+
+    for i in range(5):
+        ts = pd.Series(
+            [i] * 3,
+            index=pd.date_range(
+                utcdt(2022, 1, 1 + i),
+                freq='D',
+                periods=3
+            )
+        )
+        tsa.update(
+            'ground-ref-pol',
+            ts,
+            'Babar',
+            insertion_date=pd.Timestamp(f'2022-1-{i+1}', tz='utc')
+        )
+
+    tsa.register_formula(
+        'f1',
+        '(series "ground-ref-pol")'
+    )
+    tsa.register_formula(
+        'f2',
+        '(+ 1 (series "ground-ref-pol"))'
+    )
+
+    tsa.new_cache_policy(
+        'test-refresh',
+        initial_revdate='(date "2022-1-1")',
+        look_before='(shifted now #:days -1)',
+        look_after='(shifted now #:days 1)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *',
+    )
+    tsa.set_cache_policy('test-refresh', ['f1', 'f2'])
+
+    for name in ('f1', 'f2'):
+        assert not cache.ready(engine, name, namespace=tsh.namespace)
+
+    # non initial refresh, cache not ready, nothing should happen
+    cache.refresh_policy(tsa, 'test-refresh', False)
+
+    for name in ('f1', 'f2'):
+        assert not cache.ready(engine, name, namespace=tsh.namespace)
+
+    # initial refresh, cache not ready, first revisions should appear
+    cache.refresh_policy(
+        tsa, 'test-refresh', True,
+        final_revdate=pd.Timestamp('2022-1-4', tz='utc')
+    )
+
+    assert cache.policy_ready(engine, 'test-refresh', namespace=tsh.namespace)
+    for name in ('f1', 'f2'):
+        assert cache.ready(engine, name, namespace=tsh.namespace)
+
+    # non initial refresh, cache ready, subsequent revisions should appear
+    cache.refresh_policy(
+        tsa, 'test-refresh', False,
+        final_revdate=pd.Timestamp('2022-1-10', tz='utc')
+    )
+
+    assert cache.policy_ready(engine, 'test-refresh', namespace=tsh.namespace)
+    for name in ('f1', 'f2'):
+        assert cache.ready(engine, name, namespace=tsh.namespace)
