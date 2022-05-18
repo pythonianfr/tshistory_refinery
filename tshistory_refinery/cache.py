@@ -154,7 +154,7 @@ def schedule_policy(engine, name, namespace='tsh'):
             sched_id=sid
         )
     # immediately schedule the initial import
-    rapi.schedule(
+    return rapi.schedule(
         engine,
         'refresh_formula_cache',
         domain='timeseries',

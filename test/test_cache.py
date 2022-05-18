@@ -76,7 +76,9 @@ def test_good_cache(engine):
     assert engine.execute('select count(*) from rework.sched').scalar() == 0
 
     assert not cache.scheduled_policy(engine, 'my-policy')
-    cache.schedule_policy(engine, 'my-policy')
+    t = cache.schedule_policy(engine, 'my-policy')
+    assert t.status == 'queued'
+
     assert engine.execute('select count(*) from rework.sched').scalar() == 1
     assert cache.scheduled_policy(engine, 'my-policy')
     assert engine.execute('select count(*) from rework.task').scalar() == 1
