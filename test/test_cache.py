@@ -471,7 +471,7 @@ insertion_date             value_date
         'over-ground-1',
         namespace=tsh.namespace
     )
-    assert r == False
+    assert r
 
     # we only refresh up to the first 3 revisions
     cache.refresh(
@@ -499,13 +499,6 @@ insertion_date             value_date
     # cache has been reset
     assert len(tsa.insertion_dates('over-ground-1')) == 5
 
-    r = cache.ready(
-        engine,
-        'over-ground-1',
-        namespace=tsh.namespace
-    )
-    assert r == False
-
     # we only refresh up to the first 3 revisions
     cache.refresh(
         engine,
@@ -514,12 +507,6 @@ insertion_date             value_date
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
     cache.set_ready(engine, 'another-policy', True, namespace=tsh.namespace)
-    r = cache.ready(
-        engine,
-        'over-ground-1',
-        namespace=tsh.namespace
-    )
-    assert r
 
     assert_df("""
 2022-01-01 00:00:00+00:00    2.0

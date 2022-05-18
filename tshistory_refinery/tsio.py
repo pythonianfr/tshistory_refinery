@@ -38,7 +38,7 @@ class timeseries(xlts):
         if self.type(cn, name) != 'formula':
             return super().get(cn, name, **kw)
 
-        if not nocache:
+        if not nocache and self.cache.exists(cn, name):
             ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None and ready:
 
@@ -89,7 +89,7 @@ class timeseries(xlts):
             )
 
 
-        if not nocache:
+        if not nocache and self.cache.exists(cn, name):
             ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None and ready:
                 return self.cache.insertion_dates(
@@ -115,7 +115,7 @@ class timeseries(xlts):
                 cn, name, **kw
             )
 
-        if not nocache:
+        if not nocache and self.cache.exists(cn, name):
             ready = cache.ready(cn, name, namespace=self.namespace)
             if ready is not None and ready:
                 return self.cache.history(cn, name, **kw)
@@ -127,27 +127,20 @@ class timeseries(xlts):
     @tx
     def rename(self, cn, oldname, newname):
         if self.type(cn, oldname) == 'formula':
-            ready = cache.ready(cn, oldname, namespace=self.namespace)
-            if ready is not None:
-                self.cache.rename(cn, oldname, newname)
+            self.cache.rename(cn, oldname, newname)
 
         return super().rename(cn, oldname, newname)
 
     @tx
     def delete(self, cn, name):
         if self.type(cn, name) == 'formula':
-            ready = cache.ready(cn, name, namespace=self.namespace)
-            if ready is not None:
-                self.cache.delete(cn, name)
+            self.cache.delete(cn, name)
 
         return super().delete(cn, name)
 
     @tx
     def invalidate_cache(self, cn, name):
-        ready = cache.ready(cn, name, namespace=self.namespace)
-        if ready is not None:
-            cache.invalidate(cn, name, namespace=self.namespace)
-            self.cache.delete(cn, name)
+        self.cache.delete(cn, name)
 
     @tx
     def unset_cache_policy(self, cn, name):
