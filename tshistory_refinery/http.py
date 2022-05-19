@@ -58,6 +58,14 @@ newcp.add_argument(
 
 deletecp = cp.copy()
 
+delete_cache = reqparse.RequestParser()
+delete_cache.add_argument(
+    'name',
+    type=str,
+    required=True,
+    help='series name'
+)
+
 
 def jsonlist(thing):
     return json.loads(thing)
@@ -207,6 +215,13 @@ class refinery_httpapi(xl_httpapi):
                 args = shc.parse_args()
                 return tsa.has_cache(args.name)
 
+            @api.expect(delete_cache)
+            @onerror
+            def delete(self):
+                args = delete_cache.parse_args()
+                tsa.delete_cache(args.name)
+                return '', 204
+
 
 
 class RefineryClient(XLClient):
@@ -333,5 +348,15 @@ class RefineryClient(XLClient):
         })
         if res.status_code == 200:
             return res.json()
+
+        return res
+
+    @unwraperror
+    def delete_cache(self, seriesname):
+        res = self.session.delete(f'{self.uri}/cache/series-has-cache', params={
+            'name': seriesname
+        })
+        if res.status_code == 204:
+            return
 
         return res

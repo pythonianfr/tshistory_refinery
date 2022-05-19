@@ -111,3 +111,7 @@ def cache_policy_series(self, policyname: str):
 def has_cache(self, seriesname: str):
     return self.tsh.cache.exists(self.engine, seriesname)
 
+
+@extend(mainsource)
+def delete_cache(self, seriesname: str):
+    return self.tsh.invalidate_cache(self.engine, seriesname)

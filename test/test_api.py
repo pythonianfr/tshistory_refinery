@@ -790,6 +790,16 @@ insertion_date             value_date
     assert tsx.cache_free_series() == []
     assert tsx.cache_policies() == ['another-policy']
 
+    assert tsx.has_cache('over-ground-1')
+    tsx.delete_cache('over-ground-1')
+    assert not tsx.has_cache('over-ground-1')
+    cache.refresh(
+        engine,
+        tsa3,
+        'over-ground-1',
+        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
+    )
+
     # unset
     tsx.unset_cache_policy(
         ['over-ground-1', 'over-ground-2']
@@ -805,6 +815,7 @@ insertion_date             value_date
     assert tsx.cache_policies() == []
 
     assert tsx.has_cache('over-ground-1')
+    assert not tsx.has_cache('over-ground-2')
 
 
 def test_cacheable_formulas(tsa1, tsa2):
