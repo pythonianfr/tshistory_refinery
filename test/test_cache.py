@@ -153,14 +153,14 @@ def test_cache_a_series(engine, tsa):
         'over-ground-0',
         namespace=tsh.namespace
     )
-    r = cache.ready(
+    r = cache.series_policy_ready(
         engine,
         'no-such-series',
         namespace=tsh.namespace
     )
     assert r is None
 
-    r = cache.ready(
+    r = cache.series_policy_ready(
         engine,
         'over-ground-0',
         namespace=tsh.namespace
@@ -186,9 +186,9 @@ def test_cache_a_series(engine, tsa):
         'over-ground-0',
         final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
     )
-    cache.set_ready(engine, 'a-policy', True, namespace=tsh.namespace)
+    cache.set_policy_ready(engine, 'a-policy', True, namespace=tsh.namespace)
 
-    r = cache.ready(
+    r = cache.series_policy_ready(
         engine,
         'over-ground-0',
         namespace=tsh.namespace
@@ -306,7 +306,7 @@ insertion_date             value_date
         namespace=tsh.namespace
     )
     assert cache.series_policy(engine, 'over-ground-1', namespace=tsh.namespace)
-    r = cache.ready(
+    r = cache.series_policy_ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -320,10 +320,10 @@ insertion_date             value_date
         'over-ground-1',
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
-    cache.set_ready(engine, 'another-policy', True, namespace=tsh.namespace)
+    cache.set_policy_ready(engine, 'another-policy', True, namespace=tsh.namespace)
     assert cache.series_policy(engine, 'over-ground-1', namespace=tsh.namespace)
 
-    r = cache.ready(
+    r = cache.series_policy_ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -466,7 +466,7 @@ insertion_date             value_date
     # cached and uncached are *still* the same
     assert tsa.get('over-ground-1').equals(tsa.get('over-ground-1', nocache=True))
 
-    r = cache.ready(
+    r = cache.series_policy_ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -480,9 +480,9 @@ insertion_date             value_date
         'over-ground-1',
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
-    cache.set_ready(engine, 'another-policy', True, namespace=tsh.namespace)
+    cache.set_policy_ready(engine, 'another-policy', True, namespace=tsh.namespace)
 
-    r = cache.ready(
+    r = cache.series_policy_ready(
         engine,
         'over-ground-1',
         namespace=tsh.namespace
@@ -506,7 +506,7 @@ insertion_date             value_date
         'over-ground-1',
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
-    cache.set_ready(engine, 'another-policy', True, namespace=tsh.namespace)
+    cache.set_policy_ready(engine, 'another-policy', True, namespace=tsh.namespace)
 
     assert_df("""
 2022-01-01 00:00:00+00:00    2.0
@@ -797,7 +797,7 @@ def test_federation_cache_coherency(engine, federated, remote):
         final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
     )
     assert tsh.cache.exists(engine, 'invalidate-me')
-    cache.set_ready(engine, 'policy-5', True, namespace=tsh.namespace)
+    cache.set_policy_ready(engine, 'policy-5', True, namespace=tsh.namespace)
 
     # Why are we missing the point of day 3 ?
     # Since the underlying series only has 1 revision, the refresher
@@ -931,13 +931,13 @@ def test_refresh_policy(engine, tsa):
     tsa.set_cache_policy('test-refresh', ['f1', 'f2'])
 
     for name in ('f1', 'f2'):
-        assert not cache.ready(engine, name, namespace=tsh.namespace)
+        assert not cache.series_policy_ready(engine, name, namespace=tsh.namespace)
 
     # non initial refresh, cache not ready, nothing should happen
     cache.refresh_policy(tsa, 'test-refresh', False)
 
     for name in ('f1', 'f2'):
-        assert not cache.ready(engine, name, namespace=tsh.namespace)
+        assert not cache.series_policy_ready(engine, name, namespace=tsh.namespace)
 
     # initial refresh, cache not ready, first revisions should appear
     cache.refresh_policy(
@@ -947,7 +947,7 @@ def test_refresh_policy(engine, tsa):
 
     assert cache.policy_ready(engine, 'test-refresh', namespace=tsh.namespace)
     for name in ('f1', 'f2'):
-        assert cache.ready(engine, name, namespace=tsh.namespace)
+        assert cache.series_policy_ready(engine, name, namespace=tsh.namespace)
 
     # non initial refresh, cache ready, subsequent revisions should appear
     cache.refresh_policy(
@@ -957,7 +957,7 @@ def test_refresh_policy(engine, tsa):
 
     assert cache.policy_ready(engine, 'test-refresh', namespace=tsh.namespace)
     for name in ('f1', 'f2'):
-        assert cache.ready(engine, name, namespace=tsh.namespace)
+        assert cache.series_policy_ready(engine, name, namespace=tsh.namespace)
 
     for name in ('f1', 'f2'):
         assert tsa.has_cache(name)

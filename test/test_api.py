@@ -713,7 +713,7 @@ insertion_date             value_date
         'over-ground-1',
         'over-ground-2'
     ]
-    r = cache.ready(
+    r = cache.series_policy_ready(
         engine,
         'over-ground-1'
     )
@@ -726,13 +726,13 @@ insertion_date             value_date
         'over-ground-1',
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
-    cache.set_ready(engine, 'another-policy', True)
-
-    r = cache.ready(
+    cache.set_policy_ready(engine, 'another-policy', True)
+    r = cache.series_policy_ready(
         engine,
         'over-ground-1'
     )
     assert r
+    cache.set_policy_ready(engine, 'another-policy', True)
 
     # get: cache (not live patching)
     assert_df("""

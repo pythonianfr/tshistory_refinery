@@ -2,6 +2,7 @@ from datetime import (
     datetime,
     timedelta
 )
+from contextlib import contextmanager
 from functools import cmp_to_key
 
 from croniter import (
@@ -296,10 +297,10 @@ def policy_ready(cn, policyname, namespace='tsh'):
     ).scalar()
 
 
-def ready(cn, series_name, namespace='tsh'):
+def series_policy_ready(cn, series_name, namespace='tsh'):
     """ Return the cache readiness for a series """
     q = (
-        f'select ready '
+        f'select cache.ready '
         f'from "{namespace}".cache_policy as cache, '
         f'     "{namespace}".cache_policy_series as middle, '
         f'     "{namespace}".formula as series '
@@ -313,7 +314,23 @@ def ready(cn, series_name, namespace='tsh'):
     ).scalar()
 
 
-def set_ready(engine, policy_name, val, namespace='tsh'):
+def series_ready(cn, series_name, namespace='tsh'):
+    """ Return the cache readiness for a series """
+    q = (
+        f'select middle.ready '
+        f'from "{namespace}".cache_policy_series as middle, '
+        f'     "{namespace}".formula as series '
+        f'where series_id = series.id and '
+        f'      series.name = %(seriesname)s'
+    )
+    return cn.execute(
+        q,
+        seriesname=series_name
+    ).scalar()
+
+
+
+def set_policy_ready(engine, policy_name, val, namespace='tsh'):
     """ Mark a cache policy as ready """
     assert isinstance(val, bool)
     print('set ready', policy_name, val, namespace)
@@ -326,6 +343,25 @@ def set_ready(engine, policy_name, val, namespace='tsh'):
         cn.execute(
             q,
             name=policy_name,
+            val=val
+        )
+
+
+def set_series_ready(engine, series_name, val, namespace='tsh'):
+    """ Mark the cache readiness for a series """
+    assert isinstance(val, bool)
+    print('set ready', series_name, val, namespace)
+    q = (
+        f'update "{namespace}".cache_policy_series as middle '
+        f'set ready = %(val)s '
+        f'from "{namespace}".formula as series '
+        f'where middle.series_id = series.id and '
+        f'      series.name = %(seriesname)s'
+    )
+    with engine.begin() as cn:
+        cn.execute(
+            q,
+            seriesname=series_name,
             val=val
         )
 
@@ -370,10 +406,23 @@ def policy_series(cn, policy_name, namespace='tsh'):
     return [item for item, in p]
 
 
+@contextmanager
+def series_refresh_lock(engine, name, namespace):
+    set_series_ready(engine, name, False, namespace=namespace)
+    try:
+        yield
+    finally:
+        set_series_ready(engine, name, True, namespace=namespace)
+
+
 def refresh(engine, tsa, name, final_revdate=None):
     """ Refresh a series cache """
     tsh = tsa.tsh
     policy = series_policy(engine, name, tsh.namespace)
+
+    if not series_ready(engine, name, namespace=tsh.namespace):
+        print(f'Series {name} already being updated. Bailing out.')
+        return
 
     exists = tsh.cache.exists(engine, name)
     if exists:
@@ -410,53 +459,54 @@ def refresh(engine, tsa, name, final_revdate=None):
     final_revdate = final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC')
     print('starting range refresh', initial_revdate, '->', final_revdate)
 
-    for revdate in croniter_range(
-        initial_revdate,
-        final_revdate,
-        policy['revdate_rule']
-    ):
-        # native python datetimes lack some method
-        revdate = pd.Timestamp(revdate)
+    with series_refresh_lock(engine, name, tsh.namespace):
+        for revdate in croniter_range(
+            initial_revdate,
+            final_revdate,
+            policy['revdate_rule']
+        ):
+            # native python datetimes lack some method
+            revdate = pd.Timestamp(revdate)
 
-        if exists:
-            if revdate == initial_revdate:
-                continue
-        else:
-            curidate = max(idate for idate in idates
-                           if idate <= revdate)
-            if curidate == lastidate:
-                # while revdate advances, the source idate is the same
-                # as before -> the current revdate is spurious,
-                # let's avoid a useless source query
-                print('skip spurious revdate', revdate)
-                continue
-            lastidate = curidate
+            if exists:
+                if revdate == initial_revdate:
+                    continue
+            else:
+                curidate = max(idate for idate in idates
+                               if idate <= revdate)
+                if curidate == lastidate:
+                    # while revdate advances, the source idate is the same
+                    # as before -> the current revdate is spurious,
+                    # let's avoid a useless source query
+                    print('skip spurious revdate', revdate)
+                    continue
+                lastidate = curidate
 
-        from_value_date = eval_moment(
-            policy['look_before'],
-            {'now': revdate}
-        )
-        to_value_date = eval_moment(
-            policy['look_after'],
-            {'now': revdate}
-        )
-
-        print(revdate)
-        ts = tsa.get(
-            name,
-            revision_date=revdate,
-            from_value_date=from_value_date,
-            to_value_date=to_value_date,
-            nocache=True
-        )
-        if len(ts):
-            tsh.cache.update(
-                engine,
-                ts,
-                name,
-                'formula-cacher',
-                insertion_date=revdate
+            from_value_date = eval_moment(
+                policy['look_before'],
+                {'now': revdate}
             )
+            to_value_date = eval_moment(
+                policy['look_after'],
+                {'now': revdate}
+            )
+
+            print(revdate)
+            ts = tsa.get(
+                name,
+                revision_date=revdate,
+                from_value_date=from_value_date,
+                to_value_date=to_value_date,
+                nocache=True
+            )
+            if len(ts):
+                tsh.cache.update(
+                    engine,
+                    ts,
+                    name,
+                    'formula-cacher',
+                    insertion_date=revdate
+                )
 
 
 def refresh_policy(tsa, policy, initial, final_revdate=None):
@@ -523,5 +573,5 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
             final_revdate=final_revdate
         )
 
-    set_ready(engine, policy, True, namespace=tsh.namespace)
+    set_policy_ready(engine, policy, True, namespace=tsh.namespace)
     assert policy_ready(engine, policy, namespace=tsh.namespace)

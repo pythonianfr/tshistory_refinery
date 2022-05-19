@@ -31,6 +31,7 @@ create index on "{ns}".cache_policy_sched (prepared_task_id);
 create table "{ns}".cache_policy_series (
   cache_policy_id int not null references "{ns}".cache_policy on delete cascade,
   series_id int not null references "{ns}".formula on delete cascade,
+  ready bool not null default true,
 
   unique (cache_policy_id, series_id)
 );
