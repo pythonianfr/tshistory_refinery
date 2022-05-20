@@ -453,15 +453,21 @@ def refresh(engine, tsa, name, final_revdate=None):
                 if revdate == initial_revdate:
                     continue
             else:
-                curidate = max(idate for idate in idates
-                               if idate <= revdate)
-                if curidate == lastidate:
-                    # while revdate advances, the source idate is the same
-                    # as before -> the current revdate is spurious,
-                    # let's avoid a useless source query
-                    print('skip spurious revdate', revdate)
-                    continue
-                lastidate = curidate
+                filtered = [
+                    idate for idate in idates
+                    if idate <= revdate
+                ]
+                if filtered:
+                    curidate = max(filtered)
+                    if curidate == lastidate:
+                        # while revdate advances, the source idate is the same
+                        # as before -> the current revdate is spurious,
+                        # let's avoid a useless source query
+                        print('skip spurious revdate', revdate)
+                        continue
+                    lastidate = curidate
+                else:
+                    return # nothing left !
 
             from_value_date = eval_moment(
                 policy['look_before'],
