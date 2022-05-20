@@ -17,17 +17,6 @@ from tshistory_refinery import cache
 from tshistory_refinery import api  # trigger registration
 
 
-def _munge_value_dates(self, cn, name, fvd, tvd):
-    # munge query to satisfy pandas idiocy
-    if fvd or tvd:
-        tzaware = self.metadata(cn, name)['tzaware']
-        if fvd:
-            fvd = compatible_date(tzaware, fvd)
-        if tvd:
-            tvd = compatible_date(tzaware, tvd)
-    return fvd, tvd
-
-
 class timeseries(xlts):
 
     def __init__(self, *a, **kw):
@@ -50,25 +39,40 @@ class timeseries(xlts):
 
                 cached = self.cache.get(cn, name, **kw)
                 if len(cached) and live:
+                    tzaware = self.metadata(cn, name)['tzaware']
                     # save for later use
                     fvd = kw.pop('from_value_date', None)
                     tvd = kw.pop('to_value_date', None)
+                    if fvd:
+                        fvd = compatible_date(tzaware, fvd)
+                    if tvd:
+                        tvd = compatible_date(tzaware, tvd)
+
+                    # now, compute boundaries for the live query
+                    # using the cache policy
                     policy = cache.series_policy(cn, name, namespace=self.namespace)
                     now = (
                         kw.get('revision_date') or
                         (idates and idates[-1]) or
                         pd.Timestamp.utcnow()
                     )
+                    # we use the look before date span from the cache policy
                     kw['from_value_date'] = cache.eval_moment(
                         policy['look_before'],
                         {'now': now}
                     )
-                    kw['to_value_date'] = cache.eval_moment(
+                    # and the max of the look after / query for the right boundary
+                    la = cache.eval_moment(
                         policy['look_after'],
                         {'now': now}
                     )
+                    if tvd:
+                        # let's honor the to_value_date part of the query of provided
+                        # for the live part
+                        la = compatible_date(tzaware, la)
+                        la = max(tvd, la)
+                    kw['to_value_date'] = la
                     livets = super().get(cn, name, **kw)
-                    fvd, tvd = _munge_value_dates(self, cn, name, fvd, tvd)
                     return patch(cached, livets).loc[fvd:tvd]
 
                 return cached

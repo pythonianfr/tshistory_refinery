@@ -802,11 +802,11 @@ insertion_date             value_date
     # `live` + to_value_date
     # the output is not very good ...
     ts = pd.Series(
-        [7] * 10,
+        [7] * 5,
         index=pd.date_range(
             utcdt(2022, 1, 10),
             freq='D',
-            periods=10
+            periods=5
         )
     )
     tsx.update(
@@ -820,7 +820,14 @@ insertion_date             value_date
 2022-01-03 00:00:00+00:00    1.0
 2022-01-04 00:00:00+00:00    1.0
 2022-01-05 00:00:00+00:00    1.0
-""", tsx.get('over-ground-1', to_value_date=pd.Timestamp('2022-1-20'), live=True))
+2022-01-06 00:00:00+00:00    2.0
+2022-01-07 00:00:00+00:00    3.0
+2022-01-10 00:00:00+00:00    7.0
+2022-01-11 00:00:00+00:00    7.0
+2022-01-12 00:00:00+00:00    7.0
+2022-01-13 00:00:00+00:00    7.0
+2022-01-14 00:00:00+00:00    7.0
+""", tsx.get('over-ground-1', to_value_date=pd.Timestamp('2022-1-15'), live=True))
 
     # unset
     tsx.unset_cache_policy(
