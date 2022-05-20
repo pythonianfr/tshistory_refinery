@@ -108,6 +108,11 @@ def cache_policy_series(self, policyname: str):
 
 
 @extend(mainsource)
+def cache_series_policy(self, seriesname: str):
+    return cache.series_policy(self.engine, seriesname)
+
+
+@extend(mainsource)
 def has_cache(self, seriesname: str):
     return self.tsh.cache.exists(self.engine, seriesname)
 

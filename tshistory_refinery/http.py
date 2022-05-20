@@ -66,6 +66,14 @@ delete_cache.add_argument(
     help='series name'
 )
 
+series_policy = reqparse.RequestParser()
+series_policy.add_argument(
+    'name',
+    type=str,
+    required=True,
+    help='series name'
+)
+
 
 def jsonlist(thing):
     return json.loads(thing)
@@ -206,6 +214,15 @@ class refinery_httpapi(xl_httpapi):
                 args = cp.parse_args()
                 return tsa.cache_policy_series(args.name)
 
+        @nsc.route('/series-policy')
+        class cache_series_policy(Resource):
+
+            @api.expect(series_policy)
+            @onerror
+            def get(self):
+                args = series_policy.parse_args()
+                return tsa.cache_series_policy(args.name)
+
         @nsc.route('/series-has-cache')
         class series_has_cache(Resource):
 
@@ -335,6 +352,16 @@ class RefineryClient(XLClient):
     def cache_policy_series(self, policyname):
         res = self.session.get(f'{self.uri}/cache/policy-series', params={
             'name': policyname
+        })
+        if res.status_code == 200:
+            return res.json()
+
+        return res
+
+    @unwraperror
+    def cache_series_policy(self, seriesname):
+        res = self.session.get(f'{self.uri}/cache/series-policy', params={
+            'name': seriesname
         })
         if res.status_code == 200:
             return res.json()

@@ -368,7 +368,7 @@ def set_series_ready(engine, series_name, val, namespace='tsh'):
 def series_policy(cn, series_name, namespace='tsh'):
     """ Return the cache policy for a series """
     q = (
-        f'select initial_revdate, '
+        f'select cache.name, initial_revdate, '
         f'       look_before, look_after, '
         f'       revdate_rule, schedule_rule '
         f'from "{namespace}".cache_policy as cache, '

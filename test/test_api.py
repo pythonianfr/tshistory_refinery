@@ -713,6 +713,15 @@ insertion_date             value_date
         'over-ground-1',
         'over-ground-2'
     ]
+    assert tsx.cache_series_policy('over-ground-1') == {
+        'name': 'another-policy',
+        'initial_revdate': '(date "2022-1-1")',
+        'look_after': '(shifted now #:days 2)',
+        'look_before': '(shifted now #:days -10)',
+        'revdate_rule': '0 0 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    }
+
     r = cache.series_policy_ready(
         engine,
         'over-ground-1'

@@ -173,6 +173,7 @@ def test_cache_a_series(engine, tsa):
         namespace=tsh.namespace
     )
     assert p == {
+        'name': 'a-policy',
         'initial_revdate': '(date "2022-1-1")',
         'look_after': '(shifted now #:days 10)',
         'look_before': '(shifted now #:days -10)',
