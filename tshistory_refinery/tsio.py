@@ -5,6 +5,7 @@ from psyl import lisp
 from sqlhelp import select
 
 from tshistory.util import (
+    compatible_date,
     patch,
     threadpool,
     tx

@@ -763,16 +763,6 @@ insertion_date             value_date
 2022-01-07 00:00:00+00:00    3.0
 """, tsx.get('over-ground-1', live=True, revision_date=pd.Timestamp('2022-1-5')))
 
-    assert_df("""
-2022-01-01 00:00:00+00:00    1.0
-2022-01-02 00:00:00+00:00    1.0
-2022-01-03 00:00:00+00:00    1.0
-2022-01-04 00:00:00+00:00    1.0
-2022-01-05 00:00:00+00:00    1.0
-2022-01-06 00:00:00+00:00    2.0
-2022-01-07 00:00:00+00:00    3.0
-""", tsx.get('over-ground-1', nocache=True))
-
     assert tsx.has_cache('over-ground-1')
 
     # insertion dates: only 3 vs 5
@@ -808,6 +798,29 @@ insertion_date             value_date
         'over-ground-1',
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
+
+    # `live` + to_value_date
+    # the output is not very good ...
+    ts = pd.Series(
+        [7] * 10,
+        index=pd.date_range(
+            utcdt(2022, 1, 10),
+            freq='D',
+            periods=10
+        )
+    )
+    tsx.update(
+        'ground-1',
+        ts,
+        'Babar'
+    )
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00    1.0
+""", tsx.get('over-ground-1', to_value_date=pd.Timestamp('2022-1-20'), live=True))
 
     # unset
     tsx.unset_cache_policy(
