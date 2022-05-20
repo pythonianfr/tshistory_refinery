@@ -230,7 +230,8 @@ def policy_by_name(engine, name, namespace='tsh'):
     return dict(p)
 
 
-def policy_series(cn, policyname, namespace='tsh'):
+def policy_series(cn, policy_name, namespace='tsh'):
+    """ Return the series associated with a cache policy """
     q = (
         f'select series.name '
         f'from "{namespace}".cache_policy as cache, '
@@ -238,15 +239,13 @@ def policy_series(cn, policyname, namespace='tsh'):
         f'     "{namespace}".formula as series '
         f'where cache.id = middle.cache_policy_id and '
         f'      series_id = series.id and '
-        f'      cache.name = %(policyname)s '
-        f'order by series.name asc'
+        f'      cache.name = %(cachename)s'
     )
-    return [
-        name for name, in cn.execute(
-            q,
-            policyname=policyname
-        ).fetchall()
-    ]
+    p = cn.execute(
+        q,
+        cachename=policy_name
+    ).fetchall()
+    return [item for item, in p]
 
 
 def set_policy(cn, policy_name, series_name, namespace='tsh'):
@@ -386,24 +385,6 @@ def series_policy(cn, series_name, namespace='tsh'):
     if p is None:
         return
     return dict(p)
-
-
-def policy_series(cn, policy_name, namespace='tsh'):
-    """ Return the series associated with a cache policy """
-    q = (
-        f'select series.name '
-        f'from "{namespace}".cache_policy as cache, '
-        f'     "{namespace}".cache_policy_series as middle, '
-        f'     "{namespace}".formula as series '
-        f'where cache.id = middle.cache_policy_id and '
-        f'      series_id = series.id and '
-        f'      cache.name = %(cachename)s'
-    )
-    p = cn.execute(
-        q,
-        cachename=policy_name
-    ).fetchall()
-    return [item for item, in p]
 
 
 @contextmanager
