@@ -134,11 +134,13 @@ setcache model policyname seriesname =
 
 
 unsetcache model name =
-    Http.request
-    { url = UB.crossOrigin model.baseurl [ "unset-series-policy/" ++ name ] [ ]
+    let payload_encoder =
+            [ ("name" , E.string name) ]
+    in Http.request
+    { url = UB.crossOrigin model.baseurl [ "unset-series-policy" ] [ ]
     , method = "PUT"
     , headers = []
-    , body = Http.emptyBody
+    , body = Http.jsonBody <| E.object payload_encoder
     , expect = Http.expectString CacheWasUnset
     , timeout = Nothing
     , tracker = Nothing
