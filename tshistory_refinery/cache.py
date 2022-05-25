@@ -407,67 +407,46 @@ def refresh(engine, tsa, name, final_revdate=None):
 
     exists = tsh.cache.exists(engine, name)
     if exists:
-        idates = tsh.cache.insertion_dates(engine, name)
-        initial_revdate = idates[-1]
-        lastidate = idates[0]
+        cache_idates = tsh.cache.insertion_dates(engine, name)
+        initial_revdate = cache_idates[-1]
     else:
         initial_revdate = pd.Timestamp(
             eval_moment(policy['initial_revdate']),
             tz='UTC'
         )
-        # That is well and nice but what if some autotrophic
-        # operator's earlier idates comes after the specified initial
-        # revdate ? In some timeseries systems, there is no idates api
-        # ...  and it costs a lot scanning over non-existent data (as
-        # absurd as it sounds). Hence, we will get the first known
-        # idate there and use that.
-        now = pd.Timestamp.utcnow()
-        idates = tsa.insertion_dates(
-            name,
-            from_insertion_date=initial_revdate,
-            to_insertion_date=now,
-            nocache=True
-        )
-        if not idates:
-            print(f'no idate over {initial_revdate} -> {now}, no refresh')
-            return  # that's an odd series, let's bail out
+    now = pd.Timestamp.utcnow()
+    idates = tsa.insertion_dates(
+        name,
+        from_insertion_date=initial_revdate,
+        to_insertion_date=now,
+        nocache=True
+    )
+    if not idates:
+        print(f'no idate over {initial_revdate} -> {now}, no refresh')
+        return  # that's an odd series, let's bail out
 
-        if idates[0] > initial_revdate:
-            initial_revdate = idates[0]
-        # we want to not filter out the first revdate
-        lastidate = initial_revdate - timedelta(days=1)
 
     final_revdate = final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC')
     print('starting range refresh', initial_revdate, '->', final_revdate)
 
+    cron_range = croniter_range(
+        initial_revdate,
+        final_revdate,
+        policy['revdate_rule']
+    )
+    reduced_cron = helper.reduce_frequency(list(cron_range), idates)
+    if not len(reduced_cron):
+        return
+
     with series_refresh_lock(engine, name, tsh.namespace):
-        for revdate in croniter_range(
-            initial_revdate,
-            final_revdate,
-            policy['revdate_rule']
-        ):
+        for revdate in reduced_cron:
+
             # native python datetimes lack some method
             revdate = pd.Timestamp(revdate)
 
             if exists:
                 if revdate == initial_revdate:
                     continue
-            else:
-                filtered = [
-                    idate for idate in idates
-                    if idate <= revdate
-                ]
-                if filtered:
-                    curidate = max(filtered)
-                    if curidate == lastidate:
-                        # while revdate advances, the source idate is the same
-                        # as before -> the current revdate is spurious,
-                        # let's avoid a useless source query
-                        print('skip spurious revdate', revdate)
-                        continue
-                    lastidate = curidate
-                else:
-                    return # nothing left !
 
             from_value_date = eval_moment(
                 policy['look_before'],
