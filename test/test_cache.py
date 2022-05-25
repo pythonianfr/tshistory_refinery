@@ -11,7 +11,7 @@ from tshistory.testutil import (
 )
 
 from tshistory_refinery import cache
-from tshistory_refinery.helper import comparator
+from tshistory_refinery.helper import comparator, reduce_frequency
 
 
 def test_invalid_cache():
@@ -965,3 +965,73 @@ def test_refresh_policy(engine, tsa):
     tsa.delete_cache_policy('test-refresh')
     for name in ('f1', 'f2'):
         assert not tsa.has_cache(name)
+
+
+def test_reduce_cron():
+    cronlist = [
+        utcdt(2022, 1, 1),
+        utcdt(2022, 1, 2),
+        utcdt(2022, 1, 3),
+        utcdt(2022, 1, 4),
+        utcdt(2022, 1, 5),
+    ]
+
+    # c  c  c  c  c
+    #      i    ii
+    idates_inclusive = [
+        utcdt(2022, 1, 2, 12),
+        utcdt(2022, 1, 4, 8),
+        utcdt(2022, 1, 4, 16),
+        utcdt(2022, 1, 5),
+    ]
+
+    assert [
+        utcdt(2022, 1, 3),
+        utcdt(2022, 1, 5),
+    ] == reduce_frequency(cronlist, idates_inclusive)
+
+
+    #   c  c  c  c  c
+    # i  ii    i
+    idates_overlap_before = [
+        utcdt(2021, 12, 31),
+        utcdt(2022, 1, 1, 8),
+        utcdt(2022, 1, 3, 16),
+    ]
+
+    assert [
+        utcdt(2022, 1, 1),
+        utcdt(2022, 1, 2),
+        utcdt(2022, 1, 4),
+    ] == reduce_frequency(cronlist, idates_overlap_before)
+
+    #  c  c  c  c  c
+    #   ii    i      i    i
+    idates_overlap_after = [
+        utcdt(2022, 1, 1, 8),
+        utcdt(2022, 1, 1, 16),
+        utcdt(2022, 1, 3, 16),
+        utcdt(2022, 1, 6, 16),
+
+    ]
+
+    assert [
+        utcdt(2022, 1, 2),
+        utcdt(2022, 1, 4),
+    ] == reduce_frequency(cronlist, idates_overlap_after)
+
+    #   c  c  c  c  c
+    # i      i    ii   i
+    idates_overlap_both = [
+        utcdt(2021, 12, 31),
+        utcdt(2022, 1, 2, 12),
+        utcdt(2022, 1, 4, 8),
+        utcdt(2022, 1, 4, 16),
+        utcdt(2022, 1, 6, 16),
+    ]
+
+    assert [
+        utcdt(2022, 1, 1),
+        utcdt(2022, 1, 3),
+        utcdt(2022, 1, 5),
+    ] == reduce_frequency(cronlist, idates_overlap_both)
