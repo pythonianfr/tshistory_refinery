@@ -13,7 +13,8 @@ import pandas as pd
 from psyl import lisp
 from rework import (
     api as rapi,
-    io as rio
+    io as rio,
+    task as rtask
 )
 from sqlhelp import (
     insert,
@@ -202,6 +203,21 @@ def unschedule_policy(engine, name, namespace='tsh'):
             f'      cp.name = %(name)s',
             name=name
         )
+
+
+def active_task(engine, policy_name, namespace='tsh'):
+    r = engine.execute(
+        'select t.id '
+        'from rework.task as t, '
+        '     rework.operation as o '
+        'where t.operation = o.id and '
+        '      o.name = \'refresh_formula_cache\''
+    )
+    for tid, in r.fetchall():
+        task = rtask.Task.byid(engine, tid)
+        if task.input['policy'] == policy_name:
+            if task.status != 'done':
+                return task
 
 
 def delete_policy(engine, policy_name, namespace='tsh'):
