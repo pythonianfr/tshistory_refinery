@@ -4,8 +4,6 @@ from inireader import reader
 from sqlalchemy import create_engine
 from tshistory.api import timeseries
 
-from tshistory_refinery.tsio import timeseries as tshclass
-
 
 NTHREAD = 16
 
@@ -27,6 +25,7 @@ def readsources(config):
 
 
 def apimaker(config):
+    from tshistory_refinery.tsio import timeseries as tshclass
     dburi = config['db']['uri']
     sources = readsources(config)
 
