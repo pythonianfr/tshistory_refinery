@@ -32,6 +32,25 @@ def setup_tasks(db_uri):
     api.freeze_operations(engine)
 
 
+@click.command('refresh-cache')
+@click.argument('db-uri')
+@click.argument('policy-name')
+@click.option('--initial', default=False, is_flag=True)
+def refresh_cache(db_uri, policy_name, initial=False):
+    dburi = find_dburi(db_uri)
+    engine = create_engine(dburi)
+    t = api.schedule(
+        engine,
+        'refresh_formula_cache',
+        domain='timeseries',
+        inputdata={
+            'policy': policy_name,
+            'initial': initial
+        },
+    )
+    print(f'queued {t.tid}')
+
+
 @click.command('migrate-to-cache')
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')
