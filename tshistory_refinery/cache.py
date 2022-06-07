@@ -424,7 +424,13 @@ def refresh(engine, tsa, name, final_revdate=None):
     exists = tsh.cache.exists(engine, name)
     if exists:
         cache_idates = tsh.cache.insertion_dates(engine, name)
-        initial_revdate = cache_idates[-1]
+        cached_last_idate = cache_idates[-1]
+        policy_initial_revdate = pd.Timestamp(
+            eval_moment(policy['initial_revdate']),
+            tz='UTC'
+        )
+        # usefull for discontinued series & edited caches
+        initial_revdate = max(cached_last_idate, policy_initial_revdate)
     else:
         initial_revdate = pd.Timestamp(
             eval_moment(policy['initial_revdate']),
