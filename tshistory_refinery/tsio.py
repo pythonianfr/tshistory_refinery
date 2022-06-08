@@ -44,10 +44,11 @@ class timeseries(xlts):
     def _expanded_formula(self, cn, formula, stopnames=(), qargs=None):
         # stopnames dynamic lookup for series that have a cache
         # (we won't expand them since we can litterally stop at them)
-        stopper = name_stopper(cn, self, stopnames)
+        if not qargs or not qargs.get('live'):
+            stopnames = name_stopper(cn, self, stopnames)
         return super()._expanded_formula(
             cn, formula,
-            stopnames=stopper,
+            stopnames=stopnames,
             qargs=qargs
         )
 
@@ -57,11 +58,11 @@ class timeseries(xlts):
             return super().get(cn, name, **kw)
 
         if nocache or not self.cache.exists(cn, name):
-            return super().get(cn, name, **kw)
+            return super().get(cn, name, live=live, **kw)
 
         ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
         if not ready:
-            return super().get(cn, name, **kw)
+            return super().get(cn, name, live=live, **kw)
 
         idates = self.cache.insertion_dates(
             cn, name,
@@ -102,7 +103,7 @@ class timeseries(xlts):
                 la = compatible_date(tzaware, la)
                 la = max(tvd, la)
             kw['to_value_date'] = la
-            livets = super().get(cn, name, **kw)
+            livets = super().get(cn, name, live=live, **kw)
             return patch(cached, livets).loc[fvd:tvd]
 
         return cached
