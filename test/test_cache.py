@@ -334,6 +334,13 @@ insertion_date             value_date
     )
     assert r
 
+    # a formula over the formula (to check second order effects of the
+    # api options like `live` and `nocache`)
+    tsa.register_formula(
+        'over-over-ground-1',
+        '(series "over-ground-1")'
+    )
+
     # indeed, we have 3 revs in cache
     assert_hist("""
 insertion_date             value_date               
@@ -360,6 +367,17 @@ insertion_date             value_date
 2022-01-05 00:00:00+00:00    3.0
 """, tsa.get('over-ground-1'))
 
+    # indirect get: cache + no live
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00    1.0
+2022-01-06 00:00:00+00:00    2.0
+2022-01-07 00:00:00+00:00    3.0
+""", tsa.get('over-over-ground-1'))
+
     # get: cache + live
     assert_df("""
 2022-01-01 00:00:00+00:00    1.0
@@ -367,6 +385,14 @@ insertion_date             value_date
 2022-01-03 00:00:00+00:00    2.0
 2022-01-04 00:00:00+00:00    3.0
 """, tsa.get('over-ground-1', live=True, revision_date=pd.Timestamp('2022-1-2')))
+
+    # indirect get: cache + live
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    2.0
+2022-01-04 00:00:00+00:00    3.0
+""", tsa.get('over-over-ground-1', live=True, revision_date=pd.Timestamp('2022-1-2')))
 
     # get: cache + live + revdate
     assert_df("""
@@ -379,6 +405,17 @@ insertion_date             value_date
 2022-01-07 00:00:00+00:00    3.0
 """, tsa.get('over-ground-1', live=True, revision_date=pd.Timestamp('2022-1-5')))
 
+    # indirect get: cache + live + revdate
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00    1.0
+2022-01-06 00:00:00+00:00    2.0
+2022-01-07 00:00:00+00:00    3.0
+""", tsa.get('over-over-ground-1', live=True, revision_date=pd.Timestamp('2022-1-5')))
+
     # get: cache + live
     assert_df("""
 2022-01-01 00:00:00+00:00    1.0
@@ -389,6 +426,17 @@ insertion_date             value_date
 2022-01-06 00:00:00+00:00    2.0
 2022-01-07 00:00:00+00:00    3.0
 """, tsa.get('over-ground-1', live=True))
+
+    # indirect get: cache + live
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00    1.0
+2022-01-06 00:00:00+00:00    2.0
+2022-01-07 00:00:00+00:00    3.0
+""", tsa.get('over-over-ground-1', live=True))
 
     # get: nocache
     assert_df("""
@@ -401,6 +449,17 @@ insertion_date             value_date
 2022-01-07 00:00:00+00:00    3.0
 """, tsa.get('over-ground-1', nocache=True))
 
+    # indirect get: nocache
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00    1.0
+2022-01-06 00:00:00+00:00    2.0
+2022-01-07 00:00:00+00:00    3.0
+""", tsa.get('over-over-ground-1', nocache=True))
+
     # insertion dates: only 3 vs 5
     idates = tsa.insertion_dates('over-ground-1')
     assert idates == [
@@ -409,6 +468,15 @@ insertion_date             value_date
         pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC')
     ]
 
+    # idates: indirect
+    idates = tsa.insertion_dates('over-over-ground-1')
+    assert idates == [
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC')
+    ]
+
+    # idates: nocache
     idates = tsa.insertion_dates('over-ground-1', nocache=True)
     assert idates == [
         pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
@@ -418,9 +486,21 @@ insertion_date             value_date
         pd.Timestamp('2022-01-05 00:00:00+0000', tz='UTC')
     ]
 
+    # indirect idates: nocache
+    idates = tsa.insertion_dates('over-over-ground-1', nocache=True)
+    assert idates == [
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC')
+    ]
+
     # history points: only 3 vs 5
     assert len(tsa.history('over-ground-1')) == 3
     assert len(tsa.history('over-ground-1', nocache=True)) == 5
+
+    # indirect
+    assert len(tsa.history('over-over-ground-1')) == 5
+    assert len(tsa.history('over-over-ground-1', nocache=True)) == 5
 
     # let's pretend two new revisions showed up
     cache.refresh(
