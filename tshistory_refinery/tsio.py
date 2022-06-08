@@ -28,56 +28,57 @@ class timeseries(xlts):
         if self.type(cn, name) != 'formula':
             return super().get(cn, name, **kw)
 
-        if not nocache and self.cache.exists(cn, name):
-            ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
-            if ready is not None and ready:
+        if nocache or not self.cache.exists(cn, name):
+            return super().get(cn, name, **kw)
 
-                idates = self.cache.insertion_dates(
-                    cn, name,
-                    from_insertion_date=kw.get('revision_date')
-                )
+        ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
+        if not ready:
+            return super().get(cn, name, **kw)
 
-                cached = self.cache.get(cn, name, **kw)
-                if len(cached) and live:
-                    tzaware = self.metadata(cn, name)['tzaware']
-                    # save for later use
-                    fvd = kw.pop('from_value_date', None)
-                    tvd = kw.pop('to_value_date', None)
-                    if fvd:
-                        fvd = compatible_date(tzaware, fvd)
-                    if tvd:
-                        tvd = compatible_date(tzaware, tvd)
+        idates = self.cache.insertion_dates(
+            cn, name,
+            from_insertion_date=kw.get('revision_date')
+        )
+        cached = self.cache.get(cn, name, **kw)
+        if len(cached) and live:
+            tzaware = self.metadata(cn, name)['tzaware']
+            # save for later use
+            fvd = kw.pop('from_value_date', None)
+            tvd = kw.pop('to_value_date', None)
+            if fvd:
+                fvd = compatible_date(tzaware, fvd)
+            if tvd:
+                tvd = compatible_date(tzaware, tvd)
 
-                    # now, compute boundaries for the live query
-                    # using the cache policy
-                    policy = cache.series_policy(cn, name, namespace=self.namespace)
-                    now = (
-                        kw.get('revision_date') or
-                        (idates and idates[-1]) or
-                        pd.Timestamp.utcnow()
-                    )
-                    # we use the look before date span from the cache policy
-                    kw['from_value_date'] = cache.eval_moment(
-                        policy['look_before'],
-                        {'now': now}
-                    )
-                    # and the max of the look after / query for the right boundary
-                    la = cache.eval_moment(
-                        policy['look_after'],
-                        {'now': now}
-                    )
-                    if tvd:
-                        # let's honor the to_value_date part of the query of provided
-                        # for the live part
-                        la = compatible_date(tzaware, la)
-                        la = max(tvd, la)
-                    kw['to_value_date'] = la
-                    livets = super().get(cn, name, **kw)
-                    return patch(cached, livets).loc[fvd:tvd]
+            # now, compute boundaries for the live query
+            # using the cache policy
+            policy = cache.series_policy(cn, name, namespace=self.namespace)
+            now = (
+                kw.get('revision_date') or
+                (idates and idates[-1]) or
+                pd.Timestamp.utcnow()
+            )
+            # we use the look before date span from the cache policy
+            kw['from_value_date'] = cache.eval_moment(
+                policy['look_before'],
+                {'now': now}
+            )
+            # and the max of the look after / query for the right boundary
+            la = cache.eval_moment(
+                policy['look_after'],
+                {'now': now}
+            )
+            if tvd:
+                # let's honor the to_value_date part of the query of provided
+                # for the live part
+                la = compatible_date(tzaware, la)
+                la = max(tvd, la)
+            kw['to_value_date'] = la
+            livets = super().get(cn, name, **kw)
+            return patch(cached, livets).loc[fvd:tvd]
 
-                return cached
+        return cached
 
-        return super().get(cn, name, **kw)
 
     @tx
     def insertion_dates(self, cn, name,
