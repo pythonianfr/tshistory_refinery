@@ -86,6 +86,7 @@ def unset_cache_policy(self, seriesnames: List[str]) -> NONETYPE:
             name,
             namespace=self.tsh.namespace
         )
+        self.tsh.cache.delete(self.engine, name)
 
 
 @extend(mainsource)

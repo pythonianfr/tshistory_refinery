@@ -843,7 +843,7 @@ insertion_date             value_date
     assert tsx.cache_free_series() == ['over-ground-1', 'over-ground-2']
     assert tsx.cache_policies() == []
 
-    assert tsx.has_cache('over-ground-1')
+    assert not tsx.has_cache('over-ground-1')
     assert not tsx.has_cache('over-ground-2')
 
 
