@@ -17,11 +17,39 @@ from tshistory_refinery import cache
 from tshistory_refinery import api  # trigger registration
 
 
+class name_stopper:
+    __slots__ = 'cn', 'tsh', 'names'
+
+    def __init__(self, cn, tsh, stopnames=()):
+        self.cn = cn
+        self.tsh = tsh
+        self.names = stopnames
+
+    def __contains__(self, name):
+        if name in self.names:
+            return True
+        tsh = self.tsh
+        if tsh.type(self.cn, name) == 'formula':
+            if tsh.cache.exists(self.cn, name):
+                return True
+        return False
+
+
 class timeseries(xlts):
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
         self.cache = basets(namespace='{}-cache'.format(self.namespace))
+
+    def _expanded_formula(self, cn, formula, stopnames=(), qargs=None):
+        # stopnames dynamic lookup for series that have a cache
+        # (we won't expand them since we can litterally stop at them)
+        stopper = name_stopper(cn, self, stopnames)
+        return super()._expanded_formula(
+            cn, formula,
+            stopnames=stopper,
+            qargs=qargs
+        )
 
     @tx
     def get(self, cn, name, nocache=False, live=False, **kw):
