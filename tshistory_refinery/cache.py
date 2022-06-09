@@ -603,3 +603,56 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
 
     set_policy_ready(engine, policy, True, namespace=tsh.namespace)
     assert policy_ready(engine, policy, namespace=tsh.namespace)
+
+
+def refresh_policy_now(tsa, policy):
+    tsh = tsa.tsh
+    engine = tsa.engine
+    names = policy_series(
+        tsa.engine,
+        policy,
+        namespace=tsh.namespace
+    )
+
+    print(
+        f'Spot refresh of cache policy `{policy}` '
+        f'(ns={tsh.namespace}) series: {names}'
+    )
+    if policy_ready(engine, policy, namespace=tsh.namespace):
+        print('Cache is not ready and this is not an initial run, stopping now.')
+        return
+
+    unames = set()
+    # put the uncached serie at the end
+    for name in names:
+        if not tsh.cache.exists(engine, name):
+            unames.add(name)
+
+    names = [
+        name for name in names
+        if name not in unames
+    ]
+
+    cmp = helper.comparator(tsh, engine)
+    names.sort(key=cmp_to_key(cmp))
+
+    unames = list(unames)
+    unames.sort(key=cmp_to_key(cmp))
+
+    print(f'first batch (cache update) ({len(names)} series)')
+    for name in names:
+        print('refresh ->', name)
+        refresh_now(
+            engine,
+            tsa,
+            name,
+        )
+
+    print(f'second batch (full cache construction) ({len(unames)} series)')
+    for name in unames:
+        print('refresh ->', name)
+        refresh_now(
+            engine,
+            tsa,
+            name,
+        )

@@ -1131,6 +1131,34 @@ def test_cache_refresh_series_now(engine, tsa):
 2022-01-05    4.0
 """, tsa.get('refresh-now'))
 
+    tsa.update(
+        'ground-refresh-now',
+        pd.Series(
+            range(7),
+            index=pd.date_range(
+                pd.Timestamp('2022-1-1'),
+                freq='D',
+                periods=7
+            )
+        ),
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-3', tz='UTC')
+    )
+    cache.refresh_policy_now(
+        tsa,
+        'policy-series-refresh-now'
+    )
+    assert_df("""
+2022-01-01    0.0
+2022-01-02    1.0
+2022-01-03    2.0
+2022-01-04    3.0
+2022-01-05    4.0
+2022-01-06    5.0
+2022-01-07    6.0
+""", tsa.get('refresh-now'))
+
+
 def test_reduce_cron():
     cronlist = [
         utcdt(2022, 1, 1),
