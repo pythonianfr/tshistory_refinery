@@ -1048,6 +1048,89 @@ def test_refresh_policy(engine, tsa):
         assert not tsa.has_cache(name)
 
 
+def test_cache_refresh_series_now(engine, tsa):
+    tsh = tsa.tsh
+
+    tsa.update(
+        'ground-refresh-now',
+        pd.Series(
+            range(3),
+            index=pd.date_range(
+                pd.Timestamp('2022-1-1'),
+                freq='D',
+                periods=3
+            )
+        ),
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-1', tz='UTC')
+    )
+    tsa.register_formula(
+        'refresh-now',
+        '(series "ground-refresh-now")'
+    )
+
+    tsa.new_cache_policy(
+        'policy-series-refresh-now',
+        initial_revdate='(date "2022-1-1")',
+        look_before='(shifted now #:days -10)',
+        look_after='(shifted now #:days 10)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+    tsa.set_cache_policy(
+        'policy-series-refresh-now',
+        ['refresh-now']
+    )
+
+    assert not tsh.cache.exists(engine, 'refresh-now')
+    cache.refresh_now(
+        engine,
+        tsa,
+        'refresh-now'
+    )
+    # because it does not work on an empty cache
+    assert not tsh.cache.exists(engine, 'refresh-now')
+
+    cache.refresh(
+        engine,
+        tsa,
+        'refresh-now'
+    )
+    assert tsh.cache.exists(engine, 'refresh-now')
+
+    assert_df("""
+2022-01-01    0.0
+2022-01-02    1.0
+2022-01-03    2.0
+""", tsa.get('refresh-now'))
+
+    tsa.update(
+        'ground-refresh-now',
+        pd.Series(
+            range(5),
+            index=pd.date_range(
+                pd.Timestamp('2022-1-1'),
+                freq='D',
+                periods=5
+            )
+        ),
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-2', tz='UTC')
+    )
+    cache.refresh_now(
+        engine,
+        tsa,
+        'refresh-now'
+    )
+
+    assert_df("""
+2022-01-01    0.0
+2022-01-02    1.0
+2022-01-03    2.0
+2022-01-04    3.0
+2022-01-05    4.0
+""", tsa.get('refresh-now'))
+
 def test_reduce_cron():
     cronlist = [
         utcdt(2022, 1, 1),

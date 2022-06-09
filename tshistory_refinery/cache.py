@@ -497,6 +497,46 @@ def refresh(engine, tsa, name, final_revdate=None):
                 )
 
 
+def refresh_now(engine, tsa, name):
+    """ Refresh a series cache on the spot (do not follow revdate_rule) """
+    tsh = tsa.tsh
+    policy = series_policy(engine, name, tsh.namespace)
+
+    if not series_ready(engine, name, namespace=tsh.namespace):
+        print(f'Series {name} already being updated. Bailing out.')
+        return
+
+    exists = tsh.cache.exists(engine, name)
+    if not exists:
+        print(f'refresh_now only works on an established cache.')
+        return
+
+    now = pd.Timestamp.utcnow()
+    with series_refresh_lock(engine, name, tsh.namespace):
+        from_value_date = eval_moment(
+            policy['look_before'],
+            {'now': now}
+        )
+        to_value_date = eval_moment(
+            policy['look_after'],
+            {'now': now}
+        )
+
+        ts = tsa.get(
+            name,
+            from_value_date=from_value_date,
+            to_value_date=to_value_date,
+            nocache=True
+        )
+        if len(ts):
+            tsh.cache.update(
+                engine,
+                ts,
+                name,
+                'formula-cacher'
+            )
+
+
 def refresh_policy(tsa, policy, initial, final_revdate=None):
     tsh = tsa.tsh
     names = policy_series(
