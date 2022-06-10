@@ -344,7 +344,6 @@ def series_ready(cn, series_name, namespace='tsh'):
     ).scalar()
 
 
-
 def set_policy_ready(engine, policy_name, val, namespace='tsh'):
     """ Mark a cache policy as ready """
     assert isinstance(val, bool)
@@ -362,7 +361,7 @@ def set_policy_ready(engine, policy_name, val, namespace='tsh'):
         )
 
 
-def set_series_ready(engine, series_name, val, namespace='tsh'):
+def _set_series_ready(engine, series_name, val, namespace='tsh'):
     """ Mark the cache readiness for a series """
     assert isinstance(val, bool)
     print('set ready', series_name, val, namespace)
@@ -405,11 +404,11 @@ def series_policy(cn, series_name, namespace='tsh'):
 
 @contextmanager
 def series_refresh_lock(engine, name, namespace):
-    set_series_ready(engine, name, False, namespace=namespace)
+    _set_series_ready(engine, name, False, namespace=namespace)
     try:
         yield
     finally:
-        set_series_ready(engine, name, True, namespace=namespace)
+        _set_series_ready(engine, name, True, namespace=namespace)
 
 
 def refresh(engine, tsa, name, final_revdate=None):
@@ -418,7 +417,7 @@ def refresh(engine, tsa, name, final_revdate=None):
     policy = series_policy(engine, name, tsh.namespace)
 
     if not series_ready(engine, name, namespace=tsh.namespace):
-        print(f'Series {name} already being updated. Bailing out.')
+        print(f'Series {name} already being updated. Bailing out. {tsh.namespace=}')
         return
 
     exists = tsh.cache.exists(engine, name)
