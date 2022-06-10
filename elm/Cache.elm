@@ -252,6 +252,22 @@ deactivate model policy =
     }
 
 
+refreshnow model policy =
+    let policy_name_encoder =
+            [ ("name" , E.string policy.name) ]
+    in
+    Http.request
+    { url = UB.crossOrigin model.baseurl
+          [ "api/cache/refresh-policy-now" ] [ ]
+    , method = "PUT"
+    , headers = []
+    , body = Http.jsonBody <| E.object policy_name_encoder
+    , expect = Http.expectWhatever RefreshNowAsked
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
+
 type Msg
     = GotPolicies (Result Http.Error (List Policy))
     | AskDeletePolicy String
@@ -269,6 +285,8 @@ type Msg
     | CancelPolicyCreation
     | CancelPolicyEdition
     | LinkPolicySeries Policy
+    | RefreshNow Policy
+    | RefreshNowAsked (Result Http.Error ())
     | GotCachedSeries (Result Http.Error (List String))
     | GotFreeSeries (Result Http.Error (List String))
     | AddToCache String
@@ -514,6 +532,15 @@ update msg model =
 
         ToggledActivation (Err _) -> nocmd model
 
+        -- refresh
+
+        RefreshNow pol ->
+            ( model
+            , refreshnow model pol
+            )
+
+        RefreshNowAsked _ ->
+            nocmd model
 
 
 viewdeletepolicyaction model policy =
@@ -551,6 +578,18 @@ viewactivatepolicyaction model policy =
     ]
 
 
+viewforcerefreshaction model policy =
+    if policy.active then
+        [ H.button [ HA.class "btn btn-info"
+                   , HA.type_ "button"
+                   , HE.onClick (RefreshNow policy)
+                   , HA.title "force an immediate policy refresh"
+                   ]
+              [ H.text "refresh" ]
+        ]
+    else []
+
+
 vieweditpolicyaction model policy =
     if policy.active then [] else
     [ H.button [ HA.class "btn btn-primary"
@@ -579,6 +618,8 @@ viewpolicy model policy =
             (viewactivatepolicyaction model policy)
             ++
             (vieweditpolicyaction model policy)
+            ++
+            (viewforcerefreshaction model policy)
             ++
             (viewdeletepolicyaction model policy)
         ]
