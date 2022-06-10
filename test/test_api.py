@@ -3,6 +3,8 @@ from datetime import datetime
 import pytest
 import pandas as pd
 
+from rework import api as rapi, task
+from rework.testutils import workers
 from tshistory import api
 from tshistory.testutil import (
     assert_df,
@@ -15,12 +17,14 @@ from tshistory_refinery import (
     cache,
     http,
     tsio,
-    schema
+    schema,
+    tasks  # trigger registration
 )
 
 
 def _initschema(engine, ns='tsh'):
     schema.init(engine, namespace=ns, drop=True)
+    rapi.freeze_operations(engine)
 
 
 def make_api(engine, ns, sources=()):
@@ -881,3 +885,116 @@ def test_cacheable_formulas(tsa1, tsa2):
         'cacheable-2',
         'cacheable-3'
     ]
+
+
+def test_cache_refresh_series_now(engine, tsx):
+    tsx.update(
+        'ground-refresh-now',
+        pd.Series(
+            range(3),
+            index=pd.date_range(
+                pd.Timestamp('2022-1-1'),
+                freq='D',
+                periods=3
+            )
+        ),
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-1', tz='UTC')
+    )
+    tsx.register_formula(
+        'refresh-now',
+        '(series "ground-refresh-now")'
+    )
+
+    tsx.new_cache_policy(
+        'policy-series-refresh-now',
+        initial_revdate='(date "2022-1-1")',
+        look_before='(shifted now #:days -10)',
+        look_after='(shifted now #:days 10)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+    tsx.set_cache_policy(
+        'policy-series-refresh-now',
+        ['refresh-now']
+    )
+
+    tsa = api.timeseries(
+        str(engine.url),
+        namespace='tsh',
+        handler=tsio.timeseries,
+        sources=[]
+    )
+    cache.refresh(
+        engine,
+        tsa,
+        'refresh-now'
+    )
+
+    assert_df("""
+2022-01-01    0.0
+2022-01-02    1.0
+2022-01-03    2.0
+""", tsx.get('refresh-now'))
+
+    tsx.update(
+        'ground-refresh-now',
+        pd.Series(
+            range(5),
+            index=pd.date_range(
+                pd.Timestamp('2022-1-1'),
+                freq='D',
+                periods=5
+            )
+        ),
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-2', tz='UTC')
+    )
+    tsx.refresh_series_policy_now(
+        'refresh-now'
+    )
+
+    assert_df("""
+2022-01-01    0.0
+2022-01-02    1.0
+2022-01-03    2.0
+2022-01-04    3.0
+2022-01-05    4.0
+""", tsx.get('refresh-now'))
+
+    tsx.update(
+        'ground-refresh-now',
+        pd.Series(
+            range(7),
+            index=pd.date_range(
+                pd.Timestamp('2022-1-1'),
+                freq='D',
+                periods=7
+            )
+        ),
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-3', tz='UTC')
+    )
+    with workers(engine, domain='timeseries'):
+        tid = tsx.refresh_series_policy_now(
+            'policy-series-refresh-now'
+        )
+        t = task.Task.byid(engine, tid)
+        # this will be failed because we don't have an easily injectable
+        # refinery.cfg file
+        t.join()
+
+    # so this is a lie ... and the cache did not get updated :/
+    # this integration test is more tricky than I'd want for today
+    assert_df("""
+2022-01-01    0.0
+2022-01-02    1.0
+2022-01-03    2.0
+2022-01-04    3.0
+2022-01-05    4.0
+2022-01-06    5.0
+2022-01-07    6.0
+""", tsx.get('refresh-now'))
+
+    # cleanup
+    engine.execute('delete from rework.task')

@@ -23,3 +23,19 @@ def refresh_formula_cache(task):
 
     with task.capturelogs(std=True):
         cache.refresh_policy(tsa, policy, initial)
+
+
+@task(
+    domain='timeseries',
+    inputs=(
+        rio.string('policy', required=True),
+    )
+)
+def refresh_formula_cache_now(task):
+    tsa = helper.apimaker(
+        helper.config()
+    )
+    policy = task.input['policy']
+
+    with task.capturelogs(std=True):
+        cache.refresh_policy_now(tsa, policy)

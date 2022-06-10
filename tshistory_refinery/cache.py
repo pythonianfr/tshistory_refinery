@@ -648,10 +648,5 @@ def refresh_policy_now(tsa, policy):
         )
 
     print(f'second batch (full cache construction) ({len(unames)} series)')
-    for name in unames:
-        print('refresh ->', name)
-        refresh_now(
-            engine,
-            tsa,
-            name,
-        )
+    print(f'only a regular update can fix them')
+

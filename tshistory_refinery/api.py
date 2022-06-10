@@ -1,5 +1,6 @@
 from typing import List
 
+from rework import api as rapi
 from tshistory.util import extend
 from tshistory.api import mainsource
 
@@ -121,3 +122,13 @@ def has_cache(self, seriesname: str):
 @extend(mainsource)
 def delete_cache(self, seriesname: str):
     return self.tsh.invalidate_cache(self.engine, seriesname)
+
+
+@extend(mainsource)
+def refresh_series_policy_now(self, policyname: str):
+    return rapi.schedule(
+        self.engine,
+        'refresh_formula_cache_now',
+        domain='timeseries',
+        inputdata={'policy': policyname}
+    ).tid

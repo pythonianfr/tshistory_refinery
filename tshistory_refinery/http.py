@@ -240,6 +240,16 @@ class refinery_httpapi(xl_httpapi):
                 return '', 204
 
 
+        @nsc.route('/refresh-policy-now')
+        class refresh_policy_now(Resource):
+
+            @api.expect(cp)
+            @onerror
+            def put(self):
+                args = cp.parse_args()
+                tid = tsa.refresh_series_policy_now(args.name)
+                return tid, 200
+
 
 class RefineryClient(XLClient):
 
@@ -385,5 +395,15 @@ class RefineryClient(XLClient):
         })
         if res.status_code == 204:
             return
+
+        return res
+
+    @unwraperror
+    def refresh_series_policy_now(self, policyname):
+        res = self.session.put(f'{self.uri}/cache/refresh-policy-now', params={
+            'name': policyname
+        })
+        if res.status_code == 200:
+            return res.json()
 
         return res
