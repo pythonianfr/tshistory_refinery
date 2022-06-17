@@ -407,8 +407,9 @@ def series_refresh_lock(engine, name, namespace):
     _set_series_ready(engine, name, False, namespace=namespace)
     try:
         yield
-    finally:
-        _set_series_ready(engine, name, True, namespace=namespace)
+    except:
+        return
+    _set_series_ready(engine, name, True, namespace=namespace)
 
 
 def refresh(engine, tsa, name, final_revdate=None):
