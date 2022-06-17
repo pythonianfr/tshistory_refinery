@@ -656,8 +656,8 @@ haserror editerror fieldname =
 inputs =
     [ ("name", "name", "policy name" )
     , ("initial_revdate", "initial revision date", "e.g. (date \"2022-1-1\")" )
-    , ("look_before", "look before", "e.g. (shifted (today) #:days -15)" )
-    , ("look_after", "look after", "e.g. (shifted (today) #:days 15)" )
+    , ("look_before", "look before", "e.g. (shifted now #:days -15)" )
+    , ("look_after", "look after", "e.g. (shifted now #:days 15)" )
     , ("revdate_rule", "revision date rule", "in crontab format" )
     , ("schedule_rule", "schedule rule", "in crontab format" )
     ]
