@@ -622,7 +622,7 @@ def refresh_policy_now(tsa, policy):
         f'Spot refresh of cache policy `{policy}` '
         f'(ns={tsh.namespace}) series: {names}'
     )
-    if policy_ready(engine, policy, namespace=tsh.namespace):
+    if not policy_ready(engine, policy, namespace=tsh.namespace):
         print('Cache is not ready and this is not an initial run, stopping now.')
         return
 
