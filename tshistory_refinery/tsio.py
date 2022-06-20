@@ -63,7 +63,7 @@ class timeseries(xlts):
         ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
         if not ready:
             return super().get(cn, name, nocache=nocache, live=live, **kw)
-
+        print(f'GET DATA FROM CACHE FOR {name}')
         idates = self.cache.insertion_dates(
             cn, name,
             from_insertion_date=kw.get('revision_date')

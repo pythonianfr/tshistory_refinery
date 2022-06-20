@@ -443,7 +443,7 @@ def refresh(engine, tsa, name, final_revdate=None):
         to_insertion_date=now,
         nocache=True
     )
-    if not idates:
+    if not idates or not len(idates):
         print(f'no idate over {initial_revdate} -> {now}, no refresh')
         return  # that's an odd series, let's bail out
 
@@ -456,7 +456,11 @@ def refresh(engine, tsa, name, final_revdate=None):
         final_revdate,
         policy['revdate_rule']
     )
-    reduced_cron = helper.reduce_frequency(list(cron_range), idates)
+
+    l_cron_range = list(cron_range)
+    if not len(l_cron_range):
+        return
+    reduced_cron = helper.reduce_frequency(l_cron_range, idates)
     if not len(reduced_cron):
         return
 
