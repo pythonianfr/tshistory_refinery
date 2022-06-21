@@ -643,7 +643,7 @@ def refresh_policy_now(tsa, policy):
     unames = list(unames)
     unames.sort(key=cmp_to_key(cmp))
 
-    print(f'first batch (cache update) ({len(names)} series)')
+    print(f'updating ({len(names)} series)')
     for name in names:
         print('refresh ->', name)
         refresh_now(
@@ -652,6 +652,7 @@ def refresh_policy_now(tsa, policy):
             name,
         )
 
-    print(f'second batch (full cache construction) ({len(unames)} series)')
-    print(f'only a regular update can fix them')
+    if len(unames):
+        print(f'second batch (full cache construction) ({len(unames)} series)')
+        print(f'only a regular update can fix them')
 
