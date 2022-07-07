@@ -37,6 +37,7 @@ setup(name='tshistory_refinery',
           'tshistory_supervision',
           'tshistory_formula',
           'tshistory_editor',
+          'tshistory_xl',
           'rework',
           'rework_ui',
           'inireader',
@@ -50,7 +51,8 @@ setup(name='tshistory_refinery',
       ],
       package_data={'tshistory_refinery': [
           'refinery_static/*',
-          'templates/*'
+          'templates/*',
+          'schema.sql'
       ]},
       entry_points={
           'tshistory.subcommands': [
