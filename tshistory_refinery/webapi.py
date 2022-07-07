@@ -23,7 +23,12 @@ def make_app(config, tsa, editor_callback=None, more_sections=None):
     dburi = config['db']['uri']
     engine = create_engine(dburi)
 
-    segment = config['nginx']['segment']
+    try:
+        # in the near future we want to completely
+        # get rid of this
+        segment = config['nginx']['segment']
+    except:
+        segment = '/'
 
     def has_permission(perm):
         return True
