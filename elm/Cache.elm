@@ -601,19 +601,19 @@ vieweditpolicyaction model policy =
 
 
 viewpolicy model policy =
-    H.li [  HA.class "gridded_policy" ]
-        [ H.span []
+    H.tr [  HA.class "gridded_policy" ]
+        [ H.td []
               [ H.a [ HA.href "#"
                     , HE.onClick (LinkPolicySeries policy)
                     ]
                     [ H.text policy.name ]
               ]
-        , H.span [] [ H.text <| if policy.ready then "true" else "false" ]
-        , H.span [] [ H.text <| policy.initial_revdate ]
-        , H.span [] [ H.text <| policy.look_before ]
-        , H.span [] [ H.text <| policy.look_after ]
-        , H.span [] [ H.text <| policy.revdate_rule ]
-        , H.span [] [ H.text <| policy.schedule_rule ]
+        , H.td [] [ H.text <| if policy.ready then "true" else "false" ]
+        , H.td [] [ H.text <| policy.initial_revdate ]
+        , H.td [] [ H.text <| policy.look_before ]
+        , H.td [] [ H.text <| policy.look_after ]
+        , H.td [] [ H.text <| policy.revdate_rule ]
+        , H.td [] [ H.text <| policy.schedule_rule ]
         , H.div [] <|
             (viewactivatepolicyaction model policy)
             ++
@@ -830,9 +830,9 @@ viewpoliciesheader =
             , "look before", "look after"
             , "rev date rule", "schedule rule", "actions"
             ]
-    in [ H.li [ HA.class "gridded_policy" ]
-             <| List.map (\item -> H.span [] [ H.text item ]) columns
-       ]
+    in H.tr
+        [ HA.class "gridded_policy" ]
+        <| List.map (\item -> H.th [] [ H.text item ]) columns
 
 
 viewpolicies model =
@@ -848,10 +848,13 @@ viewpolicies model =
                                            , HE.onClick NewPolicy
                                            ]
                                       [ H.text "create a cache policy" ]
-                                , H.ul [ HA.class "policy_list" ]
+                                , H.table [ HA.class "policy_list" ]
                                     <| (++)
-                                        viewpoliciesheader
-                                        <| List.map (viewpolicy model) model.policies
+                                        [ H.thead [] [ viewpoliciesheader ] ]
+                                        [ H.tbody
+                                              []
+                                              <| List.map (viewpolicy model) model.policies
+                                        ]
                                 ]
                         Just policy ->
                             viewlinkpolicy model policy
