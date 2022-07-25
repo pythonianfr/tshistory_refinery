@@ -26,7 +26,7 @@ class ElmBuild(build_ext):
 
 
 setup(name='tshistory_refinery',
-      version='0.4.0',
+      version='0.4.1',
       author='Pythonian',
       author_email='aurelien.campeas@pythonian.fr, arnaud.campeas@pythonian.fr',
       packages=['tshistory_refinery'],
