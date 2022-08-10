@@ -241,7 +241,9 @@ def policy_by_name(engine, name, namespace='tsh'):
         p = cn.execute(
             f'select initial_revdate, '
             f'       revdate_rule, schedule_rule '
-            f'from "{namespace}".cache_policy'
+            f'from "{namespace}".cache_policy '
+            f'where name = %(name)s',
+            name=name
         ).fetchone()
     return dict(p)
 

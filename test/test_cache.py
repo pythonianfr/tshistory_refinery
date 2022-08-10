@@ -135,7 +135,7 @@ def test_policy_by_name(engine):
 
     p = cache.policy_by_name(engine, 'my-policy-2')
     assert p == {
-        'initial_revdate': '(date "2022-1-1")',  # wrong !
+        'initial_revdate': '(date "2023-1-1")',
         'revdate_rule': '0 1 * * *',
         'schedule_rule': '0 8-18 * * *'
     }
