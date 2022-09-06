@@ -401,7 +401,7 @@ def refinery_bp(tsa, more_sections=None):
 
     @bp.route('/set-series-policy', methods=['PUT'])
     def set_series_policy():
-        args = policy_args(request.json)
+        args = set_policy_args(request.json)
         with engine.begin() as cn:
             cache.set_policy(
                 cn,
