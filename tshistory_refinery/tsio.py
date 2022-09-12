@@ -129,7 +129,7 @@ class timeseries(xlts):
 
         if not nocache and self.cache.exists(cn, name):
             ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
-            if ready is not None and ready:
+            if ready:
                 return self.cache.insertion_dates(
                     cn, name,
                     from_insertion_date=from_insertion_date,
@@ -155,7 +155,7 @@ class timeseries(xlts):
 
         if not nocache and self.cache.exists(cn, name):
             ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
-            if ready is not None and ready:
+            if ready:
                 return self.cache.history(cn, name, **kw)
 
         return super().history(
