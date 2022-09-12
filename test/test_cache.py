@@ -1185,6 +1185,85 @@ def test_cache_refresh_series_now(engine, tsa):
 """, tsa.get('refresh-now'))
 
 
+def test_always_live_in_the_deep_past(engine, tsa):
+    for m in range(1, 5):
+        ts = pd.Series(
+            [m] * 5,
+            index=pd.date_range(f'2022-{m}-1', freq='D', periods=5)
+        )
+        tsa.update(
+            'deep-fried',
+            ts,
+            'Babar',
+            insertion_date=pd.Timestamp(f'2022-{m}-1', tz='utc')
+        )
+
+    assert_df("""
+2022-01-01    1.0
+2022-01-02    1.0
+2022-01-03    1.0
+2022-01-04    1.0
+2022-01-05    1.0
+2022-02-01    2.0
+2022-02-02    2.0
+2022-02-03    2.0
+2022-02-04    2.0
+2022-02-05    2.0
+2022-03-01    3.0
+2022-03-02    3.0
+2022-03-03    3.0
+2022-03-04    3.0
+2022-03-05    3.0
+2022-04-01    4.0
+2022-04-02    4.0
+2022-04-03    4.0
+2022-04-04    4.0
+2022-04-05    4.0
+""", tsa.get('deep-fried'))
+
+    tsa.register_formula(
+        'f-deep-fried',
+        '(series "deep-fried")'
+    )
+
+    tsa.new_cache_policy(
+        'p-deep-fried',
+        initial_revdate='(date "2022-1-3")',
+        look_before='(shifted now #:days -5)',
+        look_after='(shifted now #:days 5)',
+        # monthly
+        revdate_rule='0 0 1 1-3 *',
+        schedule_rule='0 0 1 1-3 *'
+    )
+    tsa.set_cache_policy(
+        'p-deep-fried',
+        ['f-deep-fried']
+    )
+
+    cache.refresh(
+        engine,
+        tsa,
+        'f-deep-fried',
+        final_revdate=pd.Timestamp('2022-3-1', tz='UTC')
+    )
+    cache.set_policy_ready(engine, 'p-deep-fried', True, tsa.tsh.namespace)
+
+    idates = tsa.insertion_dates('f-deep-fried')
+    assert idates == [
+        pd.Timestamp('2022-02-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-03-01 00:00:00+0000', tz='UTC'),
+    ]
+
+    ts = tsa.get('f-deep-fried', revision_date=pd.Timestamp('2022-1-1', tz='utc'))
+    assert not len(ts)
+
+    hist = tsa.history('f-deep-fried')
+    assert list(hist.keys())  == [
+        pd.Timestamp('2022-02-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-03-01 00:00:00+0000', tz='UTC')
+    ]
+
+
 def test_reduce_cron():
     cronlist = [
         utcdt(2022, 1, 1),
