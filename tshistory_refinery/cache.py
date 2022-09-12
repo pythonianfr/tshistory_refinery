@@ -492,7 +492,7 @@ def refresh(engine, tsa, name, final_revdate=None):
                 to_value_date=to_value_date,
                 nocache=True
             )
-            print(f'{revdate} -> {len(ts)} points)')
+            print(f'{revdate} -> {len(ts)} points')
             if len(ts):
                 tsh.cache.update(
                     engine,
