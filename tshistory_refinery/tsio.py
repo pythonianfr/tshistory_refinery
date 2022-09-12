@@ -65,10 +65,20 @@ class timeseries(xlts):
             return super().get(cn, name, nocache=nocache, live=live, **kw)
 
         cached = self.cache.get(cn, name, **kw)
-        if len(cached) and live:
-            return self._get_live(cn, name, cached, kw)
+        if len(cached):
+            if live:
+                return self._get_live(cn, name, cached, kw)
 
-        return cached
+            return cached
+
+        # cache is empty -- here we see if we ware asked some old uncached
+        # revision and serve it if availablbe
+
+        revdate = kw.get('revision_date')
+        if revdate is None:
+            return cached
+
+        return super().get(cn, name, nocache=nocache, live=live, **kw)
 
     def _get_live(self, cn, name, cached, kw):
         idates = self.cache.insertion_dates(
@@ -126,16 +136,43 @@ class timeseries(xlts):
                 **kw
             )
 
-
         if not nocache and self.cache.exists(cn, name):
             ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
             if ready:
-                return self.cache.insertion_dates(
+                idates = self.cache.insertion_dates(
                     cn, name,
                     from_insertion_date=from_insertion_date,
                     to_insertion_date=to_insertion_date,
                     **kw
                 )
+                # some casuistry to complete idates to the left
+                # using the uncached formula
+                if not idates:
+                    # no choice but to delegate
+                    return super().insertion_dates(
+                        cn, name,
+                        from_insertion_date=from_insertion_date,
+                        to_insertion_date=to_insertion_date,
+                        nocache=False,
+                        **kw
+                    )
+
+                if from_insertion_date and from_insertion_date >= idates[0]:
+                    # nothing more to collect
+                    return idates
+
+                # complete to the left
+                leftidates = super().insertion_dates(
+                    cn, name,
+                    from_insertion_date=from_insertion_date,
+                    to_insertion_date=idates[0],
+                    **kw
+                )
+                if leftidates:
+                    # avoid a duplicate
+                    return sorted(set(leftidates + idates))
+
+                return idates
 
         return super().insertion_dates(
             cn, name,
@@ -156,7 +193,36 @@ class timeseries(xlts):
         if not nocache and self.cache.exists(cn, name):
             ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
             if ready:
-                return self.cache.history(cn, name, **kw)
+                # some casuistry to complete idates to the left
+                # using the uncached formula
+                hist = self.cache.history(cn, name, **kw)
+                if not hist:
+                    # nothing in the cache, let's delegate
+                    return super().history(
+                        cn, name,
+                        nocache=False,
+                        **kw
+                    )
+                fid  = kw.pop('from_insertion_date', None)
+                first_key = next(iter(hist.keys()))
+                if fid and fid >= first_key:
+                    # nothing more to collect
+                    return hist
+
+                # complete to the left
+                kw.pop('to_insertion_date', None)
+                lefthist = super().history(
+                    cn, name,
+                    nocache=False,
+                    from_insertion_date=fid,
+                    to_insertion_date=first_key,
+                    **kw
+                )
+                if first_key in lefthist:
+                    # avoid a duplicate
+                    lefthist.pop(first_key)
+                lefthist.update(hist)
+                return lefthist
 
         return super().history(
             cn, name, **kw

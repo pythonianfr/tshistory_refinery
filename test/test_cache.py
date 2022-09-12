@@ -1228,10 +1228,10 @@ def test_always_live_in_the_deep_past(engine, tsa):
 
     tsa.new_cache_policy(
         'p-deep-fried',
-        initial_revdate='(date "2022-1-3")',
+        initial_revdate='(date "2022-3-1")',
         look_before='(shifted now #:days -5)',
         look_after='(shifted now #:days 5)',
-        # monthly
+        # monthly (we stop at month 3)
         revdate_rule='0 0 1 1-3 *',
         schedule_rule='0 0 1 1-3 *'
     )
@@ -1250,17 +1250,60 @@ def test_always_live_in_the_deep_past(engine, tsa):
 
     idates = tsa.insertion_dates('f-deep-fried')
     assert idates == [
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
         pd.Timestamp('2022-02-01 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2022-03-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-03-01 00:00:00+0000', tz='UTC')
     ]
 
     ts = tsa.get('f-deep-fried', revision_date=pd.Timestamp('2022-1-1', tz='utc'))
-    assert not len(ts)
+    assert len(ts) == 5
 
     hist = tsa.history('f-deep-fried')
     assert list(hist.keys())  == [
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
         pd.Timestamp('2022-02-01 00:00:00+0000', tz='UTC'),
         pd.Timestamp('2022-03-01 00:00:00+0000', tz='UTC')
+    ]
+
+    # test more code paths
+    # overlapping + explicit from idate
+    idates = tsa.insertion_dates(
+        'f-deep-fried',
+        from_insertion_date=pd.Timestamp('2022-2-1', tz='utc')
+    )
+    assert idates == [
+        pd.Timestamp('2022-02-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-03-01 00:00:00+0000', tz='UTC')
+    ]
+
+    hist = tsa.history(
+        'f-deep-fried',
+        from_insertion_date=pd.Timestamp('2022-2-1', tz='utc')
+    )
+    assert list(hist.keys())  == [
+        pd.Timestamp('2022-02-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-03-01 00:00:00+0000', tz='UTC')
+    ]
+
+    # pure left out of cache read
+    idates = tsa.insertion_dates(
+        'f-deep-fried',
+        from_insertion_date=pd.Timestamp('2022-1-1', tz='utc'),
+        to_insertion_date=pd.Timestamp('2022-2-1', tz='utc')
+    )
+    assert idates == [
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-02-01 00:00:00+0000', tz='UTC')
+    ]
+
+    hist = tsa.history(
+        'f-deep-fried',
+        from_insertion_date=pd.Timestamp('2022-1-1', tz='utc'),
+        to_insertion_date=pd.Timestamp('2022-2-1', tz='utc')
+    )
+    assert list(hist.keys())  == [
+        pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-02-01 00:00:00+0000', tz='UTC')
     ]
 
 
