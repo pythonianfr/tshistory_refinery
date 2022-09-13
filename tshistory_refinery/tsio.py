@@ -244,7 +244,8 @@ class timeseries(xlts):
 
     @tx
     def invalidate_cache(self, cn, name):
-        self.cache.delete(cn, name)
+        if self.cache.exists(cn, name):
+            self.cache.delete(cn, name)
 
     @tx
     def unset_cache_policy(self, cn, name):
