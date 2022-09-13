@@ -907,15 +907,10 @@ def test_federation_cache_coherency(engine, federated, remote):
     assert tsh.cache.exists(engine, 'invalidate-me')
     cache.set_policy_ready(engine, 'policy-5', True, namespace=tsh.namespace)
 
-    # Why are we missing the point of day 3 ?
-    # Since the underlying series only has 1 revision, the refresher
-    # did not bother reading an already read version. Because of the
-    # tiny read window we don't grab day 3.  Understand this as a
-    # warning on the interaction of the revdate rule, underlying
-    # revisions, and read window.
     assert_df("""
 2022-01-01 00:00:00+00:00    1.0
 2022-01-02 00:00:00+00:00    2.0
+2022-01-03 00:00:00+00:00    3.0
 """, federated.get('invalidate-me'))
 
     # update without change
@@ -927,6 +922,7 @@ def test_federation_cache_coherency(engine, federated, remote):
     assert_df("""
 2022-01-01 00:00:00+00:00    1.0
 2022-01-02 00:00:00+00:00    2.0
+2022-01-03 00:00:00+00:00    3.0
 """, federated.get('invalidate-me'))
 
     remote.register_formula(

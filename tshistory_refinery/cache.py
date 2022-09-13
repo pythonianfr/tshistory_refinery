@@ -4,6 +4,7 @@ from datetime import (
 )
 from contextlib import contextmanager
 from functools import cmp_to_key
+import traceback
 
 from croniter import (
     croniter,
@@ -410,6 +411,7 @@ def series_refresh_lock(engine, name, namespace):
     try:
         yield
     except:
+        traceback.print_exc()
         return
     _set_series_ready(engine, name, True, namespace=namespace)
 
@@ -467,8 +469,7 @@ def refresh(engine, tsa, name, final_revdate=None):
         return
 
     with series_refresh_lock(engine, name, tsh.namespace):
-        for revdate in reduced_cron:
-
+        for idx, revdate in enumerate(reduced_cron):
             # native python datetimes lack some method
             revdate = pd.Timestamp(revdate)
 
@@ -476,14 +477,19 @@ def refresh(engine, tsa, name, final_revdate=None):
                 if revdate == initial_revdate:
                     continue
 
-            from_value_date = eval_moment(
-                policy['look_before'],
-                {'now': revdate}
-            )
-            to_value_date = eval_moment(
-                policy['look_after'],
-                {'now': revdate}
-            )
+            if not idx and not exists:
+                # very first read will populate the whole horizon
+                from_value_date = None
+                to_value_date = None
+            else:
+                from_value_date = eval_moment(
+                    policy['look_before'],
+                    {'now': revdate}
+                )
+                to_value_date = eval_moment(
+                    policy['look_after'],
+                    {'now': revdate}
+                )
 
             ts = tsa.get(
                 name,
