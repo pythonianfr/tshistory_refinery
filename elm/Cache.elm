@@ -8,7 +8,7 @@ import Http
 import Json.Decode as D
 import Json.Encode as E
 import List.Extra as LE
-import Set exposing (..)
+import Set exposing (Set)
 import Url.Builder as UB
 
 
