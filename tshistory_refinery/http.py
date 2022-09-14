@@ -95,6 +95,15 @@ unmapcp.add_argument(
     help='series list to remove from their cache policy'
 )
 
+cacheable = reqparse.RequestParser()
+cacheable.add_argument(
+    'allsources',
+    type=inputs.boolean,
+    required=True,
+    default=True,
+    help='get the answer for all sources'
+)
+
 shc = reqparse.RequestParser()
 shc.add_argument(
     'name',
@@ -194,9 +203,11 @@ class refinery_httpapi(xl_httpapi):
         @nsc.route('/cacheable')
         class cacheable_series(Resource):
 
+            @api.expect(cacheable)
             @onerror
             def get(self):
-                return tsa.cache_free_series()
+                args = cacheable.parse_args()
+                return tsa.cache_free_series(args.allsources)
 
         @nsc.route('/policies')
         class cache_policy(Resource):
@@ -343,8 +354,10 @@ class RefineryClient(XLClient):
         return res
 
     @unwraperror
-    def cache_free_series(self):
-        res = self.session.get(f'{self.uri}/cache/cacheable')
+    def cache_free_series(self, allsources=True):
+        res = self.session.get(f'{self.uri}/cache/cacheable', params={
+            'allsources': allsources
+        })
         if res.status_code == 200:
             return res.json()
 

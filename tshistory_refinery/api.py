@@ -1,8 +1,14 @@
 from typing import List
 
 from rework import api as rapi
-from tshistory.util import extend
-from tshistory.api import mainsource
+from tshistory.util import (
+    extend,
+    threadpool
+)
+from tshistory.api import (
+    altsources,
+    mainsource
+)
 
 from tshistory_refinery import cache
 
@@ -91,8 +97,32 @@ def unset_cache_policy(self, seriesnames: List[str]) -> NONETYPE:
 
 
 @extend(mainsource)
-def cache_free_series(self):
-    return self.tsh.cacheable_formulas(self.engine)
+def cache_free_series(self, allsources: bool=True):
+    freeset = {
+        self._instancename(): self.tsh.cacheable_formulas(self.engine)
+    }
+    freeset.update(self.othersources.cache_free_series(False))
+    return freeset
+
+
+@extend(altsources)
+def cache_free_series(self, allsources=True):
+    freeset = []
+    pool = threadpool(len(self.sources))
+    def getfree(source):
+        try:
+            freeset.append(
+                source.tsa.cache_free_series(allsources)
+            )
+        except:
+            import traceback as tb; tb.print_exc()
+            print(f'source {source} temporarily unavailable')
+
+    pool(getfree, [(s,) for s in self.sources])
+    all = {}
+    for c in freeset:
+        all.update(c)
+    return all
 
 
 @extend(mainsource)

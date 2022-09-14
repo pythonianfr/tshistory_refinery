@@ -790,7 +790,7 @@ insertion_date             value_date
     assert len(tsx.history('over-ground-1')) == 3
     assert len(tsx.history('over-ground-1', nocache=True)) == 5
 
-    assert tsx.cache_free_series() == []
+    assert tsx.cache_free_series() == {'postgres': []}
     assert tsx.cache_policies() == ['another-policy']
 
     assert tsx.has_cache('over-ground-1')
@@ -844,7 +844,7 @@ insertion_date             value_date
         'another-policy'
     )
 
-    assert tsx.cache_free_series() == ['over-ground-1', 'over-ground-2']
+    assert tsx.cache_free_series() == {'postgres': ['over-ground-1', 'over-ground-2']}
     assert tsx.cache_policies() == []
 
     assert not tsx.has_cache('over-ground-1')
@@ -998,3 +998,42 @@ def test_cache_refresh_series_now(engine, tsx):
 
     # cleanup
     engine.execute('delete from rework.task')
+
+
+def test_free_series(tsa1, tsa2):
+    for name in ('cacheable-0',
+                 'cacheable-1',
+                 'cacheable-2',
+                 'cacheable-3'):
+        tsa1.delete(name)
+    for name in ('scalarprod',
+                 'repusum',
+                 'repuprio',
+                 'serie5'):
+        tsa2.delete(name)
+
+    tsa1.register_formula(
+        'free-local',
+        '(constant 1. (date "2022-1-1") (date "2022-1-3") "D" (date "2022-2-1"))'
+    )
+    tsa2.register_formula(
+        'free-remote',
+        '(constant 1. (date "2022-1-1") (date "2022-1-3") "D" (date "2022-2-1"))'
+    )
+
+    free = tsa1.cache_free_series()
+    assert free == {
+        'postgres@test-api': ['free-local'],
+        'postgres@test-remote': ['free-remote']
+    }
+
+
+def test_free_series_http(tsx):
+    tsx.register_formula(
+        'free-local',
+        '(constant 1. (date "2022-1-1") (date "2022-1-3") "D" (date "2022-2-1"))'
+    )
+    free = tsx.cache_free_series(allsources=False)
+    assert free == {
+        'postgres': ['free-local'],
+    }
