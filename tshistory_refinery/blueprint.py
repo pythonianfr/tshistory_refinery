@@ -61,14 +61,6 @@ def format_metadata(meta):
     return str(h)
 
 
-def homeurl():
-    homeurl = url_for('refinery.welcome')
-    baseurl = homeurl[:homeurl.rindex('/')]
-    if len(baseurl):
-        return baseurl
-    return baseurl
-
-
 def refinery_bp(tsa, more_sections=None):
     engine = tsa.engine
 
@@ -93,7 +85,7 @@ def refinery_bp(tsa, more_sections=None):
                 'All Formulas': url_for('refinery.formulas'),
                 'Upload New Formulas': url_for('refinery.addformulas'),
                 'Edit a new Formula': url_for('tsview.tsformula'),
-                'Edit the formula cache': url_for('refinery.formulacache'),
+                'Edit the formula cache': url_for('tsview.formulacache'),
                 'Formula operators documentation': url_for('tsview.formula_operators'),
             },
             'Tasks': {
@@ -272,13 +264,6 @@ def refinery_bp(tsa, more_sections=None):
         )
         response.headers['Content-Type'] = 'text/json'
         return response
-
-    @bp.route('/formulacache')
-    def formulacache():
-        return render_template(
-            'cache.html',
-            homeurl=homeurl()
-        )
 
     # /formula
     # formula cache
