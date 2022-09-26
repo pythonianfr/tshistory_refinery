@@ -153,7 +153,7 @@ class timeseries(xlts):
                         cn, name,
                         from_insertion_date=from_insertion_date,
                         to_insertion_date=to_insertion_date,
-                        nocache=False,
+                        nocache=True,
                         **kw
                     )
 
@@ -166,6 +166,7 @@ class timeseries(xlts):
                     cn, name,
                     from_insertion_date=from_insertion_date,
                     to_insertion_date=idates[0],
+                    nocache=True,
                     **kw
                 )
                 if leftidates:
@@ -201,7 +202,7 @@ class timeseries(xlts):
                     # nothing in the cache, let's delegate
                     return super().history(
                         cn, name,
-                        nocache=False,
+                        nocache=True,
                         **kw
                     )
                 fid  = kw.pop('from_insertion_date', None)
@@ -214,7 +215,7 @@ class timeseries(xlts):
                 kw.pop('to_insertion_date', None)
                 lefthist = super().history(
                     cn, name,
-                    nocache=False,
+                    nocache=True,
                     from_insertion_date=fid,
                     to_insertion_date=first_key,
                     **kw
