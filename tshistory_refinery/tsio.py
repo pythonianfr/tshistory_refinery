@@ -178,6 +178,7 @@ class timeseries(xlts):
             cn, name,
             from_insertion_date=from_insertion_date,
             to_insertion_date=to_insertion_date,
+            nocache=nocache,
             **kw
         )
 
@@ -225,7 +226,7 @@ class timeseries(xlts):
                 return lefthist
 
         return super().history(
-            cn, name, **kw
+            cn, name, nocache=nocache, **kw
         )
 
     @tx

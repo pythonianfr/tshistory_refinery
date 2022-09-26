@@ -515,7 +515,9 @@ insertion_date             value_date
     assert idates == [
         pd.Timestamp('2022-01-01 00:00:00+0000', tz='UTC'),
         pd.Timestamp('2022-01-02 00:00:00+0000', tz='UTC'),
-        pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC')
+        pd.Timestamp('2022-01-03 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-04 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2022-01-05 00:00:00+0000', tz='UTC')
     ]
 
     # history points: only 3 vs 5
@@ -524,7 +526,7 @@ insertion_date             value_date
 
     # indirect
     assert len(tsa.history('over-over-ground-1')) == 3
-    assert len(tsa.history('over-over-ground-1', nocache=True)) == 3
+    assert len(tsa.history('over-over-ground-1', nocache=True)) == 5
 
     # let's pretend two new revisions showed up
     cache.refresh(
