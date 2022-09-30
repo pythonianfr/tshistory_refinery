@@ -12,9 +12,10 @@ from tshistory_refinery.schema import init
 
 
 @click.command()
-def webstart():
+@click.option('--port', default=5000)
+def webstart(port=500):
     from tshistory_refinery.wsgi import app
-    app.run(host=host(), debug=True)
+    app.run(host=host(), port=port, debug=True)
 
 
 @click.command('setup-tasks')
