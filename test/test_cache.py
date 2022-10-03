@@ -1373,3 +1373,92 @@ def test_reduce_cron():
         utcdt(2022, 1, 3),
         utcdt(2022, 1, 5),
     ] == reduce_frequency(cronlist, idates_overlap_both)
+
+
+def test_values_marker_origin_and_cache(engine, tsa):
+    ts = pd.Series(
+        [1.] * 3,
+        index=pd.date_range(
+            pd.Timestamp('2022-1-1'),
+            freq='D', periods=3
+        )
+    )
+    tsa.update(
+        'prim-many',
+        ts,
+        'test',
+        insertion_date=pd.Timestamp('2022-1-1', tz='UTC')
+    )
+
+    tsa.register_formula(
+        'formula-many',
+        '(series "prim-many")'
+    )
+
+    tsa.register_formula(
+        'second-level-formula',
+        '(series "formula-many")'
+    )
+
+    tsh = tsa.tsh
+
+    tsa.new_cache_policy(
+        'policy-get-many',
+        initial_revdate='(date "2022-1-1")',
+        look_before='(date "2022-1-3")',
+        look_after='(date "2022-1-6")',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+    tsa.set_cache_policy(
+        'policy-get-many',
+        ['formula-many']
+    )
+
+    cache.refresh(
+        engine,
+        tsa,
+        'formula-many',
+        final_revdate = pd.Timestamp('2022-1-2', tz='UTC')
+    )
+    assert tsh.cache.exists(engine, 'formula-many')
+    cache.set_policy_ready(
+        engine,
+        'policy-get-many',
+        True,
+        tsa.tsh.namespace
+    )
+
+    # we refresh the underlying data, but not the cache
+    ts = pd.Series(
+        [1.] * 5,
+        index=pd.date_range(
+            pd.Timestamp('2022-1-1'),
+            freq='D', periods=5
+        )
+    )
+    tsa.update(
+        'prim-many',
+        ts,
+        'test',
+    )
+
+    assert len(tsa.get('formula-many')) == 3
+    assert len(tsa.get('formula-many', nocache=True)) == 5
+
+    # the 2nd level formula is not cached but depends on a cached series
+    assert len(tsa.get('second-level-formula')) == 3
+    assert len(tsa.get('second-level-formula', nocache=True)) == 5
+
+    # now with values_markers_origins: read correctly the data in cache
+    assert len(tsa.values_markers_origins('formula-many')[0]) == 3
+
+    # the api point values_markers_origins does have the 'nocache' argument
+    with pytest.raises(TypeError) as error:
+        tsa.values_markers_origins('formula-many', nocache=True)
+    assert str(error.value) == (
+        "values_markers_origins() got an unexpected keyword argument 'nocache'"
+    )
+
+    # test of the 2nd level formula (also read the cache as intended)
+    assert len(tsa.values_markers_origins('second-level-formula')[0]) == 3
