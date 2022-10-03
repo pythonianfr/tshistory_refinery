@@ -461,10 +461,7 @@ def refresh(engine, tsa, name, final_revdate=None):
         policy['revdate_rule']
     )
 
-    l_cron_range = list(cron_range)
-    if not len(l_cron_range):
-        return
-    reduced_cron = helper.reduce_frequency(l_cron_range, idates)
+    reduced_cron = helper.reduce_frequency(list(cron_range), idates)
     if not len(reduced_cron):
         return
 
