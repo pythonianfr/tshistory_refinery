@@ -436,10 +436,30 @@ def refresh(engine, tsa, name, final_revdate=None):
         # usefull for discontinued series & edited caches
         initial_revdate = max(cached_last_idate, policy_initial_revdate)
     else:
+        # cache creation
         initial_revdate = pd.Timestamp(
             eval_moment(policy['initial_revdate']),
             tz='UTC'
         )
+        # the first cache revision contains a full horizon view of
+        # the underlying series
+        ts = tsa.get(
+            name,
+            revision_date=initial_revdate,
+            nocache=True
+        )
+        print(f'{initial_revdate} -> {len(ts)} points (initial full horizon import)')
+        if len(ts):
+            tsh.cache.update(
+                engine,
+                ts,
+                name,
+                'formula-cacher',
+                insertion_date=initial_revdate
+            )
+        else:
+            print(f'there was no data (!) for the first cache revision ({name})')
+
     now = pd.Timestamp.utcnow()
     idates = tsa.insertion_dates(
         name,
@@ -450,7 +470,6 @@ def refresh(engine, tsa, name, final_revdate=None):
     if not idates or not len(idates):
         print(f'no idate over {initial_revdate} -> {now}, no refresh')
         return  # that's an odd series, let's bail out
-
 
     final_revdate = final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC')
     print('starting range refresh', initial_revdate, '->', final_revdate)
@@ -475,18 +494,17 @@ def refresh(engine, tsa, name, final_revdate=None):
                     continue
 
             if not idx and not exists:
-                # very first read will populate the whole horizon
-                from_value_date = None
-                to_value_date = None
-            else:
-                from_value_date = eval_moment(
-                    policy['look_before'],
-                    {'now': revdate}
-                )
-                to_value_date = eval_moment(
-                    policy['look_after'],
-                    {'now': revdate}
-                )
+                # cache creation: first revision was created before
+                continue
+
+            from_value_date = eval_moment(
+                policy['look_before'],
+                {'now': revdate}
+            )
+            to_value_date = eval_moment(
+                policy['look_after'],
+                {'now': revdate}
+            )
 
             ts = tsa.get(
                 name,
