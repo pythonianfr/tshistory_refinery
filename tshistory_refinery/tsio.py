@@ -44,7 +44,7 @@ class timeseries(xlts):
     def _expanded_formula(self, cn, formula, stopnames=(), qargs=None):
         # stopnames dynamic lookup for series that have a cache
         # (we won't expand them since we can litterally stop at them)
-        if not qargs or (not qargs.get('live') and not qargs.get('nocache')):
+        if qargs is not None and (not qargs.get('live') and not qargs.get('nocache')):
             stopnames = name_stopper(cn, self, stopnames)
         return super()._expanded_formula(
             cn, formula,
