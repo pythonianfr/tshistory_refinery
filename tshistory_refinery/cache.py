@@ -412,8 +412,8 @@ def series_refresh_lock(engine, name, namespace):
         yield
     except:
         traceback.print_exc()
-        return
-    _set_series_ready(engine, name, True, namespace=namespace)
+    finally:
+        _set_series_ready(engine, name, True, namespace=namespace)
 
 
 def refresh(engine, tsa, name, final_revdate=None):
