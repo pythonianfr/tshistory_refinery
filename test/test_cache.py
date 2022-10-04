@@ -1462,3 +1462,56 @@ def test_values_marker_origin_and_cache(engine, tsa):
 
     # test of the 2nd level formula (also read the cache as intended)
     assert len(tsa.values_markers_origins('second-level-formula')[0]) == 3
+
+
+def test_errors_in_refresh_policy(engine, tsa):
+    ts = pd.Series(
+        [1.] * 3,
+        index=pd.date_range(
+            pd.Timestamp('2022-1-1'),
+            freq='D', periods=3
+        )
+    )
+    tsa.update(
+        'whatever',
+        ts,
+        'test',
+        insertion_date=pd.Timestamp('2022-01-01', tz='UTC')
+    )
+
+    tsa.register_formula(
+        'formula-working',
+        '(series "whatever")'
+    )
+
+    tsa.register_formula(
+        'formula-failing',
+        '(resample (series "whatever") "toto")'
+    )
+
+    tsa.new_cache_policy(
+        'policy-with-failure',
+        initial_revdate='(date "2022-1-1")',
+        look_before='(date "2022-1-1")',
+        look_after='(date "2022-1-6")',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+    tsa.set_cache_policy(
+        'policy-with-failure',
+        [
+            'formula-working',
+            'formula-failing'
+        ]
+    )
+
+    with pytest.raises(Exception) as error:
+        cache.refresh_policy(
+            tsa,
+            'policy-with-failure',
+            True,
+            final_revdate=pd.Timestamp('2022-01-02', tz='UTC')
+        )
+
+    # this exception is the one raised after the try/except
+    assert error.value.args[0] == "failed series on refresh: ['formula-failing']"

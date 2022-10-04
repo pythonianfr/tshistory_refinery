@@ -602,6 +602,8 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
     unames = list(unames)
     unames.sort(key=cmp_to_key(cmp))
 
+    failed = []
+
     # first batch (potentially just a refresh if not an initial run)
     print(f'first batch (cache update) ({len(names)} series)')
     for name in names:
@@ -610,26 +612,43 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
             if tsh.live_content_hash(cn, name) != tsh.content_hash(cn, name):
                 tsh.invalidate_cache(cn, name)
 
-        refresh(
-            engine,
-            tsa,
-            name,
-            final_revdate=final_revdate
-        )
+        try:
+            refresh(
+                engine,
+                tsa,
+                name,
+                final_revdate=final_revdate
+            )
+        except Exception as err:
+            failed.append(name)
+            traceback.print_exc()
+            print(f'series `{name}` crashed because {err}')
 
     # second batch (potentially re-filling invalidated caches)
     print(f'second batch (full cache construction) ({len(unames)} series)')
     for name in unames:
         print('refresh ->', name)
-        refresh(
-            engine,
-            tsa,
-            name,
-            final_revdate=final_revdate
-        )
+        try:
+            refresh(
+                engine,
+                tsa,
+                name,
+                final_revdate=final_revdate
+            )
+        except Exception as err:
+            failed.append(name)
+            traceback.print_exc()
+            print(f'series `{name}` crashed because {err}')
 
     set_policy_ready(engine, policy, True, namespace=tsh.namespace)
     assert policy_ready(engine, policy, namespace=tsh.namespace)
+
+    if failed:
+        print(
+            f'the following series failed to be refreshed: '
+            f'{", ".join(failed)}'
+        )
+        raise Exception(f'failed series on refresh: {failed}')
 
 
 def refresh_policy_now(tsa, policy):
