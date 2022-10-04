@@ -362,6 +362,7 @@ def refinery_bp(tsa, more_sections=None):
 
     @bp.route('/cacheable-formulas')
     def cacheable_formulas():
+        # remove me and use the api cache_free_series (allsources=False)
         with tsa.engine.begin() as cn:
             return jsonify(
                 sorted(
