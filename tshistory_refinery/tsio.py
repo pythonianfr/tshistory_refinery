@@ -71,8 +71,8 @@ class timeseries(xlts):
 
             return cached
 
-        # cache is empty -- here we see if we ware asked some old uncached
-        # revision and serve it if availablbe
+        # cached is empty -- here we see if we ware asked some old uncached
+        # revision and serve it if available
 
         revdate = kw.get('revision_date')
         if revdate is None:
