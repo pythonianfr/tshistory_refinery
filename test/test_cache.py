@@ -1614,8 +1614,8 @@ def test_cache_revdate(engine, tsa):
     ) == 0
 
     # get with a revdate after the first cache insertion and
-    # outside the value date bounds should return an empty series but
-    # in fact, we return some data from the underlying formula
+    # outside the value date bounds should return an empty series
+
     result = tsh.get(
         engine,
         'formula-revdate',
@@ -1624,10 +1624,7 @@ def test_cache_revdate(engine, tsa):
         revision_date=pd.Timestamp('2022-1-1 12:00:00', tz='UTC')
     )
 
-    assert_df("""
-2022-01-04    0.0
-2022-01-05    0.0
-""", result)
+    assert len(result) == 0
 
     # So what is the point of this contrived example?
     # In real life some series are discontinued (e.g. a pipe is closed).
@@ -1635,4 +1632,20 @@ def test_cache_revdate(engine, tsa):
     # of the revision date (i.e. after the first cache insertion) we should return
     # an empty series without reading the underlying formula.
     # In case of an authotrophic operator, it would fire a request with the
-    # overheads associated. We want to remove this needless request
+    # overheads associated.
+    # Since we return an empty series, it means that the underlying series was not read
+    # If it was read, we would gather the points from the cache, i.e.:
+
+    result_nocache = tsh.get(
+        engine,
+        'formula-revdate',
+        from_value_date=pd.Timestamp('2022-1-4'),
+        to_value_date=pd.Timestamp('2022-1-5'),
+        revision_date=pd.Timestamp('2022-1-1 12:00:00', tz='UTC'),
+        nocache=True,
+    )
+
+    assert_df("""
+2022-01-04    0.0
+2022-01-05    0.0
+""", result_nocache)

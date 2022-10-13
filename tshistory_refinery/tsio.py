@@ -75,7 +75,7 @@ class timeseries(xlts):
         # revision and serve it if available
 
         revdate = kw.get('revision_date')
-        if revdate is None:
+        if revdate is None or revdate >= self.cache.first_insertion_date(cn, name):
             return cached
 
         return super().get(cn, name, nocache=nocache, live=live, **kw)
