@@ -1515,3 +1515,124 @@ def test_errors_in_refresh_policy(engine, tsa):
 
     # this exception is the one raised after the try/except
     assert error.value.args[0] == "failed series on refresh: ['formula-failing']"
+
+
+def test_cache_revdate(engine, tsa):
+    ts = pd.Series(
+        [0] * 5,
+        index=pd.date_range(
+            pd.Timestamp('2022-1-1'),
+            freq='D', periods=5
+        )
+    )
+    tsa.update(
+        'prim-revdate',
+        ts,
+        'test',
+        insertion_date=pd.Timestamp('2022-1-1', tz='UTC')
+    )
+    # with one revision
+    tsa.update(
+        'prim-revdate',
+        ts + 1,
+        'test',
+        insertion_date=pd.Timestamp('2022-1-2', tz='UTC')
+    )
+
+    tsa.register_formula(
+        'formula-revdate',
+        '(series "prim-revdate")'
+    )
+
+    tsh = tsa.tsh
+
+    tsa.new_cache_policy(
+        'policy-revdate',
+        initial_revdate='(date "2022-1-1")',
+        look_before='(date "2022-1-3")',
+        look_after='(date "2022-1-6")',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+    tsa.set_cache_policy(
+        'policy-revdate',
+        ['formula-revdate']
+    )
+
+    # we insert different values on the cache manually
+    # in order to test if the cache is read vs the formula
+    # we have to tweak the series and build something weird (a cache
+    # smaller that the original series)
+    tsh.cache.update(
+        engine,
+        ts[:3] + 10 ,
+        'formula-revdate',
+        'pseudo-cache',
+        insertion_date=pd.Timestamp('2022-1-1 01:00:00', tz='UTC')
+    )
+    tsh.cache.update(
+        engine,
+        ts[:3] + 11 ,
+        'formula-revdate',
+        'pseudo-cache',
+        insertion_date=pd.Timestamp('2022-1-2 01:00:00', tz='UTC')
+    )
+    cache.set_policy_ready(
+        engine,
+        'policy-revdate',
+        True,
+        tsa.tsh.namespace
+    )
+
+    tsa.get('formula-revdate')
+
+    # with nocache=True, we get the original series
+    assert_df("""
+2022-01-01    1.0
+2022-01-02    1.0
+2022-01-03    1.0
+2022-01-04    1.0
+2022-01-05    1.0
+""", tsh.get(engine, 'formula-revdate', nocache=True))
+
+    # with nocache=False, we get the cached series
+    assert_df("""
+2022-01-01    11.0
+2022-01-02    11.0
+2022-01-03    11.0
+""", tsh.get(engine, 'formula-revdate'))
+
+    # if we request outside the bounds of the cache, we return nothing:
+
+    assert len(
+        tsh.get(
+            engine,
+            'formula-revdate',
+            from_value_date=pd.Timestamp('2022-1-4'),
+            to_value_date=pd.Timestamp('2022-1-5'),
+        )
+    ) == 0
+
+    # get with a revdate after the first cache insertion and
+    # outside the value date bounds should return an empty series but
+    # in fact, we return some data from the underlying formula
+    result = tsh.get(
+        engine,
+        'formula-revdate',
+        from_value_date=pd.Timestamp('2022-1-4'),
+        to_value_date=pd.Timestamp('2022-1-5'),
+        revision_date=pd.Timestamp('2022-1-1 12:00:00', tz='UTC')
+    )
+
+    assert_df("""
+2022-01-04    0.0
+2022-01-05    0.0
+""", result)
+
+    # So what is the point of this contrived example?
+    # In real life some series are discontinued (e.g. a pipe is closed).
+    # If we request outside the bounds of the value dates but in the bounds
+    # of the revision date (i.e. after the first cache insertion) we should return
+    # an empty series without reading the underlying formula.
+    # In case of an authotrophic operator, it would fire a request with the
+    # overheads associated. We want to remove this needless request
