@@ -775,7 +775,7 @@ def test_types():
     )
     types = {
         name: ftype
-        for name, ftype in json.loads(jsontypes()).items()
+        for name, ftype in json.loads(jsontypes(all=True)).items()
         if name in opnames
     }
     assert {
