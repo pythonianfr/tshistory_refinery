@@ -1,4 +1,3 @@
-
 from flask import (
     Flask,
     render_template,
@@ -9,10 +8,9 @@ from sqlalchemy import create_engine
 
 from tsview.blueprint import tsview
 from tsview.history import historic
+from tsview.editor import editor
 from rework_ui.blueprint import reworkui
 
-from tshistory_editor.editor import editor
-from tshistory_formula.editor import components_table
 from tshistory_xl.blueprint import blueprint as excel
 
 from tshistory_refinery import http, blueprint
@@ -56,8 +54,7 @@ def make_app(config, tsa, editor_callback=None, more_sections=None):
         tsa,
         has_permission=has_permission,
         request_pathname_prefix=segment,
-        additionnal_info=editor_callback,
-        alternative_table=components_table
+        additionnal_info=editor_callback
     )
 
     app.register_blueprint(
