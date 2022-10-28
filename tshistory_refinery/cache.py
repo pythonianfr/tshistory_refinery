@@ -22,6 +22,7 @@ from sqlhelp import (
     update
 )
 
+from tshistory_formula import interpreter
 from tshistory_refinery import helper
 from tshistory_refinery import tsio
 
@@ -486,6 +487,9 @@ def refresh_series(engine, tsa, name, final_revdate=None):
         if not len(reduced_cron):
             return
 
+        # now, prepare the formula
+        formula = tsa.formula(name)
+
         for idx, revdate in enumerate(reduced_cron):
             # native python datetimes lack some method
             revdate = pd.Timestamp(revdate)
@@ -507,12 +511,11 @@ def refresh_series(engine, tsa, name, final_revdate=None):
                 {'now': revdate}
             )
 
-            ts = tsa.get(
-                name,
+            ts = tsa.eval_formula(
+                formula,
                 revision_date=revdate,
                 from_value_date=from_value_date,
                 to_value_date=to_value_date,
-                nocache=True
             )
             print(f'{revdate} -> {len(ts)} points')
             if len(ts):

@@ -1730,5 +1730,8 @@ def test_refresh_using_middle_cache(engine, tsa):
     )
 
     # and here we show that while being based on a cached series
-    # we bypassed the "middle" cache
-    assert len(tsa.get('cache-top')) == 2
+    # we now use the "middle" cache
+    assert len(tsa.get('cache-top')) == 1
+
+    # for comparison with nocache:
+    assert len(tsa.get('cache-top', nocache=True)) == 2
