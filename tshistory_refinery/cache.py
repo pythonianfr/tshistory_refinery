@@ -338,7 +338,7 @@ def series_ready(cn, series_name, namespace='tsh'):
         f'select middle.ready '
         f'from "{namespace}".cache_policy_series as middle, '
         f'     "{namespace}".formula as series '
-        f'where series_id = series.id and '
+        f'where middle.series_id = series.id and '
         f'      series.name = %(seriesname)s'
     )
     return cn.execute(

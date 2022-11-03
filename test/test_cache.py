@@ -1649,3 +1649,86 @@ def test_cache_revdate(engine, tsa):
 2022-01-04    0.0
 2022-01-05    0.0
 """, result_nocache)
+
+
+def test_refresh_using_middle_cache(engine, tsa):
+    # base serie with 2 revs
+    # middle formula with 1 rev in the cache
+    # top-level formula with a cache using the middle formula cache
+    for i in range(1, 3):
+        tsa.update(
+            '2-revs',
+            pd.Series(
+                [i],
+                index=pd.date_range(
+                    pd.Timestamp(f'2022-1-{i}', tz='utc'),
+                    freq='D',
+                    periods=1
+                )
+            ),
+            'Babar',
+            insertion_date=pd.Timestamp(f'2022-1-{i}', tz='utc')
+        )
+
+    tsa.register_formula(
+        'cache-1rev-middle',
+        '(series "2-revs")'
+    )
+
+    cache.new_policy(
+        engine,
+        'middle-policy',
+        initial_revdate='(date "2022-1-1")',
+        look_before='(shifted now #:days -1)',
+        look_after='(shifted now #:days 0)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *',
+        namespace=tsa.tsh.namespace
+    )
+    cache.set_policy(
+        engine,
+        'middle-policy',
+        'cache-1rev-middle',
+        namespace=tsa.tsh.namespace
+    )
+    cache.set_policy_ready(engine, 'middle-policy', True, namespace=tsa.tsh.namespace)
+    cache.refresh_series(
+        engine,
+        tsa,
+        'cache-1rev-middle',
+        final_revdate=pd.Timestamp('2022-1-1', tz='UTC')
+    )
+
+    assert len(tsa.get('cache-1rev-middle')) == 1
+
+    tsa.register_formula(
+        'cache-top',
+        '(series "cache-1rev-middle")'
+    )
+    cache.new_policy(
+        engine,
+        'top-policy',
+        initial_revdate='(date "2022-1-1")',
+        look_before='(shifted now #:days -1)',
+        look_after='(shifted now #:days 0)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *',
+        namespace=tsa.tsh.namespace
+    )
+    cache.set_policy(
+        engine,
+        'top-policy',
+        'cache-top',
+        namespace=tsa.tsh.namespace
+    )
+    cache.set_policy_ready(engine, 'top-policy', True, namespace=tsa.tsh.namespace)
+    cache.refresh_series(
+        engine,
+        tsa,
+        'cache-top'
+        # NOTE: no final-rev there
+    )
+
+    # and here we show that while being based on a cached series
+    # we bypassed the "middle" cache
+    assert len(tsa.get('cache-top')) == 2
