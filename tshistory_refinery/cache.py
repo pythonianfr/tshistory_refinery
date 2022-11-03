@@ -412,6 +412,7 @@ def series_refresh_lock(engine, name, namespace):
         yield
     except:
         traceback.print_exc()
+        raise
     finally:
         _set_series_ready(engine, name, True, namespace=namespace)
 
@@ -425,66 +426,66 @@ def refresh(engine, tsa, name, final_revdate=None):
         print(f'Series {name} already being updated. Bailing out. {tsh.namespace=}')
         return
 
-    exists = tsh.cache.exists(engine, name)
-    if exists:
-        cache_idates = tsh.cache.insertion_dates(engine, name)
-        cached_last_idate = cache_idates[-1]
-        policy_initial_revdate = pd.Timestamp(
-            eval_moment(policy['initial_revdate']),
-            tz='UTC'
-        )
-        # usefull for discontinued series & edited caches
-        initial_revdate = max(cached_last_idate, policy_initial_revdate)
-    else:
-        # cache creation
-        initial_revdate = pd.Timestamp(
-            eval_moment(policy['initial_revdate']),
-            tz='UTC'
-        )
-        # the first cache revision contains a full horizon view of
-        # the underlying series
-        ts = tsa.get(
+    with series_refresh_lock(engine, name, tsh.namespace):
+        exists = tsh.cache.exists(engine, name)
+        if exists:
+            cache_idates = tsh.cache.insertion_dates(engine, name)
+            cached_last_idate = cache_idates[-1]
+            policy_initial_revdate = pd.Timestamp(
+                eval_moment(policy['initial_revdate']),
+                tz='UTC'
+            )
+            # usefull for discontinued series & edited caches
+            initial_revdate = max(cached_last_idate, policy_initial_revdate)
+        else:
+            # cache creation
+            initial_revdate = pd.Timestamp(
+                eval_moment(policy['initial_revdate']),
+                tz='UTC'
+            )
+            # the first cache revision contains a full horizon view of
+            # the underlying series
+            ts = tsa.get(
+                name,
+                revision_date=initial_revdate,
+                nocache=True
+            )
+            print(f'{initial_revdate} -> {len(ts)} points (initial full horizon import)')
+            if len(ts):
+                tsh.cache.update(
+                    engine,
+                    ts,
+                    name,
+                    'formula-cacher',
+                    insertion_date=initial_revdate
+                )
+            else:
+                print(f'there was no data (!) for the first cache revision ({name})')
+
+        now = pd.Timestamp.utcnow()
+        idates = tsa.insertion_dates(
             name,
-            revision_date=initial_revdate,
+            from_insertion_date=initial_revdate,
+            to_insertion_date=now,
             nocache=True
         )
-        print(f'{initial_revdate} -> {len(ts)} points (initial full horizon import)')
-        if len(ts):
-            tsh.cache.update(
-                engine,
-                ts,
-                name,
-                'formula-cacher',
-                insertion_date=initial_revdate
-            )
-        else:
-            print(f'there was no data (!) for the first cache revision ({name})')
+        if not idates or not len(idates):
+            print(f'no idate over {initial_revdate} -> {now}, no refresh')
+            return  # that's an odd series, let's bail out
 
-    now = pd.Timestamp.utcnow()
-    idates = tsa.insertion_dates(
-        name,
-        from_insertion_date=initial_revdate,
-        to_insertion_date=now,
-        nocache=True
-    )
-    if not idates or not len(idates):
-        print(f'no idate over {initial_revdate} -> {now}, no refresh')
-        return  # that's an odd series, let's bail out
+        final_revdate = final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC')
+        print('starting range refresh', initial_revdate, '->', final_revdate)
 
-    final_revdate = final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC')
-    print('starting range refresh', initial_revdate, '->', final_revdate)
+        cron_range = croniter_range(
+            initial_revdate,
+            final_revdate,
+            policy['revdate_rule']
+        )
 
-    cron_range = croniter_range(
-        initial_revdate,
-        final_revdate,
-        policy['revdate_rule']
-    )
+        reduced_cron = helper.reduce_frequency(list(cron_range), idates)
+        if not len(reduced_cron):
+            return
 
-    reduced_cron = helper.reduce_frequency(list(cron_range), idates)
-    if not len(reduced_cron):
-        return
-
-    with series_refresh_lock(engine, name, tsh.namespace):
         for idx, revdate in enumerate(reduced_cron):
             # native python datetimes lack some method
             revdate = pd.Timestamp(revdate)
