@@ -733,7 +733,7 @@ insertion_date             value_date
     assert r == False
 
     # we only refresh up to the first 3 revisions
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa3,
         'over-ground-1',
@@ -796,7 +796,7 @@ insertion_date             value_date
     assert tsx.has_cache('over-ground-1')
     tsx.delete_cache('over-ground-1')
     assert not tsx.has_cache('over-ground-1')
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa3,
         'over-ground-1',
@@ -925,7 +925,7 @@ def test_cache_refresh_series_now(engine, tsx):
         handler=tsio.timeseries,
         sources=[]
     )
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'refresh-now'

@@ -210,7 +210,7 @@ def test_cache_a_series(engine, tsa):
         'schedule_rule': '0 8-18 * * *'
     }
 
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'over-ground-0',
@@ -344,7 +344,7 @@ insertion_date             value_date
     assert r == False
 
     # we only refresh up to the first 3 revisions
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'over-ground-1',
@@ -529,7 +529,7 @@ insertion_date             value_date
     assert len(tsa.history('over-over-ground-1', nocache=True)) == 5
 
     # let's pretend two new revisions showed up
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'over-ground-1',
@@ -584,7 +584,7 @@ insertion_date             value_date
     assert r
 
     # we only refresh up to the first 3 revisions
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'over-ground-1',
@@ -610,7 +610,7 @@ insertion_date             value_date
     assert len(tsa.insertion_dates('over-ground-1')) == 5
 
     # we only refresh up to the first 3 revisions
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'over-ground-1',
@@ -654,7 +654,7 @@ insertion_date             value_date
         )
 
     # we refresh up to rev 5
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'over-ground-1',
@@ -739,7 +739,7 @@ def test_rename_delete(engine, tsa):
     )
     assert not tsh.cache.exists(engine, 'over-ground-2')
 
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'over-ground-2',
@@ -811,7 +811,7 @@ def test_cache_coherency(engine, tsa):
     )
     assert names == ['invalidate-me']
 
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'invalidate-me',
@@ -900,7 +900,7 @@ def test_federation_cache_coherency(engine, federated, remote):
     )
     assert not tsh.cache.exists(engine, 'invalidate-me')
 
-    cache.refresh(
+    cache.refresh_series(
         engine,
         federated,
         'invalidate-me',
@@ -1115,7 +1115,7 @@ def test_cache_refresh_series_now(engine, tsa):
     # because it does not work on an empty cache
     assert not tsh.cache.exists(engine, 'refresh-now')
 
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'refresh-now'
@@ -1238,7 +1238,7 @@ def test_always_live_in_the_deep_past(engine, tsa):
         ['f-deep-fried']
     )
 
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'f-deep-fried',
@@ -1415,7 +1415,7 @@ def test_values_marker_origin_and_cache(engine, tsa):
         ['formula-many']
     )
 
-    cache.refresh(
+    cache.refresh_series(
         engine,
         tsa,
         'formula-many',

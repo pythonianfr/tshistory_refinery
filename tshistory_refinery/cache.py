@@ -417,7 +417,7 @@ def series_refresh_lock(engine, name, namespace):
         _set_series_ready(engine, name, True, namespace=namespace)
 
 
-def refresh(engine, tsa, name, final_revdate=None):
+def refresh_series(engine, tsa, name, final_revdate=None):
     """ Refresh a series cache """
     tsh = tsa.tsh
     policy = series_policy(engine, name, tsh.namespace)
@@ -614,7 +614,7 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
                 tsh.invalidate_cache(cn, name)
 
         try:
-            refresh(
+            refresh_series(
                 engine,
                 tsa,
                 name,
@@ -630,7 +630,7 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
     for name in unames:
         print('refresh ->', name)
         try:
-            refresh(
+            refresh_series(
                 engine,
                 tsa,
                 name,
