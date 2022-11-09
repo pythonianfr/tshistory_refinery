@@ -1735,3 +1735,112 @@ def test_refresh_using_middle_cache(engine, tsa):
 
     # for comparison with nocache:
     assert len(tsa.get('cache-top', nocache=True)) == 2
+
+
+def test_interaction_hijack_and_cache(engine, tsa):
+    """
+    Since both the cache and the hijack_formula
+    use the .exanded_formula with stopnames, this test checks
+    if no bad interaction occured between the twos.
+
+    We build a dependency formula tree as follow
+    A -> B -> C
+    with B cached and C hijacked by a group.
+    We want to make sure that the expanded formula used in the hijacking
+    can reach C without being stoped at B
+    """
+
+    ts = pd.Series(
+        [1., 2., 3.],
+        index=pd.date_range(
+            pd.Timestamp('2022-1-1'),
+            freq='D', periods=3
+        )
+    )
+
+    group = pd.DataFrame(
+        [[0, 1, 2], [1, 2, 3], [2, 3, 4]],
+        index=pd.date_range(
+            pd.Timestamp('2022-1-1'),
+            freq='D', periods=3
+        ),
+        columns=['a', 'b', 'c']
+    )
+
+    tsa.update('ts-c', ts, 'oim', insertion_date=pd.Timestamp('2022-1-1', tz='UTC'))
+    tsa.register_formula('ts-b', """(series "ts-c")""")
+    tsa.register_formula('ts-a', """(series "ts-b")""")
+
+    assert_df("""
+2022-01-01    1.0
+2022-01-02    2.0
+2022-01-03    3.0
+    """, tsa.get('ts-a'))
+
+    tsa.group_replace('group-y', group, 'oim')
+    binding = pd.DataFrame(
+        [['ts-c', 'group-y', 'whatever']],
+        columns=['series', 'group', 'family']
+    )
+
+    tsa.register_formula_bindings(
+        'hijacked-formula',
+        'ts-a',
+        bindings=binding,
+    )
+
+    df = tsa.group_get('hijacked-formula')
+
+    assert_df("""
+              a    b    c
+2022-01-01  0.0  1.0  2.0
+2022-01-02  1.0  2.0  3.0
+2022-01-03  2.0  3.0  4.0
+    """, df)
+
+    # so far, so good, we are in the standard case of the hijacking
+    # now, let's setup the cache
+
+    tsh = tsa.tsh
+    tsa.new_cache_policy(
+        'policy-group',
+        initial_revdate='(date "2022-1-2")',
+        look_before='(date "2022-1-1")',
+        look_after='(date "2022-1-4")',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+    tsa.set_cache_policy(
+        'policy-group',
+        ['ts-b']
+    )
+
+    # we insert negative values on the cache manually
+    tsh.cache.update(
+        engine,
+        -ts,
+        'ts-b',
+        'pseudo-cache',
+    )
+    cache.set_policy_ready(
+        engine,
+        'policy-group',
+        True,
+        namespace=tsh.namespace
+    )
+
+    assert_df("""
+2022-01-01   -1.0
+2022-01-02   -2.0
+2022-01-03   -3.0
+    """, tsa.get('ts-a'))
+
+    # the negative value come from the cache: everything is Ok
+
+    # now the point of all this:
+
+    with pytest.raises(AssertionError) as err:
+        df = tsa.group_get('hijacked-formula')
+
+    # As feared, the expanded formula is stopped by the cached series
+    # i.e. ts-b and cannot reach ts-c which is the one hijacked
