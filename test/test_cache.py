@@ -1839,8 +1839,12 @@ def test_interaction_hijack_and_cache(engine, tsa):
 
     # now the point of all this:
 
-    with pytest.raises(AssertionError) as err:
-        df = tsa.group_get('hijacked-formula')
-
-    # As feared, the expanded formula is stopped by the cached series
-    # i.e. ts-b and cannot reach ts-c which is the one hijacked
+    df = tsa.group_get('hijacked-formula')
+    assert_df("""
+              a    b    c
+2022-01-01  0.0  1.0  2.0
+2022-01-02  1.0  2.0  3.0
+2022-01-03  2.0  3.0  4.0
+        """, df)
+    # Thanks to a dev in tshistory_formula.tsio._hijack_formula,
+    # the cache does not interfer anymore with the hijacking
