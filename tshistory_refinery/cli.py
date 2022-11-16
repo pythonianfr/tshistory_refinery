@@ -85,3 +85,10 @@ def initdb(db_uri, no_dry_run=False):
     # register all component schemas
     engine = create_engine(dburi)
     init(engine)
+
+
+@click.command(name='shell')
+def shell():
+    tsa = apimaker(config())
+
+    import pdb; pdb.set_trace()
