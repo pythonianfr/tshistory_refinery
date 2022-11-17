@@ -116,7 +116,7 @@ def refinery_bp(tsa, more_sections=None):
             return render_template(
                 'bigtable.html',
                 table=pd.read_sql_query(
-                    'select id, name, text, metadata from tsh.formula',
+                    'select id, name, text, metadata from tsh.formula order by name',
                     cn
                 ).drop(
                     labels='id',
