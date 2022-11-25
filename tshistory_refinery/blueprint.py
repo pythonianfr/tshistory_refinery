@@ -165,9 +165,6 @@ def refinery_bp(tsa, more_sections=None):
             if not tsa.exists(sname):
                 if sname in registry.AUTO:
                     return True
-                for op in ('cronos', 'meteo', 'pointconnect'):
-                    if sname.startswith(op):
-                        return True
                 return False
             return True
 
