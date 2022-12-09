@@ -52,6 +52,38 @@ def refresh_cache(db_uri, policy_name, initial=False):
     print(f'queued {t.tid}')
 
 
+@click.command('list-series-locks')
+@click.argument('db-uri')
+@click.option('--policy-name', default=None)
+@click.option('--kill', default=False, is_flag=True,
+              help='remove the locks')
+def list_series_locks(db_uri, policy_name=None, kill=False):
+    dburi = find_dburi(db_uri)
+    engine = create_engine(dburi)
+
+    tsa = apimaker(config())
+    print('Series having a lock, per policy')
+
+    if policy_name:
+        policies = [policy_name]
+    else:
+        policies = tsa.cache_policies()
+
+    for polname in policies:
+        print(f'Policy `{polname}`')
+        for name in tsa.cache_policy_series(polname):
+            if cache.series_policy_ready(engine, name):
+                continue
+
+            print(f'* {name}')
+            if kill:
+                cache._set_series_ready(
+                    engine,
+                    name,
+                    True
+                )
+
+
 @click.command('migrate-to-cache')
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')
