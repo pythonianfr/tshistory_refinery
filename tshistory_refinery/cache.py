@@ -543,6 +543,7 @@ def refresh_now(engine, tsa, name):
         return
 
     now = pd.Timestamp.utcnow()
+    formula = tsa.formula(name)
     with series_refresh_lock(engine, name, tsh.namespace):
         from_value_date = eval_moment(
             policy['look_before'],
@@ -553,11 +554,10 @@ def refresh_now(engine, tsa, name):
             {'now': now}
         )
 
-        ts = tsa.get(
-            name,
+        ts = tsa.eval_formula(
+            formula,
             from_value_date=from_value_date,
             to_value_date=to_value_date,
-            nocache=True
         )
         if len(ts):
             tsh.cache.update(
