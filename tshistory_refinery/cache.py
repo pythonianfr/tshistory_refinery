@@ -427,6 +427,9 @@ def refresh_series(engine, tsa, name, final_revdate=None):
         print(f'Series {name} already being updated. Bailing out. {tsh.namespace=}')
         return
 
+    # now, prepare the formula
+    formula = tsa.formula(name)
+
     with series_refresh_lock(engine, name, tsh.namespace):
         exists = tsh.cache.exists(engine, name)
         if exists:
@@ -446,10 +449,9 @@ def refresh_series(engine, tsa, name, final_revdate=None):
             )
             # the first cache revision contains a full horizon view of
             # the underlying series
-            ts = tsa.get(
-                name,
-                revision_date=initial_revdate,
-                nocache=True
+            ts = tsa.eval_formula(
+                formula,
+                revision_date=initial_revdate
             )
             print(f'{initial_revdate} -> {len(ts)} points (initial full horizon import)')
             if len(ts):
@@ -486,9 +488,6 @@ def refresh_series(engine, tsa, name, final_revdate=None):
         reduced_cron = helper.reduce_frequency(list(cron_range), idates)
         if not len(reduced_cron):
             return
-
-        # now, prepare the formula
-        formula = tsa.formula(name)
 
         for idx, revdate in enumerate(reduced_cron):
             # native python datetimes lack some method
