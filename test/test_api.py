@@ -1037,3 +1037,74 @@ def test_free_series_http(tsx):
     assert free == {
         'postgres': ['free-local'],
     }
+
+
+def test_insertion_dates_vs_cache(tsa):
+    for i in range(1, 4):
+        ts = pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(
+                utcdt(2022, 1, i),
+                freq='D',
+                periods=3
+            )
+        )
+        tsa.update(
+            'idates-vs-cache-ground',
+            ts,
+            'Babar',
+            insertion_date=pd.Timestamp(f'2023-1-{i}', tz='utc')
+        )
+
+    tsa.register_formula(
+        'idates-vs-cache-middle',
+        '(series "idates-vs-cache-ground")'
+    )
+    tsa.register_formula(
+        'idates-vs-cache-top',
+        '(series "idates-vs-cache-middle")'
+    )
+
+    tsa.new_cache_policy(
+        'idates-issue',
+        initial_revdate='(date "2023-1-1")',
+        look_before='(shifted now #:days -15)',
+        look_after='(shifted now #:days 10)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+
+    tsa.set_cache_policy(
+        'idates-issue',
+        [
+            'idates-vs-cache-middle',
+            'idates-vs-cache-top'
+        ]
+    )
+
+    # now, we will poison the `middle` formula cache
+    # to prove that it is not used, which is wrong
+
+    tsa.tsh.cache.update(
+        tsa.engine,
+        pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(
+                utcdt(2022, 1, 1 + i),
+                freq='D',
+                periods=3
+            )
+        ),
+        'idates-vs-cache-middle',
+        'Celeste',
+        insertion_date=pd.Timestamp('2024-1-1', tz='utc')
+    )
+
+    cache.refresh_series(
+        tsa.engine,
+        tsa,
+        'idates-issue'
+    )
+
+    idates = tsa.insertion_dates('idates-vs-cache-top', nocache=True)
+    assert len(idates) == 3
