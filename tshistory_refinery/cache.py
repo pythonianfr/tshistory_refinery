@@ -418,6 +418,54 @@ def series_refresh_lock(engine, name, namespace):
         _set_series_ready(engine, name, True, namespace=namespace)
 
 
+def _insertion_dates(tsa,
+                     name,
+                     from_insertion_date=None,
+                     to_insertion_date=None):
+    """ Produces the insertion dates of a series, bypassing its local cache
+    while still using its component series cache if any
+
+    """
+    tsh, engine = tsa.tsh, tsa.engine
+    formula = tsa.formula(name)
+    tree = tsh._expanded_formula(
+        engine,
+        formula,
+        qargs={}  # we want the stopnames mecanism to work for us
+    )
+    idates = []
+
+    with engine.begin() as cn:
+        for sname in tsh.find_series(cn, tree):
+            if not tsh.exists(cn,  sname):
+                # delegate to other instance
+                idates += tsa.insertion_dates(
+                    name,
+                    from_insertion_date=from_insertion_date,
+                    to_insertion_date=to_insertion_date
+                )
+                continue
+
+            if tsh.cache.exists(cn, sname):
+                idates += tsh.cache.insertion_dates(
+                    cn,
+                    sname,
+                    from_insertion_date=from_insertion_date,
+                    to_insertion_date=to_insertion_date
+                )
+            else:
+                idates += tsh.insertion_dates(
+                    cn,
+                    sname,
+                    from_insertion_date=from_insertion_date,
+                    to_insertion_date=to_insertion_date
+                )
+
+    return sorted(
+        set(idates)
+    )
+
+
 def refresh_series(engine, tsa, name, final_revdate=None):
     """ Refresh a series cache """
     tsh = tsa.tsh
@@ -466,11 +514,11 @@ def refresh_series(engine, tsa, name, final_revdate=None):
                 print(f'there was no data (!) for the first cache revision ({name})')
 
         now = pd.Timestamp.utcnow()
-        idates = tsa.insertion_dates(
+        idates = _insertion_dates(
+            tsa,
             name,
             from_insertion_date=initial_revdate,
-            to_insertion_date=now,
-            nocache=True
+            to_insertion_date=now
         )
         if not idates or not len(idates):
             print(f'no idate over {initial_revdate} -> {now}, no refresh')

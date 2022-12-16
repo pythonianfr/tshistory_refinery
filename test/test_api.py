@@ -1082,29 +1082,52 @@ def test_insertion_dates_vs_cache(tsa):
         ]
     )
 
-    # now, we will poison the `middle` formula cache
-    # to prove that it is not used, which is wrong
-
-    tsa.tsh.cache.update(
-        tsa.engine,
-        pd.Series(
-            [1, 2, 3],
-            index=pd.date_range(
-                utcdt(2022, 1, 1 + i),
-                freq='D',
-                periods=3
-            )
-        ),
-        'idates-vs-cache-middle',
-        'Celeste',
-        insertion_date=pd.Timestamp('2024-1-1', tz='utc')
-    )
-
-    cache.refresh_series(
-        tsa.engine,
+    cache.refresh_policy(
         tsa,
-        'idates-issue'
+        'idates-issue',
+        True
     )
 
-    idates = tsa.insertion_dates('idates-vs-cache-top', nocache=True)
+    assert tsa.has_cache('idates-vs-cache-middle')
+    assert tsa.has_cache('idates-vs-cache-top')
+
+    # now, we will poison the `middle` formula cache
+    # to prove that it is *effectively used*
+
+    tsa.tsh.invalidate_cache(tsa.engine, 'idates-vs-cache-middle')
+    assert not tsa.has_cache('idates-vs-cache-middle')
+
+    with tsa.engine.begin() as cn:
+        tsa.tsh.cache.update(
+            cn,
+            pd.Series(
+                [1, 2, 3],
+                index=pd.date_range(
+                    utcdt(2022, 1, 1 + i),
+                    freq='D',
+                    periods=3
+                )
+            ),
+            'idates-vs-cache-middle',
+            'Celeste',
+            insertion_date=pd.Timestamp('2024-1-1', tz='utc')
+        )
+    assert tsa.has_cache('idates-vs-cache-middle')
+    assert len(
+        tsa.tsh.cache.insertion_dates(tsa.engine, 'idates-vs-cache-middle')
+    ) == 1
+
+    # will use the cache
+    idates = tsa.insertion_dates('idates-vs-cache-top')
+    assert len(idates) == 1
+    # nocache
+    idates = tsa.insertion_dates('idates-vs-cache-top',  nocache=True)
     assert len(idates) == 3
+
+    refresh_idates = cache._insertion_dates(
+        tsa,
+        'idates-vs-cache-top'
+    )
+
+    # our poisoned middle cache shows up there
+    assert len(refresh_idates) == 1
