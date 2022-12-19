@@ -625,8 +625,7 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
 
     print(
         f'Refreshing cache policy `{policy}` '
-        f'({initial=}) (ns={tsh.namespace}) '
-        f'series: {names}'
+        f'({initial=}) (ns={tsh.namespace})'
     )
     # sort series by dependency order
     # we want the leafs to be computed
@@ -652,6 +651,8 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
 
     unames = list(unames)
     unames.sort(key=cmp_to_key(cmp))
+
+    print(f'refresh in order: {names}, then {unames}')
 
     failed = []
 
