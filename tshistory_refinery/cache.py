@@ -750,3 +750,29 @@ def refresh_policy_now(tsa, policy):
         print(f'second batch (full cache construction) ({len(unames)} series)')
         print(f'only a regular update can fix them')
 
+
+@contextmanager
+def suspended_policies(engine, namespace='tsh'):
+    """A context manager to deactivate  / reactivate policies.
+    Will be useful when playing (re-setting for instance) the
+    rework tasks and schedule rules in a ... brutal way.
+    """
+    polnames = {
+        name for name, in
+        engine.execute(
+            f'select name from "{namespace}".cache_policy'
+        ).fetchall()
+    }
+
+    active = {
+        name for name in polnames
+        if scheduled_policy(engine, name, namespace)
+    }
+    for name in active:
+        unschedule_policy(engine, name, namespace)
+
+    try:
+        yield
+    finally:
+        for name in active:
+            schedule_policy(engine, name, namespace)
