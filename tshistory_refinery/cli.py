@@ -9,6 +9,7 @@ from rework import api
 from tshistory.util import find_dburi
 from tshistory_refinery.helper import config, apimaker
 from tshistory_refinery.schema import init
+from tshistory_refinery import cache
 
 
 @click.command()
@@ -72,7 +73,7 @@ def list_series_locks(db_uri, policy_name=None, kill=False):
     for polname in policies:
         print(f'Policy `{polname}`')
         for name in tsa.cache_policy_series(polname):
-            if cache.series_policy_ready(engine, name):
+            if cache.series_ready(engine, name):
                 continue
 
             print(f'* {name}')
