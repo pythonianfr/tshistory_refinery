@@ -22,7 +22,10 @@ setup(name='tshistory_refinery',
           'requests',
           'pml',
           'pygments',
-          'croniter'
+          'croniter',
+          'sphinx',
+          'sphinx-rtd-theme',
+          'sphinx-autoapi'
       ],
       package_data={'tshistory_refinery': [
           'refinery_static/*',
