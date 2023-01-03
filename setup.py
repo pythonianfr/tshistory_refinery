@@ -23,11 +23,14 @@ setup(name='tshistory_refinery',
           'pml',
           'pygments',
           'croniter',
-          'sphinx == 4.5.0',
-          'sphinx-rtd-theme',
-          'sphinx-autoapi',
-          'pydata-sphinx-theme'
       ],
+      extras_require={
+          'doc': [
+            'sphinx == 4.5.0',
+            'sphinx-rtd-theme',
+            'sphinx-autoapi',
+            'pydata-sphinx-theme'
+        ]},
       package_data={'tshistory_refinery': [
           'refinery_static/*',
           'templates/*',
