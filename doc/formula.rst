@@ -57,6 +57,7 @@ Pre-defined operators
 .. automodule:: tshistory_formula.funcs
     :noindex:
     :members:
+    :exclude-members: aggregate_by_doy, compute_bounds, doy_aggregation, doy_scope_shift_transform, get_boundaries
 
 Registering new operators
 -------------------------

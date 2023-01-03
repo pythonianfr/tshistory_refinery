@@ -25,7 +25,8 @@ setup(name='tshistory_refinery',
           'croniter',
           'sphinx',
           'sphinx-rtd-theme',
-          'sphinx-autoapi'
+          'sphinx-autoapi',
+          'pydata-sphinx-theme'
       ],
       package_data={'tshistory_refinery': [
           'refinery_static/*',

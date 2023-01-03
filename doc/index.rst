@@ -21,8 +21,8 @@ The Timeseries Refinery is a tool that :
    :caption: Content
 
    usage
-   api
+   supervision
    formula
    rework
-   supervision
+   api
 

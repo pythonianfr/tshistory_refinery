@@ -60,8 +60,8 @@ The core idea of tshistory is to handle successive versions of
 timeseries as they grow in time, allowing to get older states of any
 series.
 
-Getting started tutorials
-==============================================
+Timeseries Store Usage
+======================
 
 Starting with a fresh database
 ------------------------------
