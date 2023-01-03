@@ -23,7 +23,7 @@ setup(name='tshistory_refinery',
           'pml',
           'pygments',
           'croniter',
-          'sphinx',
+          'sphinx == 4.5.0',
           'sphinx-rtd-theme',
           'sphinx-autoapi',
           'pydata-sphinx-theme'
