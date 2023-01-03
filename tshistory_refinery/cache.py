@@ -259,7 +259,7 @@ def policy_series(cn, policy_name, namespace='tsh'):
         f'select series.name '
         f'from "{namespace}".cache_policy as cache, '
         f'     "{namespace}".cache_policy_series as middle, '
-        f'     "{namespace}".formula as series '
+        f'     "{namespace}".registry as series '
         f'where cache.id = middle.cache_policy_id and '
         f'      series_id = series.id and '
         f'      cache.name = %(cachename)s'
@@ -281,7 +281,7 @@ def set_policy(cn, policy_name, series_name, namespace='tsh'):
         f'  from "{namespace}".cache_policy '
         f'  where name = %(cachename)s), '
         f' (select id '
-        f'  from "{namespace}".formula '
+        f'  from "{namespace}".registry '
         f'  where name = %(seriesname)s) '
         f')'
     )
@@ -296,7 +296,7 @@ def unset_policy(cn, series_name, namespace='tsh'):
     q = (
         f'delete from "{namespace}".cache_policy_series '
         f'where series_id in ('
-        f' select id from "{namespace}".formula where '
+        f' select id from "{namespace}".registry where '
         f' name = %(name)s'
         f')'
     )
@@ -325,7 +325,7 @@ def series_policy_ready(cn, series_name, namespace='tsh'):
         f'select cache.ready '
         f'from "{namespace}".cache_policy as cache, '
         f'     "{namespace}".cache_policy_series as middle, '
-        f'     "{namespace}".formula as series '
+        f'     "{namespace}".registry as series '
         f'where cache.id = middle.cache_policy_id and '
         f'      series_id = series.id and '
         f'      series.name = %(seriesname)s'
@@ -341,7 +341,7 @@ def series_ready(cn, series_name, namespace='tsh'):
     q = (
         f'select middle.ready '
         f'from "{namespace}".cache_policy_series as middle, '
-        f'     "{namespace}".formula as series '
+        f'     "{namespace}".registry as series '
         f'where middle.series_id = series.id and '
         f'      series.name = %(seriesname)s'
     )
@@ -375,7 +375,7 @@ def _set_series_ready(engine, series_name, val, namespace='tsh'):
     q = (
         f'update "{namespace}".cache_policy_series as middle '
         f'set ready = %(val)s '
-        f'from "{namespace}".formula as series '
+        f'from "{namespace}".registry as series '
         f'where middle.series_id = series.id and '
         f'      series.name = %(seriesname)s'
     )
@@ -395,7 +395,7 @@ def series_policy(cn, series_name, namespace='tsh'):
         f'       revdate_rule, schedule_rule '
         f'from "{namespace}".cache_policy as cache, '
         f'     "{namespace}".cache_policy_series as middle, '
-        f'     "{namespace}".formula as series '
+        f'     "{namespace}".registry as series '
         f'where cache.id = middle.cache_policy_id and '
         f'      series_id = series.id and '
         f'      series.name = %(seriesname)s'

@@ -754,11 +754,13 @@ def test_formula_metadata(engine, tsh):
         'combined',
         '(add (series "unsupervised") (series "handcrafted"))'
     )
-    meta = tsh.metadata(
+    meta = tsh.internal_metadata(
         engine,
         'combined'
     )
     assert meta == {
+        'contenthash': 'ac1fa764df0c13df74269a747562666f57319d34',
+        'formula': '(add (series "unsupervised") (series "handcrafted"))',
         'index_dtype': '|M8[ns]',
         'index_type': 'datetime64[ns, UTC]',
         'tzaware': True,

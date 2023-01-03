@@ -85,7 +85,7 @@ class timeseries(xlts):
             cn, name,
             from_insertion_date=kw.get('revision_date')
         )
-        tzaware = self.metadata(cn, name)['tzaware']
+        tzaware = self.tzaware(cn, name)
 
         # save for later use
         fvd = kw.pop('from_value_date', None)
@@ -259,7 +259,9 @@ class timeseries(xlts):
         q = select(
             'f.name'
         ).table(
-            f'"{self.namespace}".formula as f'
+            f'"{self.namespace}".registry as f'
+        ).where(
+            f'f.internal_metadata->\'formula\' is not null'
         )
         if unlinked:
             q.where(

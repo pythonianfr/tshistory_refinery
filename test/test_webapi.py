@@ -32,7 +32,7 @@ def cronos_metadata(cn, tsh, tree):
 
 def test_formula_form_base(engine, client, tsh):
     with engine.begin() as cn:
-        cn.execute('delete from tsh.formula')
+        cn.execute('delete from tsh.registry')
 
     ts = genserie('2019-1-1', 'D', 3)
     tsh.update(engine, ts, 'crude-a', 'Babar')
@@ -82,7 +82,7 @@ def test_formula_form_base(engine, client, tsh):
     formula_downloaded = pd.read_csv(io.StringIO(response.text))
     assert formula_inserted['name'].isin(formula_downloaded['name']).all()
 
-    assert tsh.metadata(engine, 'arith2')['tzaware'] == False
+    assert tsh.internal_metadata(engine, 'arith2')['tzaware'] == False
 
     # We reinsert the donwloaded formulaes and check that everything is kept in the process
     response = client.post(
@@ -135,8 +135,8 @@ def test_formula_form_base(engine, client, tsh):
 
 def test_formula_form_metadata(engine, client, tsh, remote):
     with engine.begin() as cn:
-        cn.execute('delete from tsh.formula')
-        cn.execute('delete from remote.formula')
+        cn.execute('delete from tsh.registry')
+        cn.execute('delete from remote.registry')
         cn.execute('delete from tsh.cache_policy')
 
     remote.register_formula(
@@ -164,7 +164,9 @@ def test_formula_form_metadata(engine, client, tsh, remote):
     assert formula_inserted['name'].isin(formula_downloaded['name']).all()
 
     assert tsh.exists(engine, 'remote')
-    assert tsh.metadata(engine, 'remote') == {
+    assert tsh.internal_metadata(engine, 'remote') == {
+        'contenthash': '3f27b94c07e759f9dfb331def431c2bc7278c27a',
+        'formula': '(series "remote-formula")',
         'tzaware': True,
         'index_type': 'datetime64[ns, UTC]',
         'value_type': 'float64',
@@ -288,7 +290,7 @@ def test_create_policies(client, engine):
 
 def test_cacheable_formulas(client, tsh, engine):
     with engine.begin() as cn:
-        cn.execute('delete from tsh.formula')
+        cn.execute('delete from tsh.registry')
         cn.execute('delete from tsh.cache_policy')
 
     res = client.get('/cacheable-formulas')
@@ -370,7 +372,7 @@ def test_validate_policy(client):
 
 def test_schedule_policy(client, tsh, engine):
     with engine.begin() as cn:
-        cn.execute('delete from tsh.formula')
+        cn.execute('delete from tsh.registry')
         cn.execute('delete from tsh.cache_policy')
 
     ts = pd.Series(
@@ -448,7 +450,7 @@ def test_schedule_policy(client, tsh, engine):
 
 def test_edit_policy(client, engine):
     with engine.begin() as cn:
-        cn.execute('delete from tsh.formula')
+        cn.execute('delete from tsh.registry')
         cn.execute('delete from tsh.cache_policy')
 
     res = client.put_json('/create-policy', {

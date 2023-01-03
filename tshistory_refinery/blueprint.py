@@ -109,14 +109,17 @@ def refinery_bp(tsa, more_sections=None):
         pd.set_option('display.max_colwidth', None)
         fmt = {
             'name': format_name,
-            'text': format_formula,
+            'formula': format_formula,
             'metadata': format_metadata
         }
         with engine.begin() as cn:
             return render_template(
                 'bigtable.html',
                 table=pd.read_sql_query(
-                    'select id, name, text, metadata from tsh.formula order by name',
+                    'select id, name, internal_metadata->>\'formula\' as formula, metadata '
+                    'from tsh.registry '
+                    'where internal_metadata->\'formula\' is not null '
+                    'order by name',
                     cn
                 ).drop(
                     labels='id',
@@ -245,14 +248,16 @@ def refinery_bp(tsa, more_sections=None):
     @bp.route('/downloadformulas')
     def downloadformulas():
         formulas = pd.read_sql(
-            'select name, text from tsh.formula',
+            'select name, internal_metadata->\'formula\' as formula '
+            'from tsh.registry '
+            'where internal_metadata->\'formula\' is not null',
             engine
         )
         df = formulas.sort_values(
-            by=['name', 'text'],
+            by=['name', 'formula'],
             kind='mergesort'
         )
-        df['text'] = df['text'].apply(lambda x: serialize(fparse(x)))
+        df['formula'] = df['formula'].apply(lambda x: serialize(fparse(x)))
         response = make_response(
             df.to_csv(
                 index=False,
