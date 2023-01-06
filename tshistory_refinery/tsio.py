@@ -285,5 +285,5 @@ class timeseries(xlts):
         )
         if prevch != self.content_hash(cn, name):
             self.invalidate_cache(cn, name)
-            for name in self.dependants(cn, name):
+            for name in self.dependents(cn, name):
                 self.invalidate_cache(cn, name)

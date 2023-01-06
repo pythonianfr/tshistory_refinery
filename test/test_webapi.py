@@ -128,9 +128,8 @@ def test_formula_form_base(engine, client, tsh):
     response = client.get('/formulas')
     assert response.status_code == 200
 
-    meta = tsh.metadata(engine, 'arith2')
+    meta = tsh.internal_metadata(engine, 'arith2')
     assert 'supervision_status' not in meta
-
 
 
 def test_formula_form_metadata(engine, client, tsh, remote):

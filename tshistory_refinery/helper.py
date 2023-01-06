@@ -37,11 +37,11 @@ def apimaker(config):
 # topological sort of formulas
 
 def comparator(tsh, engine):
-    """ produces a `cmp` function to order series by dependants """
+    """ produces a `cmp` function to order series by dependents """
 
     def compare(n1, n2):
-        d1 = tsh.dependants(engine, n1)
-        d2 = tsh.dependants(engine, n2)
+        d1 = tsh.dependents(engine, n1)
+        d2 = tsh.dependents(engine, n2)
         # base case: if any has no dep we are done
         if not len(d1) and not len(d2):
             return -1 if n1 < n2 else 0 if n1 == n2 else 1
