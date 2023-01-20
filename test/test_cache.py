@@ -1850,3 +1850,181 @@ def test_interaction_hijack_and_cache(engine, tsa):
         """, df)
     # Thanks to a dev in tshistory_formula.tsio._hijack_formula,
     # the cache does not interfer anymore with the hijacking
+
+
+def test_autotrophic_series_in_cache(engine, tsa):
+    tsa.delete('autotrophic_series')
+    tsa.delete('upstream')
+    tsh = tsa.tsh
+
+    from tshistory_formula.registry import func, finder, insertion_dates
+    from datetime import datetime
+
+    # 1. create autotrophic series with a series we can update for the test
+    @func('auto_series', auto=True)
+    def auto_series(__interpreter__,
+                    __from_value_date__,
+                    __to_value_date__,
+                    __revision_date__,
+                    external_identifier: str) -> pd.Series:
+        i = __interpreter__
+        return i.tsh.get(
+            i.cn,
+            'upstream',
+            revision_date=__revision_date__,
+            from_value_date=__from_value_date__,
+            to_value_date=__to_value_date__
+        )
+
+    @finder('auto_series')
+    def auto_series_finder(cn, tsh, tree):
+        return {
+            'auto_series': tree
+        }
+
+    @insertion_dates('auto_series')
+    def auto_series_idates(cn, tsh, tree,
+                           from_insertion_date=None,
+                           to_insertion_date=None,
+                           from_value_date=None,
+                           to_value_date=None):
+        return tsh.insertion_dates(
+            cn,
+            'upstream',
+            from_insertion_date= from_insertion_date,
+            to_insertion_date=to_insertion_date,
+            from_value_date=from_value_date,
+            to_value_date=to_value_date,
+            nocache=True
+        )
+
+    # 2. assign first values with insertion date = 2022-1-1
+    plain_ts = pd.Series(
+        [1] * 7,
+        index=pd.date_range(
+            start=datetime(2014, 12, 31),
+            freq='D',
+            periods=7,
+        )
+    )
+    tsa.update(
+        'upstream',
+        plain_ts,
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-1', tz='UTC')
+    )
+
+    tsh.register_formula(
+        engine,
+        'autotrophic_series',
+        '(auto_series "EXT-ID")'
+    )
+
+    # 3. get the data from the autotrophic series
+    result_without_cache = tsh.get(
+        engine,
+        'autotrophic_series'
+    )
+
+    # 4. set a new cache policy
+    cache.new_policy(
+        engine,
+        'a-policy',
+        '(date "2022-1-1")',
+        '(shifted now #:days -10)',
+        '(shifted now #:days 10)',
+        '0 1 * * *',
+        '0 8-18 * * *',
+        namespace=tsh.namespace
+    )
+
+    cache.set_policy(
+        engine,
+        'a-policy',
+        'autotrophic_series',
+        namespace=tsh.namespace
+    )
+
+    r = cache.series_policy_ready(
+        engine,
+        'autotrophic_series',
+        namespace=tsh.namespace
+    )
+    assert r == False
+
+    p = cache.series_policy(
+        engine,
+        'autotrophic_series',
+        namespace=tsh.namespace
+    )
+    assert p == {
+        'name': 'a-policy',
+        'initial_revdate': '(date "2022-1-1")',
+        'look_after': '(shifted now #:days 10)',
+        'look_before': '(shifted now #:days -10)',
+        'revdate_rule': '0 1 * * *',
+        'schedule_rule': '0 8-18 * * *'
+    }
+
+    # 5. initial cache load with our autotrophic_series series
+    cache.refresh_series(
+        engine,
+        tsa,
+        'autotrophic_series',
+    )
+    cache.set_policy_ready(
+        engine,
+        'a-policy',
+        True,
+        namespace=tsh.namespace
+    )
+
+    #  6. check that cached series and non cached series are the same
+    result_from_cache = tsh.get(
+        engine,
+        'autotrophic_series'
+    )
+    assert str(result_without_cache) == str(result_from_cache)
+
+    # 7. update the upstream series on insertion 1st feb with values 2 instead of 1
+    plain_ts = pd.Series(
+        [2] * 7,
+        index=pd.date_range(
+            start=datetime(2022, 1, 25),
+            freq='D',
+            periods=7,
+        )
+    )
+    tsa.update(
+        'upstream',
+        plain_ts,
+        'Babar',
+        insertion_date=pd.Timestamp('2022-2-1', tz='UTC')
+    )
+
+    # 8. check that series in not the same in and out the cache
+    result_without_cache = tsh.get(
+        engine,
+        'autotrophic_series',
+        nocache=True
+    )
+    result_from_cache = tsh.get(
+        engine,
+        'autotrophic_series'
+    )
+    assert str(result_without_cache) != str(result_from_cache)
+
+    # 9. refresh series in cache
+    cache.refresh_series(
+        engine,
+        tsa,
+        'autotrophic_series'
+    )
+    assert tsa.has_cache('autotrophic_series')
+
+    # 10 check that now, the series is updated
+    result_from_cache = tsh.get(
+        engine,
+        'autotrophic_series'
+    )
+    assert str(result_without_cache) != str(result_from_cache)
