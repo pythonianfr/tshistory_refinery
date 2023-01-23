@@ -2027,4 +2027,4 @@ def test_autotrophic_series_in_cache(engine, tsa):
         engine,
         'autotrophic_series'
     )
-    assert str(result_without_cache) != str(result_from_cache)
+    assert str(result_without_cache) == str(result_from_cache)

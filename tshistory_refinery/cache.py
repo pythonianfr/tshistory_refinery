@@ -22,7 +22,10 @@ from sqlhelp import (
     update
 )
 
-from tshistory_formula import interpreter
+from tshistory_formula import (
+    interpreter,
+    registry
+)
 from tshistory_refinery import helper
 from tshistory_refinery import tsio
 
@@ -436,8 +439,25 @@ def _insertion_dates(tsa,
     idates = []
 
     with engine.begin() as cn:
-        for sname in tsh.find_series(cn, tree):
-            if not tsh.exists(cn,  sname):
+        for sname, localtree in tsh.find_series(cn, tree).items():
+            if not tsh.exists(cn, sname):
+                # delegate to auto operator idates impl.
+                # localtree looks like:
+                # ['<opname> <param1> ... <paramn>]
+                idatefunc = registry.IDATES.get(
+                    localtree[0]
+                )
+                if idatefunc:
+                    idates += idatefunc(
+                        cn,
+                        tsh,
+                        # localtree given in full: all params will be needed
+                        # to build a proper series id
+                        localtree,
+                        from_insertion_date=from_insertion_date,
+                        to_insertion_date=to_insertion_date
+                    )
+                    continue
                 # delegate to other instance
                 idates += tsa.insertion_dates(
                     name,
