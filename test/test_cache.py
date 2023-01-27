@@ -2028,3 +2028,67 @@ def test_autotrophic_series_in_cache(engine, tsa):
         'autotrophic_series'
     )
     assert str(result_without_cache) == str(result_from_cache)
+
+
+def tuples2series(series_as_tuples, index_name=None, name='indicator'):
+    """Convert a list of (index, value) to a pandas Series"""
+    idx, values = zip(*series_as_tuples)
+    series = pd.Series(
+        values,
+        index=idx,
+        name=name,
+    )
+    if index_name:
+        series.index.name = index_name
+    return series
+
+
+def test_cache_resample(tsa):
+    from datetime import datetime
+    series_name = 'constant-values-hourly'
+    for day in [1, 2, 3, 4, 5, 6]:
+        series = tuples2series(
+            [
+                (datetime(2020, 1, day, hour), 1)
+                for hour in range(24)
+            ],
+            name=series_name,
+        )
+        tsa.update(
+            series_name,
+            series,
+            'test_cache_resample',
+            insertion_date=datetime(2020, 1, day, 12, 35)
+        )
+    formula_name = 'constant-values-hourly-resampled-daily'
+    tsa.register_formula(
+        formula_name,
+        f'(resample (series "{series_name}") "D" "sum")',
+    )
+    engine = tsa.engine
+    cache.new_policy(
+        engine,
+        'resample-policy',
+        '(date "2020-01-01")',
+        '(shifted now #:days -2)',
+        '(shifted now #:days 2)',
+        '0 * * * *',
+        '0 8-23 * * *',
+        namespace=tsa.tsh.namespace
+    )
+    cache.set_policy(engine, 'resample-policy', formula_name, namespace=tsa.tsh.namespace)
+    r = cache.series_policy_ready(engine, formula_name, namespace=tsa.tsh.namespace)
+    cache.set_policy_ready(
+        engine,
+        'resample-policy',
+        True,
+        namespace=tsa.tsh.namespace
+    )
+    assert r == False
+    cache.refresh_series(engine, tsa, formula_name)
+
+    assert tsa.has_cache(formula_name)
+    series = tsa.get(formula_name)
+    series_no_cache = tsa.get(formula_name, nocache=True)
+
+    print(tsa.tsh.cache.insertion_dates(tsa.engine, formula_name))
