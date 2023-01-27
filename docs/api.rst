@@ -5,7 +5,7 @@ Common & Storage
 ----------------
 .. autoclass:: tshistory_refinery.api.mainsource
     :noindex:
-    :members: get, update, replace, exists, insertion_dates, history, catalog, metadata, update_metadata
+    :members: get, update, replace, exists, insertion_dates, history, catalog, find, metadata, update_metadata
 
 Supervision
 -----------
