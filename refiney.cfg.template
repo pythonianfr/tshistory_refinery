@@ -5,4 +5,5 @@ uri = postgres://localhost/mydb
 # all entries optional
 localsourcea = postgres://localhost/otherdb, tsh
 localsourceb = postgres://localhost/otherdb, b-namespace
-remotesource = https://remotesource/api
+remotesource = https://remotesource/api, b-namespace
+
