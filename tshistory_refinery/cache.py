@@ -486,6 +486,23 @@ def _insertion_dates(tsa,
     )
 
 
+def has_today(formula):
+    tree = lisp.parse(formula)
+
+    def _findtoday(tree):
+        if isinstance(tree, list):
+            if tree[0] == 'today':
+                return True
+
+            for item in tree[1:]:
+                if _findtoday(item):
+                    return True
+
+        return False
+
+    return _findtoday(tree)
+
+
 def refresh_series(engine, tsa, name, final_revdate=None):
     """ Refresh a series cache """
     tsh = tsa.tsh
@@ -540,7 +557,8 @@ def refresh_series(engine, tsa, name, final_revdate=None):
             from_insertion_date=initial_revdate,
             to_insertion_date=now
         )
-        if not idates or not len(idates):
+        do_all_idates = has_today(formula)
+        if (not idates or not len(idates)) and not do_all_idates:
             print(f'no idate over {initial_revdate} -> {now}, no refresh')
             return  # that's an odd series, let's bail out
 
@@ -553,9 +571,11 @@ def refresh_series(engine, tsa, name, final_revdate=None):
             policy['revdate_rule']
         )
 
-        reduced_cron = helper.reduce_frequency(list(cron_range), idates)
-        if not len(reduced_cron):
-            return
+        if do_all_idates:
+            # let's not prune anything
+            reduced_cron = cron_range
+        else:
+            reduced_cron = helper.reduce_frequency(list(cron_range), idates)
 
         for idx, revdate in enumerate(reduced_cron):
             # native python datetimes lack some method

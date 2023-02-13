@@ -2138,12 +2138,11 @@ def test_cache_slice(tsa):
         tsa.engine,
         tsa,
         formula_name,
-        final_revdate=pd.Timestamp('2023-1-2')
+        final_revdate=pd.Timestamp('2023-1-10', tz='UTC')
     )
 
-    # Check: not good !
-    with pytest.raises(AssertionError):
-        pd.testing.assert_series_equal(
-            tsa.get(formula_name),
-            tsa.get(formula_name, nocache=True)
-        )
+    # Check: good !
+    pd.testing.assert_series_equal(
+        tsa.get(formula_name),
+        tsa.get(formula_name, nocache=True)
+    )
