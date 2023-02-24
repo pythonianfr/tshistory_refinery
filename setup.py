@@ -2,17 +2,17 @@ from setuptools import setup
 
 
 setup(name='tshistory_refinery',
-      version='0.6.0',
+      version='0.7.0',
       author='Pythonian',
       author_email='aurelien.campeas@pythonian.fr, arnaud.campeas@pythonian.fr',
       packages=['tshistory_refinery'],
       zip_safe=False,
       install_requires=[
-          'tshistory >= 0.16.0',
-          'tsview >= 0.15.1',
-          'tshistory_supervision >= 0.10.1',
-          'tshistory_formula >= 0.12.1',
-          'tshistory_xl >= 0.4.1',
+          'tshistory >= 0.18.0',
+          'tsview >= 0.17.0',
+          'tshistory_supervision >= 0.11.0',
+          'tshistory_formula >= 0.14.0',
+          'tshistory_xl >= 0.6.0',
           'rework >= 0.15.1',
           'rework_ui >= 0.13.0',
           'inireader',
