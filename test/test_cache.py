@@ -2146,3 +2146,65 @@ def test_cache_slice(tsa):
         tsa.get(formula_name),
         tsa.get(formula_name, nocache=True)
     )
+
+
+def test_cache_slice2(tsa):    
+    days = list(range(1, 10))    
+    # Define series    
+    series_name = 'forecast'    
+    now = pd.Timestamp.now() - pd.DateOffset(days=5)    
+    indexes = []    
+    for d in days:        
+        mynow = now + pd.DateOffset(days=d)        
+        indexes.append(pd.Timestamp(f'{mynow.year}-{mynow.month:02d}-{mynow.day:02d}'))
+    series = pd.Series(
+        [day for day in days],
+        index=indexes
+    )
+    tsa.update(
+        series_name,        
+        series,        
+        'test_cache_slice',        
+        insertion_date=now + pd.DateOffset(days=2)    
+    )    
+    # Define formula    
+    formula_name = 'sliced-forecast'    
+    # tsa.register_formula(    
+    #     formula_name,    
+    #     f'(slice (series "{series_name}") #:todate (shifted (today) #:days -1))',    
+    # )    
+    tsa.register_formula(
+        formula_name,        
+        f'(slice (series "{series_name}") #:todate (today)))',    
+    )    
+    # Define cache policy    
+    policy_name = 'daily-cached'    
+    tsa.new_cache_policy(        
+        policy_name,        
+        initial_revdate='(date "2023-03-01")',        
+        look_before='(shifted now #:days -2)',        
+        look_after='(shifted now #:days 10)',        
+        revdate_rule='0 1 * * *',        
+        schedule_rule='0 12 * * *',    
+    )    
+    tsa.set_cache_policy(        
+        policy_name,        
+        [formula_name]    
+    )    
+    # Initiate policy    
+    cache.series_policy_ready(tsa.engine, formula_name, namespace=tsa.tsh.namespace)    
+    cache.set_policy_ready(        
+        tsa.engine,        
+        policy_name,        
+        True,        
+        namespace=tsa.tsh.namespace    
+    )    
+    cache.refresh_series(tsa.engine, tsa, formula_name)    
+    print(tsa.get(formula_name))    
+    print(tsa.get(formula_name, nocache=True))    
+    # Check    
+    pd.testing.assert_series_equal(        
+        tsa.get(formula_name),        
+        tsa.get(formula_name, nocache=True)    
+    )
+
