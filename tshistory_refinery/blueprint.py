@@ -78,7 +78,6 @@ def refinery_bp(tsa, more_sections=None):
             'Time series': {
                 'Series Catalog': url_for('tsview.tssearch'),
                 'Series Quick-View': url_for('tsview.home'),
-                'Rename Series': url_for('tsview.tsrename'),
                 'Delete Series': url_for('tsview.tsdelete'),
             },
             'Formula': {
