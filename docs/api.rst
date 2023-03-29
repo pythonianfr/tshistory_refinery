@@ -6,7 +6,7 @@ Common & Storage
 .. autoclass:: tshistory.api.mainsource
     :noindex:
     :member-order: bysource
-    :members: get, update, replace, exists, insertion_dates, history, catalog, find, metadata, update_metadata
+    :members: get, update, replace, exists, insertion_dates, history, catalog, find, metadata, update_metadata, replace_metadata
 
 Supervision
 -----------
