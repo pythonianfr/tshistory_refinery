@@ -15,10 +15,10 @@ def spawn_engine(dburi):
 
 
 def readsources(config):
-    sources = []
-    for _name, source in config['sources'].items():
+    sources = {}
+    for name, source in config['sources'].items():
         uri, ns = source.split(',')
-        sources.append((uri.strip(), ns.strip()))
+        sources[name] = (uri.strip(), ns.strip())
     return sources
 
 

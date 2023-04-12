@@ -27,7 +27,7 @@ def _initschema(engine, ns='tsh'):
     rapi.freeze_operations(engine)
 
 
-def make_api(engine, ns, sources=()):
+def make_api(engine, ns, sources={}):
     _initschema(engine, ns)
 
     return api.timeseries(
@@ -48,7 +48,7 @@ def tsa1(engine):
     tsa = make_api(
         engine,
         'test-api',
-        [(str(engine.url), 'test-remote')]
+        {'remote': (str(engine.url), 'test-remote')}
     )
 
     return tsa
@@ -922,8 +922,7 @@ def test_cache_refresh_series_now(engine, tsx):
     tsa = api.timeseries(
         str(engine.url),
         namespace='tsh',
-        handler=tsio.timeseries,
-        sources=[]
+        handler=tsio.timeseries
     )
     cache.refresh_series(
         engine,

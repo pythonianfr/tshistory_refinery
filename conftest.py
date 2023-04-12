@@ -64,7 +64,7 @@ def federated(request, engine):
         str(engine.url),
         namespace='tsh',
         handler=tsio.timeseries,
-        sources=[(str(engine.url), 'remote')]
+        sources={'remote': (str(engine.url), 'remote')}
     )
 
 
@@ -124,9 +124,7 @@ def remote(engine):
         str(engine.url),
         namespace='remote',
         handler=tsio.timeseries,
-        sources=[
-            (str(engine.url), 'remote')
-        ]
+        sources={'remote': (str(engine.url), 'remote')}
     )
 
 
@@ -138,8 +136,6 @@ def local(engine):
         str(engine.url),
         namespace='remote',
         handler=tsio.timeseries,
-        sources=[
-            (str(engine.url), 'remote')
-        ]
+        sources={'remote': (str(engine.url), 'remote')}
     )
 
