@@ -781,5 +781,5 @@ def test_types():
         if name in opnames
     }
     assert {
-        'priority-origin': {'return': 'Series', 'serieslist': 'Series'}
+        'priority-origin': {'return': 'Series', 'serieslist': 'List[Series]'}
     } == types
