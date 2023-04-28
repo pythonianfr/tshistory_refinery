@@ -108,14 +108,13 @@ def refinery_bp(tsa, more_sections=None):
         pd.set_option('display.max_colwidth', None)
         fmt = {
             'name': format_name,
-            'formula': format_formula,
-            'metadata': format_metadata
+            'formula': format_formula
         }
         with engine.begin() as cn:
             return render_template(
                 'bigtable.html',
                 table=pd.read_sql_query(
-                    'select id, name, internal_metadata->>\'formula\' as formula, metadata '
+                    'select id, name, internal_metadata->>\'formula\' as formula '
                     'from tsh.registry '
                     'where internal_metadata->\'formula\' is not null '
                     'order by name',
