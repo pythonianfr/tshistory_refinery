@@ -10,7 +10,7 @@ from tshistory.tsio import timeseries as basets
 from tshistory_xl.tsio import timeseries as xlts
 
 from tshistory_refinery import cache
-from tshistory_refinery import api  # trigger registration
+from tshistory_refinery import api  # trigger registration  # noqa: F401
 
 
 class name_stopper:

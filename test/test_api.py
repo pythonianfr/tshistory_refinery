@@ -18,7 +18,7 @@ from tshistory_refinery import (
     http,
     tsio,
     schema,
-    tasks  # trigger registration
+    tasks  # trigger registration  # noqa: F401
 )
 
 

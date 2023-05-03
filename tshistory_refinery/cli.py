@@ -22,7 +22,7 @@ def webstart(port=500):
 @click.command('setup-tasks')
 @click.argument('db-uri')
 def setup_tasks(db_uri):
-    from tshistory_refinery import tasks  # make them available at freeze time
+    from tshistory_refinery import tasks  # make them available at freeze time  # noqa: F401
     dburi = find_dburi(db_uri)
     engine = create_engine(dburi)
     with engine.begin() as cn:
@@ -122,6 +122,6 @@ def initdb(db_uri, no_dry_run=False):
 
 @click.command(name='shell')
 def shell():
-    tsa = apimaker(config())
+    tsa = apimaker(config())  # noqa: F841
 
     import pdb; pdb.set_trace()

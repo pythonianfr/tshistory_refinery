@@ -106,7 +106,7 @@ def cache_free_series(self, allsources: bool=True):
 
 
 @extend(altsources)
-def cache_free_series(self, allsources=True):
+def cache_free_series(self, allsources=True):  # noqa: F811
     freeset = []
     pool = threadpool(len(self.sources))
     def getfree(source):

@@ -14,7 +14,7 @@ from tshistory_refinery import (
     schema,
     tsio,
     webapi,
-    tasks  # be registrable
+    tasks  # be registrable  # noqa: F401
 )
 
 
