@@ -13,8 +13,6 @@ from tshistory_xl.http import (
     XLClient
 )
 
-from tshistory_refinery import cache
-
 
 cp = reqparse.RequestParser()
 cp.add_argument(
@@ -210,7 +208,7 @@ class refinery_httpapi(xl_httpapi):
                 return tsa.cache_free_series(args.allsources)
 
         @nsc.route('/policies')
-        class cache_policy(Resource):
+        class cache_policies(Resource):
 
             @onerror
             def get(self):

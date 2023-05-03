@@ -196,7 +196,7 @@ def test_cache_a_series(engine, tsa):
         'over-ground-0',
         namespace=tsh.namespace
     )
-    assert r == False
+    assert r is False
 
     p = cache.series_policy(
         engine,
@@ -343,7 +343,7 @@ insertion_date             value_date
         'over-ground-1',
         namespace=tsh.namespace
     )
-    assert r == False
+    assert r is False
 
     # we only refresh up to the first 3 revisions
     cache.refresh_series(
@@ -1950,7 +1950,7 @@ def test_autotrophic_series_in_cache(engine, tsa):
         'autotrophic_series',
         namespace=tsh.namespace
     )
-    assert r == False
+    assert r is False
 
     p = cache.series_policy(
         engine,
@@ -2084,14 +2084,14 @@ def test_cache_resample(tsa):
         True,
         namespace=tsa.tsh.namespace
     )
-    assert r == False
+    assert r is False
     cache.refresh_series(engine, tsa, formula_name)
 
     assert tsa.has_cache(formula_name)
-    series = tsa.get(formula_name)
-    series_no_cache = tsa.get(formula_name, nocache=True)
+    # series = tsa.get(formula_name)
+    # series_no_cache = tsa.get(formula_name, nocache=True)
 
-    print(tsa.tsh.cache.insertion_dates(tsa.engine, formula_name))
+    # print(tsa.tsh.cache.insertion_dates(tsa.engine, formula_name))
 
 
 def test_cache_slice(tsa):

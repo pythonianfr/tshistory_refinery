@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from tshistory.testutil import assert_df, genserie
+from tshistory.testutil import genserie
 from tshistory_formula.registry import func, metadata
 from tshistory_refinery import cache
 
@@ -66,7 +66,7 @@ def test_formula_form_base(engine, client, tsh):
     for name in ('crude-b', 'crude-b', 'crude-c', 'gas-a', 'gas-b', 'gas-c'):
         tsh.update(engine, ts, name, 'Babar')
 
-    uploaded = client.post(
+    client.post(
         '/updateformulas',
         {'reallydoit': True},
         upload_files=[
@@ -82,7 +82,7 @@ def test_formula_form_base(engine, client, tsh):
     formula_downloaded = pd.read_csv(io.StringIO(response.text))
     assert formula_inserted['name'].isin(formula_downloaded['name']).all()
 
-    assert tsh.internal_metadata(engine, 'arith2')['tzaware'] == False
+    assert tsh.internal_metadata(engine, 'arith2')['tzaware'] is False
 
     # We reinsert the donwloaded formulaes and check that everything is kept in the process
     response = client.post(
@@ -146,7 +146,7 @@ def test_formula_form_metadata(engine, client, tsh, remote):
     assert not tsh.exists(engine, 'remote')
 
     user_file = DATADIR / 'remoteautoformula.csv'
-    uploaded = client.post(
+    client.post(
         '/updateformulas',
         {'reallydoit': True},
         upload_files=[

@@ -1,7 +1,4 @@
-from datetime import (
-    datetime,
-    timedelta
-)
+from datetime import datetime
 from contextlib import contextmanager
 from functools import cmp_to_key
 import traceback
@@ -22,10 +19,7 @@ from sqlhelp import (
     update
 )
 
-from tshistory_formula import (
-    interpreter,
-    registry
-)
+from tshistory_formula import registry
 from tshistory_refinery import helper
 from tshistory_refinery import tsio
 
@@ -626,7 +620,7 @@ def refresh_now(engine, tsa, name):
 
     exists = tsh.cache.exists(engine, name)
     if not exists:
-        print(f'refresh_now only works on an established cache.')
+        print(f'refresh_now only works on an established cache (series {name}).')
         return
 
     now = pd.Timestamp.utcnow()
@@ -788,7 +782,7 @@ def refresh_policy_now(tsa, policy):
 
     if len(unames):
         print(f'second batch (full cache construction) ({len(unames)} series)')
-        print(f'only a regular update can fix them')
+        print('only a regular update can fix them')
 
 
 @contextmanager

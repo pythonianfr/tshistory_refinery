@@ -1,13 +1,9 @@
-from datetime import timedelta
-
 import pandas as pd
-from psyl import lisp
 from sqlhelp import select
 
 from tshistory.util import (
     compatible_date,
     patch,
-    threadpool,
     tx
 )
 from tshistory.tsio import timeseries as basets
@@ -261,7 +257,7 @@ class timeseries(xlts):
         ).table(
             f'"{self.namespace}".registry as f'
         ).where(
-            f'f.internal_metadata->\'formula\' is not null'
+            'f.internal_metadata->\'formula\' is not null'
         )
         if unlinked:
             q.where(

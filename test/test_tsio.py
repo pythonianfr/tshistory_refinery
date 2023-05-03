@@ -1,12 +1,10 @@
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
-from dateutil import parser
 
 import pandas as pd
 import numpy as np
 
-from tshistory.util import empty_series
 from tshistory.testutil import (
     assert_df,
     genserie,
@@ -81,7 +79,7 @@ def test_manual_overrides(engine, tsh):
 
     # test marker for first inserstion
     _, marker = tsh.get_ts_marker(engine, 'ts_mixte')
-    assert False == marker.any()
+    assert not marker.any()
 
     # refresh all the period + 1 extra data point
     ts_more = genserie(datetime(2010, 1, 2), 'D', 5, [2])

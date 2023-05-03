@@ -1,9 +1,6 @@
 from pathlib import Path
-import io
-from functools import partial
 
 import pytest
-import responses
 from sqlalchemy import create_engine
 import webtest
 
@@ -65,17 +62,6 @@ def federated(request, engine):
         namespace='tsh',
         handler=tsio.timeseries,
         sources={'remote': (str(engine.url), 'remote')}
-    )
-
-
-@pytest.fixture(scope='session')
-def remote(request, engine):
-    _initschema(engine, 'remote')
-
-    return timeseries(
-        str(engine.url),
-        namespace='remote',
-        handler=tsio.timeseries
     )
 
 

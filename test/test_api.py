@@ -111,7 +111,7 @@ def test_manual_overrides(tsx):
 
     # test marker for first inserstion
     _, marker = tsx.edited('ts_mixte')
-    assert False == marker.any()
+    assert not marker.any()
 
     # refresh all the period + 1 extra data point
     ts_more = genserie(datetime(2010, 1, 2), 'D', 5, [2])
@@ -605,7 +605,7 @@ def test_today_vs_revision_date(tsx):
 
 def test_cache(engine, tsx, tsa3):
     with engine.begin() as cn:
-        cn.execute(f'delete from "tsh".cache_policy')
+        cn.execute('delete from "tsh".cache_policy')
 
     with pytest.raises(ValueError) as err:
         tsx.new_cache_policy(
@@ -730,7 +730,7 @@ insertion_date             value_date
         engine,
         'over-ground-1'
     )
-    assert r == False
+    assert r is False
 
     # we only refresh up to the first 3 revisions
     cache.refresh_series(
