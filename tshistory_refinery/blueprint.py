@@ -25,14 +25,16 @@ from psyl.lisp import (
 from sqlhelp import select
 from tshistory_formula import registry
 from tsview.util import format_formula as pretty_formula
+from tsview.blueprint import homeurl
 
 from tshistory_refinery import cache
 
 
-def format_formula(formula):
+def format_formula(formula, baseurl=''):
     h = HTML()
     formatted = pretty_formula(
-        formula
+        formula,
+        baseurl
     )
     s = h.span(
         formatted,
@@ -108,7 +110,8 @@ def refinery_bp(tsa, more_sections=None):
         pd.set_option('display.max_colwidth', None)
         fmt = {
             'name': format_name,
-            'formula': format_formula
+            'formula': lambda f: format_formula(f, baseurl=homeurl()),
+            'metadata': format_metadata
         }
         with engine.begin() as cn:
             return render_template(
