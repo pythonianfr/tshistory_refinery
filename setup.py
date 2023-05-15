@@ -1,8 +1,10 @@
 from setuptools import setup
 
+from tshistory_refinery import __version__
+
 
 setup(name='tshistory_refinery',
-      version='0.7.0',
+      version=__version__,
       author='Pythonian',
       author_email='aurelien.campeas@pythonian.fr, arnaud.campeas@pythonian.fr',
       packages=['tshistory_refinery'],
