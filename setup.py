@@ -47,8 +47,8 @@ setup(name='tshistory_refinery',
               'list-series-locks=tshistory_refinery.cli:list_series_locks',
               'shell=tshistory_refinery.cli:shell'
           ],
-          'tshistory.migrate.run_migrations': [
-              'run_migrations=tshistory_refinery.migrate:run_migrations'
+          'tshistory.migrate.Migrator': [
+              'migrator=tshistory_refinery.migrate:Migrator'
           ]
       },
       classifiers=[
