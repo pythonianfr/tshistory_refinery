@@ -59,6 +59,7 @@ setup(name='tshistory_refinery',
           'Programming Language :: Python :: 3',
           'Topic :: Database',
           'Topic :: Scientific/Engineering',
-          'Topic :: Software Development :: Version Control'
+          'Topic :: Software Development :: Version Control',
+          'Topic :: Software Development :: Libraries :: Application Frameworks'
       ]
 )
