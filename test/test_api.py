@@ -26,9 +26,10 @@ def _initschema(engine, ns='tsh'):
     schema.init(engine, namespace=ns, drop=True)
     rapi.freeze_operations(engine)
 
-
 def make_api(engine, ns, sources={}):
     _initschema(engine, ns)
+    for _uri, sns in sources.values():
+        _initschema(engine, sns)
 
     return api.timeseries(
         str(engine.url),
