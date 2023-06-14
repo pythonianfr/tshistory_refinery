@@ -1,7 +1,9 @@
 from datetime import datetime
+from functools import partial
 
 import pytest
 import pandas as pd
+import responses
 
 from rework import api as rapi, task
 from rework.testutils import workers
@@ -10,8 +12,12 @@ from tshistory.testutil import (
     assert_df,
     assert_hist,
     make_tsx,
-    utcdt
+    read_request_bridge,
+    utcdt,
+    write_request_bridge
 )
+
+from tshistory_xl.testutil import with_http_bridge as basebridge
 
 from tshistory_refinery import (
     cache,
@@ -25,6 +31,7 @@ from tshistory_refinery import (
 def _initschema(engine, ns='tsh'):
     schema.init(engine, namespace=ns, drop=True)
     rapi.freeze_operations(engine)
+
 
 def make_api(engine, ns, sources={}):
     _initschema(engine, ns)
@@ -55,12 +62,79 @@ def tsa1(engine):
     return tsa
 
 
+class with_http_bridge(basebridge):
+
+    def __init__(self, uri, resp, wsgitester):
+        super().__init__(uri, resp, wsgitester)
+
+        resp.add_callback(
+            responses.PUT, uri + '/cache/policy',
+            callback=write_request_bridge(wsgitester.put)
+        )
+
+        resp.add_callback(
+            responses.PATCH, uri + '/cache/policy',
+            callback=write_request_bridge(wsgitester.patch)
+        )
+
+        resp.add_callback(
+            responses.DELETE, uri + '/cache/policy',
+            callback=write_request_bridge(wsgitester.delete)
+        )
+
+        resp.add_callback(
+            responses.PUT, uri + '/cache/mapping',
+            callback=write_request_bridge(wsgitester.put)
+        )
+
+        resp.add_callback(
+            responses.DELETE, uri + '/cache/mapping',
+            callback=write_request_bridge(wsgitester.delete)
+        )
+
+        resp.add_callback(
+            responses.GET, uri + '/cache/cacheable',
+            callback=partial(read_request_bridge, wsgitester)
+        )
+
+        resp.add_callback(
+            responses.GET, uri + '/cache/policies',
+            callback=partial(read_request_bridge, wsgitester)
+        )
+
+        resp.add_callback(
+            responses.GET, uri + '/cache/policy-series',
+            callback=partial(read_request_bridge, wsgitester)
+        )
+
+        resp.add_callback(
+            responses.GET, uri + '/cache/series-policy',
+            callback=partial(read_request_bridge, wsgitester)
+        )
+
+        resp.add_callback(
+            responses.GET, uri + '/cache/series-has-cache',
+            callback=partial(read_request_bridge, wsgitester)
+        )
+
+        resp.add_callback(
+            responses.DELETE, uri + '/cache/series-has-cache',
+            callback=write_request_bridge(wsgitester.delete)
+        )
+
+        resp.add_callback(
+            responses.PUT, uri + '/cache/refresh-policy-now',
+            callback=write_request_bridge(wsgitester.put)
+        )
+
+
 tsx = make_tsx(
     'http://test.me',
     _initschema,
     tsio.timeseries,
     http.refinery_httpapi,
-    http.RefineryClient
+    http.RefineryClient,
+    with_http_bridge=with_http_bridge
 )
 
 
