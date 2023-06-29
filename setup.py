@@ -49,6 +49,9 @@ setup(name='tshistory_refinery',
           ],
           'tshistory.migrate.Migrator': [
               'migrator=tshistory_refinery.migrate:Migrator'
+          ],
+          'scrapers': [
+              'scrapers=tshistory_refinery.scrap:SCRAPERS'
           ]
       },
       classifiers=[
