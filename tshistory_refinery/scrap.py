@@ -152,6 +152,10 @@ class Scrapers:
             otherscrapers.scrapers
         )
 
+    def __lt__(self, other):
+        assert isinstance(other, self.__class__)
+        return len(self.scrapers) < len(other.scrapers)
+
     def find_by_hash(self, key):
         scrap = self.scrapers.get(key)
         if scrap is None:
