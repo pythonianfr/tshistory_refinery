@@ -1,3 +1,5 @@
+import json
+
 from rework.api import task
 import rework.io as rio
 
@@ -134,9 +136,9 @@ def refresh(task):
             task.save_output(
                 {
                     'func' : func_str,
-                    'ts_status': {
+                    'ts_status': json.dumps({
                         inputs['seriesname']: 'failed'
-                    }
+                    })
                 }
             )
             raise
@@ -144,6 +146,6 @@ def refresh(task):
         task.save_output(
             {
                 'func' : func_str,
-                'ts_status': status
+                'ts_status': json.dumps(status)
             }
         )
