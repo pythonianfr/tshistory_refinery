@@ -66,7 +66,7 @@ def test_formula_form_base(engine, client, tsh):
     for name in ('crude-b', 'crude-b', 'crude-c', 'gas-a', 'gas-b', 'gas-c'):
         tsh.update(engine, ts, name, 'Babar')
 
-    client.post(
+    posted = client.post(
         '/updateformulas',
         {'reallydoit': True},
         upload_files=[
@@ -80,7 +80,7 @@ def test_formula_form_base(engine, client, tsh):
     response = client.get('/downloadformulas')
     formula_inserted = pd.read_csv(user_file)
     formula_downloaded = pd.read_csv(io.StringIO(response.text))
-    assert formula_inserted['name'].isin(formula_downloaded['name']).all()
+    assert set(formula_inserted['text']) == set(formula_downloaded['text'])
 
     assert tsh.internal_metadata(engine, 'arith2')['tzaware'] is False
 

@@ -249,16 +249,16 @@ def refinery_bp(tsa, more_sections=None):
     @bp.route('/downloadformulas')
     def downloadformulas():
         formulas = pd.read_sql(
-            'select name, internal_metadata->\'formula\' as formula '
+            'select name, internal_metadata->\'formula\' as text '
             'from tsh.registry '
             'where internal_metadata->\'formula\' is not null',
             engine
         )
         df = formulas.sort_values(
-            by=['name', 'formula'],
+            by=['name', 'text'],
             kind='mergesort'
         )
-        df['formula'] = df['formula'].apply(lambda x: serialize(fparse(x)))
+        df['text'] = df['text'].apply(lambda x: serialize(fparse(x)))
         response = make_response(
             df.to_csv(
                 index=False,
