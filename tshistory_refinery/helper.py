@@ -3,15 +3,8 @@ from sqlalchemy import create_engine
 from tshistory.api import timeseries
 
 
-NTHREAD = 16
-
-
 def config():
     return reader('refinery.cfg')
-
-
-def spawn_engine(dburi):
-    return create_engine(dburi, pool_size=NTHREAD)
 
 
 def readsources(config):
