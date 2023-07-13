@@ -133,7 +133,7 @@ tsx = make_tsx(
     _initschema,
     tsio.timeseries,
     http.refinery_httpapi,
-    http.RefineryClient,
+    http.refinery_httpclient,
     with_http_bridge=with_http_bridge
 )
 

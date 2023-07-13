@@ -53,6 +53,9 @@ setup(name='tshistory_refinery',
           'tshclass': [
               'tshclass=tshistory_refinery.tsio:timeseries'
           ],
+          'httpclient': [
+              'httpclient=tshistory_refinery.http:refinery_httpclient'
+          ],
           'scrapers': [
               'scrapers=tshistory_refinery.scrap:SCRAPERS'
           ]

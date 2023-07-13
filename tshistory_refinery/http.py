@@ -10,7 +10,7 @@ from tshistory.http.util import onerror
 from tshistory.http.client import unwraperror
 from tshistory_xl.http import (
     xl_httpapi,
-    XLClient
+    xl_httpclient
 )
 
 
@@ -260,7 +260,7 @@ class refinery_httpapi(xl_httpapi):
                 return tid, 200
 
 
-class RefineryClient(XLClient):
+class refinery_httpclient(xl_httpclient):
 
     def __repr__(self):
         return f"refinery-http-client(uri='{self.uri}')"
