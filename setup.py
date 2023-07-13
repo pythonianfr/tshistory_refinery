@@ -44,8 +44,7 @@ setup(name='tshistory_refinery',
               'init-db=tshistory_refinery.cli:initdb',
               'migrate-to-cache=tshistory_refinery.cli:migrate_to_cache',
               'setup-tasks=tshistory_refinery.cli:setup_tasks',
-              'list-series-locks=tshistory_refinery.cli:list_series_locks',
-              'shell=tshistory_refinery.cli:shell'
+              'list-series-locks=tshistory_refinery.cli:list_series_locks'
           ],
           'tshistory.migrate.Migrator': [
               'migrator=tshistory_refinery.migrate:Migrator'
