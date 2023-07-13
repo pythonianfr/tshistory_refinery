@@ -1,3 +1,5 @@
+import warnings
+
 from inireader import reader
 from sqlalchemy import create_engine
 from tshistory.api import timeseries
@@ -16,6 +18,13 @@ def readsources(config):
 
 
 def apimaker(config):
+    warnings.warn(
+        'The `apimaker` function is deprecated. '
+        'You mayt want to move your source definitions from `refinery.cfg` '
+        'and put them into `tshistory.cfg`. Then, using tshistory.api.timeseries '
+        'will just work.',
+        DeprecationWarning
+    )
     from tshistory_refinery.tsio import timeseries as tshclass
     dburi = config['db']['uri']
     sources = readsources(config)
