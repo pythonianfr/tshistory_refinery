@@ -32,6 +32,7 @@ class name_stopper:
 
 
 class timeseries(xlts):
+    index = 3
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)

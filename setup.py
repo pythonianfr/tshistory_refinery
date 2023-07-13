@@ -50,6 +50,9 @@ setup(name='tshistory_refinery',
           'tshistory.migrate.Migrator': [
               'migrator=tshistory_refinery.migrate:Migrator'
           ],
+          'tshclass': [
+              'tshclass=tshistory_refinery.tsio:timeseries'
+          ],
           'scrapers': [
               'scrapers=tshistory_refinery.scrap:SCRAPERS'
           ]
