@@ -147,7 +147,8 @@ def tsa2(engine):
     return api.timeseries(
         dburi,
         namespace=ns,
-        handler=tsio.timeseries
+        handler=tsio.timeseries,
+        sources={}
     )
 
 
@@ -997,7 +998,8 @@ def test_cache_refresh_series_now(engine, tsx):
     tsa = api.timeseries(
         str(engine.url),
         namespace='tsh',
-        handler=tsio.timeseries
+        handler=tsio.timeseries,
+        sources={}
     )
     cache.refresh_series(
         engine,

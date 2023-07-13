@@ -49,7 +49,8 @@ def tsa(request, engine):
     return timeseries(
         str(engine.url),
         namespace=request.param,
-        handler=tsio.timeseries
+        handler=tsio.timeseries,
+        sources={}
     )
 
 
