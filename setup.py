@@ -57,6 +57,9 @@ setup(name='tshistory_refinery',
           ],
           'scrapers': [
               'scrapers=tshistory_refinery.scrap:SCRAPERS'
+          ],
+          'forceimports': [
+              'forceimports=tshistory_refinery.search:IMPORTCALLBACK'
           ]
       },
       classifiers=[

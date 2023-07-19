@@ -665,7 +665,6 @@ def test_origin_federated(tsa1, tsa2):
 """, origin)
 
 
-
 def test_today_vs_revision_date(tsx):
     tsx.register_formula(
         'constant-1',
@@ -677,6 +676,52 @@ def test_today_vs_revision_date(tsx):
         revision_date=datetime(2020, 2, 1)
     )
     assert len(ts) == 32
+
+
+# cache
+
+
+def test_find_bypolicy(tsx):
+    ts = genserie(utcdt(2023, 1, 1), 'D', 10, [1])
+    tsx.update(
+        'find.base',
+        ts,
+        'Babar'
+    )
+    tsx.register_formula(
+        'find.constant',
+        '(constant 1. (date "2020-1-1") (today) "D" (date "2020-2-1"))'
+    )
+    tsx.register_formula(
+        'find.add',
+        '(add (series "find.base") (series "find.constant"))'
+    )
+    tsx.new_cache_policy(
+        'find-policy',
+        initial_revdate='(date "2023-1-1")',
+        look_before='(shifted now #:days -15)',
+        look_after='(shifted now #:days 10)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+    tsx.set_cache_policy(
+        'find-policy',
+        ['find.add']
+    )
+
+    names = tsx.find('(by.cache)')
+    assert names == ['find.add']
+
+    names = tsx.find('(by.or (by.cache) (by.not (by.formula)))')
+    assert names == ['find.add', 'find.base']
+
+    tsx.set_cache_policy(
+        'find-policy',
+        ['find.constant']
+    )
+
+    names = tsx.find('(by.cache)')
+    assert names == ['find.add', 'find.constant']
 
 
 def test_cache(engine, tsx, tsa3):
