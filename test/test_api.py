@@ -724,6 +724,23 @@ def test_find_bypolicy(tsx):
     assert names == ['find.add', 'find.constant']
 
 
+    names = tsx.find('(by.cachepolicy "find-policy")')
+    assert names == ['find.add', 'find.constant']
+
+    names = tsx.find('(by.cachepolicy "no-such-policy")')
+    assert not names
+
+    tsx.unset_cache_policy(
+        ['find.add']
+    )
+    names = tsx.find('(by.cachepolicy "find-policy")')
+    assert names == ['find.constant']
+
+    # substring match
+    names = tsx.find('(by.cachepolicy "find-")')
+    assert names == ['find.constant']
+
+
 def test_cache(engine, tsx, tsa3):
     with engine.begin() as cn:
         cn.execute('delete from "tsh".cache_policy')
