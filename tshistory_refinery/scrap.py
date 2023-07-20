@@ -79,7 +79,7 @@ class Scrap:
         We dispatch the process depending on that.
         """
         if isinstance(self.names, str):
-            diff = tsa.update(self.names, data, author='scraper')
+            diff = tsa.update(self.names, data.dropna(), author='scraper')
             if len(diff) > 0:
                 return {self.names: 'updated'}
             else:
@@ -89,7 +89,7 @@ class Scrap:
         for name in self.names:
             if self.names[name] in data.columns:
                 ts = data[self.names[name]]
-                diff = tsa.update(name, ts, author='scraper')
+                diff = tsa.update(name, ts.dropna(), author='scraper')
                 status[name] = 'updated' if len(diff) else 'unchanged'
             else:
                 print(
