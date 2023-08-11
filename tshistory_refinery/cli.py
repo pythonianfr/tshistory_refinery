@@ -8,7 +8,7 @@ from rework.helper import host
 from rework import api
 from tshistory.util import find_dburi
 from tshistory_refinery.helper import config, apimaker
-from tshistory_refinery.schema import init
+from tshistory_refinery.schema import refinery_schema
 from tshistory_refinery import cache
 
 
@@ -117,4 +117,4 @@ def initdb(db_uri, no_dry_run=False):
         return
     # register all component schemas
     engine = create_engine(dburi)
-    init(engine)
+    refinery_schema().create(engine)
