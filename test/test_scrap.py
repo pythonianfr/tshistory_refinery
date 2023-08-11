@@ -1,12 +1,9 @@
 from functools import partial
-from pathlib import Path
 
 import pandas as pd
 import pytest
 from tshistory.testutil import assert_df
 
-from rework import api
-from rework.testutils import workers
 from tshistory_refinery.scrap import Scrap, Scrapers
 
 

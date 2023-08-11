@@ -66,7 +66,7 @@ def test_formula_form_base(engine, client, tsh):
     for name in ('crude-b', 'crude-b', 'crude-c', 'gas-a', 'gas-b', 'gas-c'):
         tsh.update(engine, ts, name, 'Babar')
 
-    posted = client.post(
+    _posted = client.post(
         '/updateformulas',
         {'reallydoit': True},
         upload_files=[

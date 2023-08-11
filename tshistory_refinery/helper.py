@@ -1,7 +1,6 @@
 import warnings
 
 from inireader import reader
-from sqlalchemy import create_engine
 from tshistory.api import timeseries
 
 
