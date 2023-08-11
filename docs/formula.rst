@@ -7,9 +7,6 @@ Purpose
 This `tshistory <https://hg.sr.ht/~pythonian/tshistory>`__ component
 provides a formula language to build computed series.
 
-Formulas are defined using a simple lisp-like syntax, using a
-pre-defined function library.
-
 Formulas are read-only series (you can’t ``update`` or ``replace``
 values).
 
@@ -20,6 +17,7 @@ formula.
 Because of this the ``staircase`` operator is available on formulae.
 Some ``staircase`` operations can have a very fast implementation if the
 formula obeys commutativity rules.
+
 
 Operators
 ---------
@@ -49,7 +47,8 @@ Some notes:
 -  operator names can contain dashes or arbitrary caracters
 
 -  literal values can be: ``3`` (integer), ``5.2`` (float), ``"hello"``
-   (string) and ``#t`` or ``#f`` (true or false)
+   (string), ``#t`` or ``#f`` (true or false) and ``nil`` (for None)
+
 
 Pre-defined operators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,7 +56,8 @@ Pre-defined operators
 .. automodule:: tshistory_formula.funcs
     :noindex:
     :members:
-    :exclude-members: aggregate_by_doy, compute_bounds, doy_aggregation, doy_scope_shift_transform, get_boundaries
+    :exclude-members: aggregate_by_doy, compute_bounds, doy_aggregation, doy_scope_shift_transform, get_boundaries, find_last_values, linear_insert_date, resample_adjust, resample_transform
+
 
 Registering new operators
 -------------------------
@@ -75,149 +75,153 @@ One just needs to decorate a python with the ``func`` decorator:
      from tshistory_formula.registry import func
 
      @func('identity')
-     def identity(series):
+     def identity(series: pd.Series) -> pd.Series:
          return series
 
 The operator will be known to the outer world by the name given to
 ``@func``, not the python function name (which can be arbitrary).
 
-This is enough to get a working transformation operator. However
+You *must* provide correct type annotations : the formula language is
+statically typed and the typechecker will refuse to work with an
+untyped operator.
+
+This is enough to get a working *transformation* operator. However
 operators built to construct series rather than just transform
 pre-existing series are more complicated.
 
-custom series operator
-~~~~~~~~~~~~~~~~~~~~~~~
+autotrophic series operator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We start with an example, a ``shifted`` operator that gets a series with
-shifted from_value_date/to_value_date boundaries by a constant ``delta``
-amount.
+We start with an example, a ``proxy`` operator that gets a series from
+an existing time series silo (on the fly) to be served as it came from
+your local installation.
 
-We would use it like this: ``(shifted "shiftme" #:days -1)``
+We would use it like this: ``(proxy "a-name" #:parameter 42.3)``
 
-As we can see the standard ``series`` operator won’t work there, that is
-applying a shift operator (``(shift (series "shiftme"))``) *after* the
-call to series is too late. The from/to implicit parameters have already
-been handled by ``series`` itself and there is nothing left to *shift*.
+As we can see it can look like the ``series`` operator, though its
+signature might be more complicated (this will be entirely dependent
+on the way to enumerate series in the silo).
 
-Hence ``shifted`` must be understood as an alternative to ``series``
-itself. Here is a possible implementation:
-
-.. code:: python
-
-     from tshistory_formula.registry import func, finder
-
-     @func('shifted')
-     def shifted(__interpreter__, name, days=0):
-         args = __interpreter__.getargs.copy()
-         fromdate = args.get('from_value_date')
-         todate = args.get('to_value_date')
-         if fromdate:
-             args['from_value_date'] = fromdate + timedelta(days=days)
-         if todate:
-             args['to_value_date'] = todate + timedelta(days=days)
-
-         return __interpreter__.get(name, args)
-
-     @finder('shifted')
-     def find_series(cn, tsh, tree):
-         return {
-             tree[1]: tsh.metadata(cn, tree[1])
-         }
-
-As we can see, we use a new ``finder`` protocol. But first let’s examine
-how the ``shiftme`` operator is implemented.
-
-First it takes a special ``__interpreter__`` parameter, which will
-receive the formula interpreter object, providing access to an important
-internal API of the evaluation process.
-
-Indeed from the interpreter we can read the ``getargs`` attribute, which
-contains a dictionary of the actual query mapping. We are specially
-interested in the ``from_value_date`` and ``to_value_date`` items in our
-example, but all the parameters of ``tshistory.get`` are available
-there.
-
-Once we have shifted the from/to value date parameter we again use the
-interpreter to make a call to ``get`` which will in turn perform a call
-to the underlying ``tshistory.get`` (which, we don’t know in advance,
-may yield a primary series or another formula computed series).
-
-Implementing the operator this way, we actually miss two important
-pieces of information:
-
--  the system cannot determine a series is *produced* by the ``shifted``
-   operator like it can with ``series``
-
--  and because of this it cannot know the technical metadata of the
-   produced series (e.g. the ``tzaware`` attribute)
-
-This is where the ``finder`` protocol and its decorator function comes
-into play. For ``shifted`` we define a finder. It is a function that
-takes the db connection (``cn``), time series protocol handler (``tsh``)
-and formula syntax tree (``tree``), and must return a mapping from
-series name to its metadata.
-
-The tree is an obvious Python data structure representing a use of the
-operator in a formula.
-
-For instance because of the ``shifted`` python signature, any use will
-be like that:
-
--  in lisp ``... (shifted "shift-me" #:hours +1) ...`` (the dots
-   indicate that it can be part of a larger formula)
-
--  tree in python: ``['shifted', "shift-me", 'hours', 1]``
-
-The name is always in position 1 in the list. Hence the implementation
-of the shifted *finder*:
+Hence ``proxy`` must be understood as an alternative to ``series``
+itself. Here is how the initial part would look:
 
 .. code:: python
 
-         return {
-             tree[1]: tsh.metadata(cn, tree[1])
-         }
+     from tshistory_formula.registry import func, finder, metadata, history, insertion_dates
 
-For the metadata we delegate the computation to the underlying series
-metadata.
+     @func('proxy', auto=True)
+     def proxy(__interpreter__,
+               __from_value_date__,
+               __to_value_date__,
+               __revision_date__,
+               name: str,
+               parameter=0):
 
-We might want to provide an ad-hoc metadata dictionary if we had a proxy
-operator that would forward the series from an external source:
-
-.. code:: python
-
-     @func('proxy')
-     def proxy(
-             __interpreter__,
-             series_uid: str,
-             default_start: date,
-             default_end : date) -> pd.Series:
-         i = __interpreter__
-         args = i.getargs.copy()
-         from_value_date = args.get('from_value_date') or default_start
-         to_value_date = args.get('to_value_date') or default_end
-
-         proxy = ProxyClient()
-         return proxy.get(
-             series_uid,
-             from_value_date,
-             to_value_date,
+         # we assume there is some python client available
+         # for the tier timeseries silo
+         return silo_client.get(
+             fromdate=__from_value_date__,
+             todate=__to_value_date__,
+             revdate=__revision_date__
          )
 
+This is a possible implementation of the API `get` protocol.
+
+Ths dunder methods are a mandatory part of the signature. The other
+parameters (positional or keyword) are at your convenience and will be
+exposed to the formula users.
+
+We must also provide an helper for the formula system to detect the
+presence of this particular kind of operator in a formula (because it
+is not like other mere *transformation* operators).
+
+Let's have it:
+
+.. code:: python
+
      @finder('proxy')
-     def proxy(cn, tsh, tree):
+     def proxy_finder(cn, tsh, tree):
          return {
-             tree[1]: {
-                 'index_type': 'datetime64[ns]',
-                 'tzaware': False,
-                 'value_type': 'float64'
-             }
+             tree[1]: tree
          }
 
-Here, because we have no other means to know (and the proxy provides
-some useful documentation), we write the metadata ourselves explicitly.
+Let us explain the parameters:
 
-Also note how accessing the ``__interpreter__`` again is used to forward
-the query arguments.
+* `cn` is a reference to the current database connection
+
+* `tsh` is a reference to the internal API implementation object (and
+  you will need the `cn` object to use it)
+
+* `tree` is a representation of the formula restricted to the proxy
+  operator use
+
+When implementing a proxy-like operator, one generally won't need the
+first two items. But here is an example of what the *tree* would look
+like:
+
+.. code:: python
+
+   ['proxy, 'a-name', '#:parameter, 77]
+
+Yes, the half-quoted `'proxy` and `'#:parameters` are not typos. These are
+respectively a:
+
+* symbol (simimlar to a variable name in Python)
+
+* keyword (similar to a Python keyword)
+
+In the finder return dictionary, only the key of the dictionary is
+important: it should be globally unique and will be used to provide an
+(internal) alias for the provided series name. For instance, in our
+example, if `parameter` has an impact on the returned series identity,
+it should be part of the key. Like this:
+
+.. code:: python
+
+     @finder('proxy')
+     def proxy_finder(cn, tsh, tree):
+         return {
+             f'tree[1]-tree[2]': tree
+         }
+
+We also have to map the `metadata`, `insertion_dates` and the
+`history` API methods.
+
+.. code:: python
+
+    @metadata('proxy')
+    def proxy_metadata(cn, tsh, tree):
+        return {
+            f'proxy:{tree[1]}-{tree[2]}': {
+                'tzaware': True,
+                'source': 'silo-proxy',
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
+
+.. code:: python
+
+    @history('proxy')
+    def proxy_history(__interpreter__,
+                      from_value_date=None,
+                      to_value_date=None,
+                      from_insertion_date=None,
+                      to_insertion_date=None):
+        # write the implementation there :)
+
+
+    @insertion_dates('proxy')
+    def proxy_idates(__interpreter__,
+                     from_value_date=None,
+                     to_value_date=None,
+                     from_insertion_date=None,
+                     to_insertion_date=None):
+        # write the implementation there :)
+
+
 
 Editor Infos
 ~~~~~~~~~~~~~
