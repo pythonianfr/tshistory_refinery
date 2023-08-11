@@ -25,6 +25,7 @@ def new_cache_policy(
         look_after: str,
         revdate_rule: str,
         schedule_rule: str) -> NONETYPE:
+    """Create a cache policy."""
 
     cache.new_policy(
         self.engine,
@@ -47,6 +48,7 @@ def edit_cache_policy(
         look_after: str,
         revdate_rule: str,
         schedule_rule: str) -> NONETYPE:
+    """Modify an existing cache policy (by name)."""
 
     cache.edit_policy(
         self.engine,
@@ -62,6 +64,7 @@ def edit_cache_policy(
 
 @extend(mainsource)
 def delete_cache_policy(self, name: str) -> NONETYPE:
+    """Delete a cache policy (by name)."""
     cache.delete_policy(
         self.engine,
         name,
@@ -74,7 +77,7 @@ def set_cache_policy(
         self,
         policyname: str,
         seriesnames: List[str]) -> NONETYPE:
-
+    """Associate series with a cache policy."""
     for name in seriesnames:
         cache.set_policy(
             self.engine,
@@ -86,7 +89,7 @@ def set_cache_policy(
 
 @extend(mainsource)
 def unset_cache_policy(self, seriesnames: List[str]) -> NONETYPE:
-
+    """Dis-associate series from a cache policy."""
     for name in seriesnames:
         cache.unset_policy(
             self.engine,
@@ -98,6 +101,8 @@ def unset_cache_policy(self, seriesnames: List[str]) -> NONETYPE:
 
 @extend(mainsource)
 def cache_free_series(self, allsources: bool=True):
+    """List the series that are available for association with a cache
+    policy."""
     freeset = {
         self._instancename(): self.tsh.cacheable_formulas(self.engine)
     }
@@ -127,6 +132,7 @@ def cache_free_series(self, allsources=True):  # noqa: F811
 
 @extend(mainsource)
 def cache_policies(self):
+    """Return a list of cache policies names."""
     return [
         name for name, in self.engine.execute(
             'select name from tsh.cache_policy'
@@ -136,21 +142,25 @@ def cache_policies(self):
 
 @extend(mainsource)
 def cache_policy_series(self, policyname: str):
+    """Return the list of series associated with a cache policy."""
     return cache.policy_series(self.engine, policyname)
 
 
 @extend(mainsource)
 def cache_series_policy(self, seriesname: str):
+    """Return the cache policy of a series."""
     return cache.series_policy(self.engine, seriesname)
 
 
 @extend(mainsource)
 def has_cache(self, seriesname: str):
+    """Predicate to verify is a series formula has a cache."""
     return self.tsh.cache.exists(self.engine, seriesname)
 
 
 @extend(mainsource)
 def delete_cache(self, seriesname: str):
+    """Purge the cache of a formula."""
     return self.tsh.invalidate_cache(self.engine, seriesname)
 
 
