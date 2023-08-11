@@ -7,3 +7,4 @@ build
 dist
 .cache
 elm-stuff
+.pytype
