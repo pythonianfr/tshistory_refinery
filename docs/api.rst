@@ -68,16 +68,16 @@ the future it is possible that these methods will be implemented with
     :members: register_formula, eval_formula, formula, formula_depth, formula_components
 
 
-..
-   Excel
-   -----
 
-   The API points listed there are mostly for use by the Excel client.
+Excel
+-----
 
-   .. autoclass:: tshistory_xl.api.mainsource
-       :noindex:
-       :member-order: bysource
-       :members: values_markers_origins,
+The API points listed there are mostly for use by the Excel client.
+
+.. autoclass:: tshistory_xl.api.mainsource
+   :noindex:
+   :member-order: bysource
+   :members: values_markers_origins,
 
 
 Formula cache
