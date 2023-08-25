@@ -5,17 +5,18 @@ Purpose
 -------
 
 This `tshistory <https://hg.sr.ht/~pythonian/tshistory>`__ component
-provides a formula language to build computed series.
+provides a formula (time series domain specific) language to build
+computed time series.
 
 Formulas are read-only series (you can’t ``update`` or ``replace``
-values).
+them).
 
-They also have an history, which is built, time stamps wise, using the
-union of all constituent time stamps, and value wise, by applying the
-formula.
+They also have versions and an history, which is built, time stamps
+wise, using the union of all constituent time stamps, and value wise,
+by applying the formula.
 
 Because of this the ``staircase`` operator is available on formulae.
-Some ``staircase`` operations can have a very fast implementation if the
+Some ``staircase`` operations can have a fast implementation if the
 formula obeys commutativity rules.
 
 
@@ -34,7 +35,8 @@ The general form is:
 
 Here are a couple examples:
 
--  ``(add (series "wallonie") (series "bruxelles") (series "flandres"))``
+- ``(add (series "wallonie") (series "bruxelles") (series "flandres"))``
+
 
 Here we see the two fundamental ``add`` and ``series`` operators at
 work.
@@ -42,33 +44,30 @@ work.
 This would form a new synthetic series out of three base series (which
 can be either raw series or formulas themselves).
 
+- ``(round (series "foo") #:decimals 2)``
+
+This illustrates the keywords.
+
 Some notes:
 
 -  operator names can contain dashes or arbitrary caracters
 
 -  literal values can be: ``3`` (integer), ``5.2`` (float), ``"hello"``
-   (string), ``#t`` or ``#f`` (true or false) and ``nil`` (for None)
-
-
-Pre-defined operators
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: tshistory_formula.funcs
-    :noindex:
-    :members:
-    :exclude-members: aggregate_by_doy, compute_bounds, doy_aggregation, doy_scope_shift_transform, get_boundaries, find_last_values, linear_insert_date, resample_adjust, resample_transform
+   (string), ``#t`` or ``#f`` (true or false).
 
 
 Registering new operators
 -------------------------
 
-This is a fundamental need. Operators are fixed python functions exposed
-through a lispy syntax. Applications need a variety of fancy operators.
+This is a fundamental need. Operators are fixed python functions
+exposed through a lispy syntax. Applications need a variety of fancy
+operators.
 
-declaring a new operator
+
+Declaring a new operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One just needs to decorate a python with the ``func`` decorator:
+One just needs to decorate a python function with the ``func`` decorator:
 
 .. code:: python
 
@@ -89,7 +88,8 @@ This is enough to get a working *transformation* operator. However
 operators built to construct series rather than just transform
 pre-existing series are more complicated.
 
-autotrophic series operator
+
+Autotrophic series operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We start with an example, a ``proxy`` operator that gets a series from
@@ -223,28 +223,10 @@ We also have to map the `metadata`, `insertion_dates` and the
 
 
 
-Editor Infos
-~~~~~~~~~~~~~
+Pre-defined operators
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``tshistory_formula`` package provides a custom callback for the
-``editor`` capabilities of
-`tshistory_editor <https://hg.sr.ht/~pythonian/tshistory_editor>`__.
-
-A dedicated protocol is available to inform the editor on the way to
-decompose/display a formula.
-
-Example of such a function:
-
-.. code:: python
-
-    from tshistory_formula.registry import editor_info
-
-    @editor_info
-    def operator_with_series(builder, expr):
-        for subexpr in expr[1:]:
-            with builder.series_scope(subexpr):
-                builder.buildinfo_expr(subexpr)
-
-The exact ways to use the builder will be provided soon.
-
-
+.. automodule:: tshistory_formula.funcs
+    :noindex:
+    :members:
+    :exclude-members: aggregate_by_doy, compute_bounds, doy_aggregation, doy_scope_shift_transform, get_boundaries, find_last_values, linear_insert_date, resample_adjust, resample_transform
