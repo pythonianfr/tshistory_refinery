@@ -1,7 +1,6 @@
 version: 2
 
 python:
-  version: "3.9"
   install:
     - method: pip
       path: .
@@ -9,4 +8,9 @@ python:
         - doc
 
 build:
-  image: testing
+  os: "ubuntu-22.04"
+  tools:
+    python: "3.10"
+
+sphinx:
+  configuration: docs/conf.py
