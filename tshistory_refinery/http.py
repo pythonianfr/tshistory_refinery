@@ -261,6 +261,7 @@ class refinery_httpapi(xl_httpapi):
 
 
 class refinery_httpclient(xl_httpclient):
+    index = 3
 
     def __repr__(self):
         return f"refinery-http-client(uri='{self.uri}')"
