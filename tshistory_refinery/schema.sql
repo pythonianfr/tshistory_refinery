@@ -20,7 +20,6 @@ create index on "{ns}".cache_policy (name);
 
 create table "{ns}".cache_policy_sched (
   cache_policy_id int unique not null references "{ns}".cache_policy on delete cascade,
-  -- no cascading delete as we do not control the upstream entity
   prepared_task_id int not null references "rework".sched on delete cascade
 );
 
