@@ -119,4 +119,4 @@ def initdb(db_uri, no_dry_run=False):
         return
     # register all component schemas
     engine = create_engine(dburi)
-    refinery_schema().create(engine, rework=True)
+    refinery_schema().create(engine, rework=True, reset=True)

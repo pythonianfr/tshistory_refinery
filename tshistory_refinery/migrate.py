@@ -16,3 +16,6 @@ class Migrator(_Migrator):
         print('initial migration')
         migrate_metadata(self.engine, f'{self.namespace}-cache', self.interactive)
         fix_user_metadata(self.engine, f'{self.namespace}-cache', self.interactive)
+
+        from tswatch.utils import tswatch_init
+        tswatch_init(self.engine, drop=False)

@@ -9,6 +9,7 @@ from rework_ui.blueprint import reworkui
 
 from tshistory.api import timeseries
 from tshistory_xl.blueprint import blueprint as excel
+from tswatch.webapp import make_blueprint as tswatch
 
 from tshistory_refinery import http, blueprint
 
@@ -44,6 +45,11 @@ def make_app(dburi, sources=None, more_sections=None):
         tsa,
         has_permission=has_permission,
         request_pathname_prefix='/'
+    )
+
+    app.register_blueprint(
+        tswatch(tsa),
+        url_prefix='/tswatch',
     )
 
     app.register_blueprint(
