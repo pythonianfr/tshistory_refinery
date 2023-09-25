@@ -22,7 +22,7 @@ DATADIR = Path(__file__).parent / 'test' / 'data'
 
 
 def _initschema(engine, ns='tsh'):
-    schema.refinery_schema(ns).create(engine, reset=True)
+    schema.refinery_schema(ns).create(engine, reset=True, rework=True)
     rapi.freeze_operations(engine)
 
 
