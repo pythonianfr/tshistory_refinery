@@ -12,7 +12,7 @@ from tshistory.api import timeseries
 from tshistory_refinery import (
     schema,
     tsio,
-    webapi,
+    webapp,
     tasks  # be registrable  # noqa: F401
 )
 
@@ -78,7 +78,7 @@ class NonSuckingWebTester(webtest.TestApp):
 @pytest.fixture(scope='session')
 def client(engine):
     return NonSuckingWebTester(
-        webapi.make_app(
+        webapp.make_app(
             str(engine.url),
             sources={
                 'remote': (f'{engine.url}', 'remote')

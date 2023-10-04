@@ -1,6 +1,6 @@
 from tshistory.util import config
 
-from tshistory_refinery.webapi import make_app
+from tshistory_refinery.webapp import make_app
 
 
 class ReverseProxied(object):
