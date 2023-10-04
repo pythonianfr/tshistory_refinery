@@ -13,7 +13,7 @@ from tshistory_xl.blueprint import blueprint as excel
 from tshistory_refinery import http, blueprint
 
 
-def make_app(dburi, sources=None, editor_callback=None, more_sections=None):
+def make_app(dburi, sources=None, more_sections=None):
     tsa = timeseries(dburi, sources=sources)
     app = Flask('refinery')
     engine = create_engine(dburi)
@@ -43,8 +43,7 @@ def make_app(dburi, sources=None, editor_callback=None, more_sections=None):
         app,
         tsa,
         has_permission=has_permission,
-        request_pathname_prefix='/',
-        additionnal_info=editor_callback
+        request_pathname_prefix='/'
     )
 
     app.register_blueprint(
