@@ -7,22 +7,16 @@ from tsview.history import historic
 from tsview.editor import editor
 from rework_ui.blueprint import reworkui
 
+from tshistory.api import timeseries
 from tshistory_xl.blueprint import blueprint as excel
 
 from tshistory_refinery import http, blueprint
 
 
-def make_app(config, tsa, editor_callback=None, more_sections=None):
+def make_app(dburi, sources=None, editor_callback=None, more_sections=None):
+    tsa = timeseries(dburi, sources=sources)
     app = Flask('refinery')
-    dburi = config['db']['uri']
     engine = create_engine(dburi)
-
-    try:
-        # in the near future we want to completely
-        # get rid of this
-        segment = config['nginx']['segment']
-    except:
-        segment = '/'
 
     def has_permission(perm):
         return True
@@ -43,13 +37,13 @@ def make_app(config, tsa, editor_callback=None, more_sections=None):
     historic(
         app,
         tsa,
-        request_pathname_prefix=segment
+        request_pathname_prefix='/'
     )
     editor(
         app,
         tsa,
         has_permission=has_permission,
-        request_pathname_prefix=segment,
+        request_pathname_prefix='/',
         additionnal_info=editor_callback
     )
 

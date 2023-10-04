@@ -1,4 +1,5 @@
-from tshistory_refinery import helper
+from tshistory.util import config
+
 from tshistory_refinery.webapi import make_app
 
 
@@ -20,7 +21,7 @@ class ReverseProxied(object):
         return self.app(environ, start_response)
 
 
-config = helper.config()
-tsa = helper.apimaker(config)
-app = make_app(config, tsa)
+cfg = config()
+dburi = next(iter(cfg['dburi'].values()))
+app = make_app(dburi)
 app.wsgi_app = ReverseProxied(app.wsgi_app)

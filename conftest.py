@@ -10,7 +10,6 @@ from rework import api as rapi
 
 from tshistory.api import timeseries
 from tshistory_refinery import (
-    helper,
     schema,
     tsio,
     webapi,
@@ -76,33 +75,16 @@ class NonSuckingWebTester(webtest.TestApp):
             # raise <- default behaviour on 4xx is silly
 
 
-BASECONFIG = {
-    'tasks': {'hostid': 'http://this'},
-    'nginx': {'segment': ''},
-    'security': {
-        'read': 'anything-goes',
-        'write': 'anython-goes'
-    },
-}
-
-APP = None
-
-
-def webapp(engine):
-    global APP
-    if APP is not None:
-        return APP
-    BASECONFIG['db'] = {'uri': str(engine.url)}
-    BASECONFIG['sources'] = {
-        'remote': f'{engine.url},remote'
-    }
-    APP = webapi.make_app(BASECONFIG, helper.apimaker(BASECONFIG))
-    return APP
-
-
 @pytest.fixture(scope='session')
 def client(engine):
-    return NonSuckingWebTester(webapp(engine))
+    return NonSuckingWebTester(
+        webapi.make_app(
+            str(engine.url),
+            sources={
+                'remote': (f'{engine.url}', 'remote')
+            }
+        )
+    )
 
 
 @pytest.fixture(scope='session')
