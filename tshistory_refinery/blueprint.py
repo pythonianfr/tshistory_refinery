@@ -89,8 +89,9 @@ def refinery_bp(tsa, more_sections=None):
                 'Edit the formula cache': url_for('tsview.formulacache'),
                 'Formula operators documentation': url_for('tsview.formula_operators'),
             },
-            'Tasks': {
-                'Monitoring': url_for('reworkui.home')
+            'Monitoring': {
+                'Tasks': url_for('reworkui.home'),
+                'Series': url_for('tswatch.watchseries')
             }
         }
 
