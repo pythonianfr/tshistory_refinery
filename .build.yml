@@ -5,6 +5,7 @@ packages:
   - postgresql
   - emacs-nox
 sources:
+  - hg+ssh://hg@hg.sr.ht/~pythonian/dbcache
   - hg+ssh://hg@hg.sr.ht/~pythonian/tshistory
   - hg+ssh://hg@hg.sr.ht/~pythonian/tshistory_supervision
   - hg+ssh://hg@hg.sr.ht/~pythonian/tshistory_formula
@@ -20,6 +21,7 @@ tasks:
       pip3 install numpy==1.23.4
       pip3 install pip --upgrade
       pip install tox wheel setuptools webtest pytest_sa_pg pystuck --quiet
+      pip install -e dbcache --prefer-binary
       pip install -e tshistory --prefer-binary
       pip install -e tshistory_supervision --prefer-binary
       pip install -e tshistory_formula --prefer-binary
