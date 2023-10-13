@@ -25,13 +25,15 @@ def setup_tasks(db_uri):
     from tshistory_refinery import tasks  # make them available at freeze time  # noqa: F401
     dburi = find_dburi(db_uri)
     engine = create_engine(dburi)
-    with engine.begin() as cn:
-        cn.execute(
-            "delete from rework.operation "
-            "where path like '%%tshistory_refinery%%'"
-        )
 
-    api.freeze_operations(engine)
+    with cache.suspended_policies(engine):
+        with engine.begin() as cn:
+            cn.execute(
+                "delete from rework.operation "
+                "where path like '%%tshistory_refinery%%'"
+            )
+
+        api.freeze_operations(engine)
 
 
 @click.command('refresh-cache')
