@@ -2,6 +2,8 @@ from flask import Flask
 
 from sqlalchemy import create_engine
 
+from dbcache.http import kvstore_httpapi
+from dbcache.api import kvstore
 from tsview.blueprint import tsview
 from tsview.history import historic
 from tsview.editor import editor
@@ -22,12 +24,15 @@ def make_app(dburi, sources=None, more_sections=None):
     def has_permission(perm):
         return True
 
+    # tsview
     app.register_blueprint(
         tsview(
             tsa,
             has_permission=has_permission
         )
     )
+
+    # rework-ui
     app.register_blueprint(
         reworkui(
             engine,
@@ -35,11 +40,15 @@ def make_app(dburi, sources=None, more_sections=None):
         ),
         url_prefix='/tasks'
     )
+
+    # history (tsview)
     historic(
         app,
         tsa,
         request_pathname_prefix='/'
     )
+
+    # editor (tsview)
     editor(
         app,
         tsa,
@@ -47,20 +56,38 @@ def make_app(dburi, sources=None, more_sections=None):
         request_pathname_prefix='/'
     )
 
+    # tswatch
     app.register_blueprint(
         tswatch(tsa),
         url_prefix='/tswatch',
     )
 
+    # excel
+    app.register_blueprint(
+        excel(tsa)
+    )
+
+    # dbcache
+    app.register_blueprint(
+        kvstore_httpapi(
+            dburi,
+            {
+                'tswatch': kvstore(dburi),
+                'dashboards': kvstore(dburi),
+                'balances': kvstore(dburi)
+             },
+            {}  # no vkvstore yet
+        ).bp,
+        url_prefix='/stores'
+    )
+
+    # refinery api
     app.register_blueprint(
         http.refinery_httpapi(tsa).bp,
         url_prefix='/api'
     )
 
-    app.register_blueprint(
-        excel(tsa)
-    )
-
+    # refinery web ui
     app.register_blueprint(
         blueprint.refinery_bp(
             tsa,
