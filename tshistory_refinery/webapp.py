@@ -16,6 +16,25 @@ from tswatch.webapp import make_blueprint as tswatch
 from tshistory_refinery import http, blueprint
 
 
+# mix refinery http stuff with dbcache stores api
+
+class final_http(http.refinery_httpapi,
+                 kvstore_httpapi):
+
+
+    def __init__(self, tsa, uri, kvstore_apimap, vkvstore_apimap):
+        http.refinery_httpapi.__init__(
+            self,
+            tsa
+        )
+        kvstore_httpapi.__init__(
+            self,
+            uri,
+            kvstore_apimap,
+            vkvstore_apimap
+        )
+
+
 def make_app(dburi, sources=None, more_sections=None):
     tsa = timeseries(dburi, sources=sources)
     app = Flask('refinery')
@@ -67,23 +86,18 @@ def make_app(dburi, sources=None, more_sections=None):
         excel(tsa)
     )
 
-    # dbcache
+    # refinery api
     app.register_blueprint(
-        kvstore_httpapi(
+        final_http(
+            tsa,
             dburi,
             {
-                'tswatch': kvstore(dburi),
-                'dashboards': kvstore(dburi),
-                'balances': kvstore(dburi)
+                'tswatch': kvstore(dburi, 'tswatch'),
+                'dashboards': kvstore(dburi, 'dashboards'),
+                'balances': kvstore(dburi, 'balances')
              },
             {}  # no vkvstore yet
         ).bp,
-        url_prefix='/stores'
-    )
-
-    # refinery api
-    app.register_blueprint(
-        http.refinery_httpapi(tsa).bp,
         url_prefix='/api'
     )
 
