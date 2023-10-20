@@ -35,8 +35,16 @@ class final_http(http.refinery_httpapi,
         )
 
 
-def make_app(dburi, sources=None, more_sections=None):
-    tsa = timeseries(dburi, sources=sources)
+def make_app(dburi=None, sources=None, more_sections=None):
+    if dburi:
+        # that will typically for the tests
+        # or someone doing something fancy
+        tsa = timeseries(dburi, sources=sources)
+    else:
+        # this will take everything from `tshistory.cfg`
+        tsa = timeseries()
+        dburi = str(tsa.engine.url)
+
     app = Flask('refinery')
     engine = create_engine(dburi)
 
