@@ -745,7 +745,7 @@ def test_rename_delete(engine, tsa):
         engine,
         tsa,
         'over-ground-2',
-        final_revdate=pd.Timestamp('2022-1-1', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
     )
 
     assert tsh.cache.exists(engine, 'over-ground-2')
@@ -1244,7 +1244,7 @@ def test_always_live_in_the_deep_past(engine, tsa):
         engine,
         tsa,
         'f-deep-fried',
-        final_revdate=pd.Timestamp('2022-3-1', tz='UTC')
+        final_revdate=pd.Timestamp('2022-3-2', tz='UTC')
     )
     cache.set_policy_ready(engine, 'p-deep-fried', True, tsa.tsh.namespace)
 
@@ -1698,7 +1698,7 @@ def test_refresh_using_middle_cache(engine, tsa):
         engine,
         tsa,
         'cache-1rev-middle',
-        final_revdate=pd.Timestamp('2022-1-1', tz='UTC')
+        final_revdate=pd.Timestamp('2022-1-1 00:00:01', tz='UTC')
     )
 
     assert len(tsa.get('cache-1rev-middle')) == 1
