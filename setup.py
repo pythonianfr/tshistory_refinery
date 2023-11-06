@@ -25,7 +25,7 @@ setup(name='tshistory_refinery',
           'requests',
           'pml',
           'pygments',
-          'croniter',
+          'python-icron',
       ],
       extras_require={
           'doc': [

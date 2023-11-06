@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from functools import cmp_to_key
 import traceback
 
-from croniter import (
+from icron import (
     croniter,
     croniter_range
 )
