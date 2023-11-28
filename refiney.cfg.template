@@ -1,9 +1,0 @@
-[db]
-uri = postgres://localhost/mydb
-
-[sources]
-# all entries optional
-localsourcea = postgres://localhost/otherdb, tsh
-localsourceb = postgres://localhost/otherdb, b-namespace
-remotesource = https://remotesource/api, b-namespace
-
