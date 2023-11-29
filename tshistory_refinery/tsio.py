@@ -124,6 +124,8 @@ class timeseries(xlts):
     def insertion_dates(self, cn, name,
                         from_insertion_date=None,
                         to_insertion_date=None,
+                        from_value_date=None,
+                        to_value_date=None,
                         nocache=False,
                         **kw):
         if self.type(cn, name) != 'formula':
@@ -131,6 +133,8 @@ class timeseries(xlts):
                 cn, name,
                 from_insertion_date=from_insertion_date,
                 to_insertion_date=to_insertion_date,
+                from_value_date=from_value_date,
+                to_value_date=to_value_date,
                 **kw
             )
 
@@ -141,16 +145,20 @@ class timeseries(xlts):
                     cn, name,
                     from_insertion_date=from_insertion_date,
                     to_insertion_date=to_insertion_date,
+                    from_value_date=from_value_date,
+                    to_value_date=to_value_date,
                     **kw
                 )
                 # some casuistry to complete idates to the left
                 # using the uncached formula
                 if not idates:
-                    # no choice but to delegate
+                    # no choice but to delegate to the non-cached world
                     return super().insertion_dates(
                         cn, name,
                         from_insertion_date=from_insertion_date,
                         to_insertion_date=to_insertion_date,
+                        from_value_date=from_value_date,
+                        to_value_date=to_value_date,
                         nocache=True,
                         **kw
                     )
@@ -159,11 +167,13 @@ class timeseries(xlts):
                     # nothing more to collect
                     return idates
 
-                # complete to the left
+                # complete to the left (with help of the non-cached world)
                 leftidates = super().insertion_dates(
                     cn, name,
                     from_insertion_date=from_insertion_date,
                     to_insertion_date=idates[0],
+                    from_value_date=from_value_date,
+                    to_value_date=to_value_date,
                     nocache=True,
                     **kw
                 )
@@ -173,59 +183,19 @@ class timeseries(xlts):
 
                 return idates
 
+        # the nocache argument must be carried
+        # upstream because it is perfectly possible
+        # to hit another cached formula there
+        # and we want to propagate this all the way up
         return super().insertion_dates(
             cn, name,
             from_insertion_date=from_insertion_date,
             to_insertion_date=to_insertion_date,
+            from_value_date=from_value_date,
+            to_value_date=to_value_date,
+            # explained in the above comment
             nocache=nocache,
             **kw
-        )
-
-    @tx
-    def history(self, cn, name,
-                nocache=False,
-                **kw):
-        if self.type(cn, name) != 'formula':
-            return super().history(
-                cn, name, **kw
-            )
-
-        if not nocache and self.cache.exists(cn, name):
-            ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
-            if ready:
-                # some casuistry to complete idates to the left
-                # using the uncached formula
-                hist = self.cache.history(cn, name, **kw)
-                if not hist:
-                    # nothing in the cache, let's delegate
-                    return super().history(
-                        cn, name,
-                        nocache=True,
-                        **kw
-                    )
-                fid  = kw.pop('from_insertion_date', None)
-                first_key = next(iter(hist.keys()))
-                if fid and fid >= first_key:
-                    # nothing more to collect
-                    return hist
-
-                # complete to the left
-                kw.pop('to_insertion_date', None)
-                lefthist = super().history(
-                    cn, name,
-                    nocache=True,
-                    from_insertion_date=fid,
-                    to_insertion_date=first_key,
-                    **kw
-                )
-                if first_key in lefthist:
-                    # avoid a duplicate
-                    lefthist.pop(first_key)
-                lefthist.update(hist)
-                return lefthist
-
-        return super().history(
-            cn, name, nocache=nocache, **kw
         )
 
     @tx
