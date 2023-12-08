@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'tshistory_refinery'
-copyright = '2022, Pythonian'
+copyright = '2023, Pythonian'
 author = 'Pythonian'
-release = '0.6.0'
+release = '0.8.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
