@@ -3,10 +3,10 @@ import json
 from rework.api import task
 import rework.io as rio
 
+from tshistory.api import timeseries
 from tshistory.util import objects
 from tshistory_refinery import (
     cache,
-    helper,
     scrap
 )
 
@@ -21,9 +21,7 @@ from tshistory_refinery import (
     )
 )
 def refresh_formula_cache(task):
-    tsa = helper.apimaker(
-        helper.config()
-    )
+    tsa = timeseries()
     policy = task.input['policy']
     initial = task.input['initial']
 
@@ -38,9 +36,7 @@ def refresh_formula_cache(task):
     )
 )
 def refresh_formula_cache_now(task):
-    tsa = helper.apimaker(
-        helper.config()
-    )
+    tsa = timeseries()
     policy = task.input['policy']
 
     with task.capturelogs(std=True):
@@ -58,12 +54,7 @@ def refresh_formula_cache_now(task):
       )
 )
 def fetch_history(task):
-    tsa = helper.apimaker(
-        {
-            'db': {'uri': str(task.engine.url)},
-            'sources': {}
-        }
-    )
+    tsa = timeseries()
     with task.capturelogs(std=True):
         inputs = task.input
         if 'seriesname' not in inputs:
@@ -97,12 +88,7 @@ def fetch_history(task):
       )
 )
 def refresh(task):
-    tsa = helper.apimaker(
-        {
-            'db': {'uri': str(task.engine.url)},
-            'sources': {}
-        }
-    )
+    tsa = timeseries()
     with task.capturelogs(std=True):
         inputs = task.input
         if 'fromdate' not in inputs:
