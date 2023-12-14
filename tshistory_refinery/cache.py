@@ -143,8 +143,7 @@ def schedule_policy(engine, name, namespace='tsh'):
             domain='timeseries',
             rule='0 ' + schedule_rule,
             inputdata={
-                'policy': name,
-                'initial': 0
+                'policy': name
             },
         )
         cn.execute(
@@ -160,8 +159,7 @@ def schedule_policy(engine, name, namespace='tsh'):
         'refresh_formula_cache',
         domain='timeseries',
         inputdata={
-            'policy': name,
-            'initial': 1
+            'policy': name
         },
     )
 
@@ -300,36 +298,6 @@ def unset_policy(cn, series_name, namespace='tsh'):
     )
 
 
-def policy_ready(cn, policyname, namespace='tsh'):
-    """ Return the cache readiness """
-    q = (
-        f'select ready '
-        f'from "{namespace}".cache_policy '
-        f'where name = %(policyname)s'
-    )
-    return cn.execute(
-        q,
-        policyname=policyname
-    ).scalar()
-
-
-def series_policy_ready(cn, series_name, namespace='tsh'):
-    """ Return the cache readiness for a series """
-    q = (
-        f'select cache.ready '
-        f'from "{namespace}".cache_policy as cache, '
-        f'     "{namespace}".cache_policy_series as middle, '
-        f'     "{namespace}".registry as series '
-        f'where cache.id = middle.cache_policy_id and '
-        f'      series_id = series.id and '
-        f'      series.name = %(seriesname)s'
-    )
-    return cn.execute(
-        q,
-        seriesname=series_name
-    ).scalar()
-
-
 def series_ready(cn, series_name, namespace='tsh'):
     """ Return the cache readiness for a series """
     q = (
@@ -343,23 +311,6 @@ def series_ready(cn, series_name, namespace='tsh'):
         q,
         seriesname=series_name
     ).scalar()
-
-
-def set_policy_ready(engine, policy_name, val, namespace='tsh'):
-    """ Mark a cache policy as ready """
-    assert isinstance(val, bool)
-    print('set ready', policy_name, val, namespace)
-    q = (
-        f'update "{namespace}".cache_policy '
-        f'set ready = %(val)s '
-        f'where name = %(name)s'
-    )
-    with engine.begin() as cn:
-        cn.execute(
-            q,
-            name=policy_name,
-            val=val
-        )
 
 
 def _set_series_ready(engine, series_name, val, namespace='tsh'):
@@ -557,6 +508,10 @@ def refresh_series(engine, tsa, name, final_revdate=None):
             return  # that's an odd series, let's bail out
 
         final_revdate = final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC')
+        if initial_revdate >= final_revdate:
+            print('empty interval, nothing to do')
+            return
+
         print('starting range refresh', initial_revdate, '->', final_revdate)
 
         cron_range = croniter_range(
@@ -626,20 +581,34 @@ def refresh_now(engine, tsa, name):
     now = pd.Timestamp.utcnow()
     formula = tsa.formula(name)
     with series_refresh_lock(engine, name, tsh.namespace):
-        from_value_date = eval_moment(
+        known_min_date = tsh.cache.interval(engine, name).left
+        tzaware = tsh.cache.tzaware(engine, name)
+
+        before = eval_moment(
             policy['look_before'],
             {'now': now}
         )
+        if not tzaware:
+            before = before.replace(tzinfo=None)
+
+        from_value_date = min(
+            known_min_date,
+            before
+        )
+
         to_value_date = eval_moment(
             policy['look_after'],
             {'now': now}
         )
 
+        print(f'{from_value_date} -> {to_value_date}')
         ts = tsa.eval_formula(
             formula,
             from_value_date=from_value_date,
             to_value_date=to_value_date,
         )
+
+        print(f'{now} -> {len(ts)} points')
         if len(ts):
             tsh.cache.update(
                 engine,
@@ -649,7 +618,7 @@ def refresh_now(engine, tsa, name):
             )
 
 
-def refresh_policy(tsa, policy, initial, final_revdate=None):
+def refresh_policy(tsa, policy, final_revdate=None):
     tsh = tsa.tsh
     names = policy_series(
         tsa.engine,
@@ -658,16 +627,11 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
     )
 
     print(
-        f'Refreshing cache policy `{policy}` '
-        f'({initial=}) (ns={tsh.namespace})'
+        f'Refreshing cache policy `{policy}` (ns={tsh.namespace})'
     )
     # sort series by dependency order
     # we want the leafs to be computed
     engine = tsa.engine
-
-    if not initial and not policy_ready(engine, policy, namespace=tsh.namespace):
-        print('Cache is not ready and this is not an initial run, stopping now.')
-        return
 
     unames = set()
     # put the uncached serie at the end
@@ -726,9 +690,6 @@ def refresh_policy(tsa, policy, initial, final_revdate=None):
             traceback.print_exc()
             print(f'series `{name}` crashed because {err}')
 
-    set_policy_ready(engine, policy, True, namespace=tsh.namespace)
-    assert policy_ready(engine, policy, namespace=tsh.namespace)
-
     if failed:
         print(
             f'the following series failed to be refreshed: '
@@ -750,9 +711,6 @@ def refresh_policy_now(tsa, policy):
         f'Spot refresh of cache policy `{policy}` '
         f'(ns={tsh.namespace}) series: {names}'
     )
-    if not policy_ready(engine, policy, namespace=tsh.namespace):
-        print('Cache is not ready and this is not an initial run, stopping now.')
-        return
 
     unames = set()
     # put the uncached serie at the end

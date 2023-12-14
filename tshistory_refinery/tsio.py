@@ -58,10 +58,6 @@ class timeseries(xlts):
         if nocache or not self.cache.exists(cn, name):
             return super().get(cn, name, nocache=nocache, live=live, **kw)
 
-        ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
-        if not ready:
-            return super().get(cn, name, nocache=nocache, live=live, **kw)
-
         cached = self.cache.get(cn, name, **kw)
         if len(cached):
             if live:
@@ -139,49 +135,47 @@ class timeseries(xlts):
             )
 
         if not nocache and self.cache.exists(cn, name):
-            ready = cache.series_policy_ready(cn, name, namespace=self.namespace)
-            if ready:
-                idates = self.cache.insertion_dates(
+            idates = self.cache.insertion_dates(
+                cn, name,
+                from_insertion_date=from_insertion_date,
+                to_insertion_date=to_insertion_date,
+                from_value_date=from_value_date,
+                to_value_date=to_value_date,
+                **kw
+            )
+            # some casuistry to complete idates to the left
+            # using the uncached formula
+            if not idates:
+                # no choice but to delegate to the non-cached world
+                return super().insertion_dates(
                     cn, name,
                     from_insertion_date=from_insertion_date,
                     to_insertion_date=to_insertion_date,
                     from_value_date=from_value_date,
                     to_value_date=to_value_date,
-                    **kw
-                )
-                # some casuistry to complete idates to the left
-                # using the uncached formula
-                if not idates:
-                    # no choice but to delegate to the non-cached world
-                    return super().insertion_dates(
-                        cn, name,
-                        from_insertion_date=from_insertion_date,
-                        to_insertion_date=to_insertion_date,
-                        from_value_date=from_value_date,
-                        to_value_date=to_value_date,
-                        nocache=True,
-                        **kw
-                    )
-
-                if from_insertion_date and from_insertion_date >= idates[0]:
-                    # nothing more to collect
-                    return idates
-
-                # complete to the left (with help of the non-cached world)
-                leftidates = super().insertion_dates(
-                    cn, name,
-                    from_insertion_date=from_insertion_date,
-                    to_insertion_date=idates[0],
-                    from_value_date=from_value_date,
-                    to_value_date=to_value_date,
                     nocache=True,
                     **kw
                 )
-                if leftidates:
-                    # avoid a duplicate
-                    return sorted(set(leftidates + idates))
 
+            if from_insertion_date and from_insertion_date >= idates[0]:
+                # nothing more to collect
                 return idates
+
+            # complete to the left (with help of the non-cached world)
+            leftidates = super().insertion_dates(
+                cn, name,
+                from_insertion_date=from_insertion_date,
+                to_insertion_date=idates[0],
+                from_value_date=from_value_date,
+                to_value_date=to_value_date,
+                nocache=True,
+                **kw
+            )
+            if leftidates:
+                # avoid a duplicate
+                return sorted(set(leftidates + idates))
+
+            return idates
 
         # the nocache argument must be carried
         # upstream because it is perfectly possible

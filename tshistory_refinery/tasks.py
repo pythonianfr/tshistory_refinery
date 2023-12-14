@@ -17,16 +17,14 @@ from tshistory_refinery import (
     domain='timeseries',
     inputs=(
         rio.string('policy', required=True),
-        rio.number('initial', required=True)
     )
 )
 def refresh_formula_cache(task):
     tsa = timeseries()
     policy = task.input['policy']
-    initial = task.input['initial']
 
     with task.capturelogs(std=True):
-        cache.refresh_policy(tsa, policy, initial)
+        cache.refresh_policy(tsa, policy)
 
 
 @task(

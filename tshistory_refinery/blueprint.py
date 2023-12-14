@@ -275,7 +275,7 @@ def refinery_bp(tsa, more_sections=None):
     @bp.route('/policies')
     def cache_policies():
         q = select(
-            'name', 'ready',
+            'name',
             'initial_revdate',
             'look_before', 'look_after',
             'revdate_rule', 'schedule_rule'

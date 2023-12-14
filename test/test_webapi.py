@@ -198,7 +198,6 @@ def test_get_policies(client, engine):
          'look_after': '(shifted (today) #:days -10)',
          'look_before': '(shifted (today) #:days 15)',
          'name': 'pol-1',
-         'ready': False,
          'revdate_rule': '0 1 * * *',
          'schedule_rule': '0 8-18 * * *'}
     ]
@@ -265,7 +264,6 @@ def test_create_policies(client, engine):
          'look_after': '(shifted (today) #:days -10)',
          'look_before': '(shifted (today) #:days 15)',
          'name': 'web-pol',
-         'ready': False,
          'revdate_rule': '0 1 * * *',
          'schedule_rule': '0 8-18 * * *'
          }
@@ -482,7 +480,6 @@ def test_edit_policy(client, engine):
          'look_after': '(shifted (today) #:days -15)',
          'look_before': '(shifted (today) #:days 20)',
          'name': 'test-edit',
-         'ready': False,
          'revdate_rule': '10 1 * * *',
          'schedule_rule': '10 8-18 * * *'
          }
