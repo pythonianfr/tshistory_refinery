@@ -12,6 +12,8 @@ from tshistory.testutil import (
 )
 from tshistory_formula.interpreter import jsontypes
 
+from tshistory_refinery.tsio import infer_freq
+
 
 DATADIR = Path(__file__).parent / 'data'
 
@@ -400,6 +402,11 @@ def test_revision_date(engine, tsh):
                  revision_date=datetime(2014, 1, 1, 18, 43, 23))
 
     assert len(ts) == 0
+
+    idates = tsh.insertion_dates(engine, 'ts_through_time')
+    delta, q = infer_freq(idates)
+    assert delta == pd.Timedelta(days=1)
+    assert q == 1
 
 
 def test_before_first_insertion(engine, tsh):

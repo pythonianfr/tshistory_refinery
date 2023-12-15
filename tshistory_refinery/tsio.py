@@ -31,6 +31,17 @@ class name_stopper:
         return False
 
 
+def infer_freq(idates):
+    assert len(idates) > 1
+    index = pd.Series(idates)
+    deltas = (index - index.shift(1)).dropna()
+    freq = deltas.median()
+
+    conform_intervals = sum(deltas == freq)
+    return freq, conform_intervals / len(deltas)
+
+
+
 class timeseries(xlts):
     index = 3
 
