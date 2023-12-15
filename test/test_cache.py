@@ -1,4 +1,5 @@
 from functools import cmp_to_key
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -352,7 +353,9 @@ insertion_date             value_date
 """, tsh.cache.history(engine, 'over-ground-1'))
 
     # get: cache + no live
-    assert_df("""
+    now = pd.Timestamp('2022-1-3', tz='utc')
+    with patch('tshistory_refinery.tsio.utcnow', return_value=now):
+        assert_df("""
 2022-01-01 00:00:00+00:00    1.0
 2022-01-02 00:00:00+00:00    1.0
 2022-01-03 00:00:00+00:00    1.0
@@ -360,8 +363,8 @@ insertion_date             value_date
 2022-01-05 00:00:00+00:00    3.0
 """, tsa.get('over-ground-1'))
 
-    # indirect get: cache + no live
-    assert_df("""
+        # indirect get: cache + no live
+        assert_df("""
 2022-01-01 00:00:00+00:00    1.0
 2022-01-02 00:00:00+00:00    1.0
 2022-01-03 00:00:00+00:00    1.0
@@ -568,7 +571,9 @@ insertion_date             value_date
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
 
-    assert_df("""
+    now = pd.Timestamp('2022-1-3', tz='utc')
+    with patch('tshistory_refinery.tsio.utcnow', return_value=now):
+        assert_df("""
 2022-01-01 00:00:00+00:00    2.0
 2022-01-02 00:00:00+00:00    2.0
 2022-01-03 00:00:00+00:00    2.0
@@ -613,7 +618,9 @@ insertion_date             value_date
 
     # at this point we have a weird mix in the cache
     # but hey, that's life
-    assert_hist("""
+    now = pd.Timestamp('2022-1-3', tz='utc')
+    with patch('tshistory_refinery.tsio.utcnow', return_value=now):
+        assert_hist("""
 insertion_date             value_date               
 2022-01-01 00:00:00+00:00  2022-01-01 00:00:00+00:00    2.0
                            2022-01-02 00:00:00+00:00    3.0
@@ -1521,7 +1528,9 @@ def test_cache_revdate(engine, tsa):
 """, tsh.get(engine, 'formula-revdate', nocache=True))
 
     # with nocache=False, we get the cached series
-    assert_df("""
+    now = pd.Timestamp('2022-1-3', tz='utc')
+    with patch('tshistory_refinery.tsio.utcnow', return_value=now):
+        assert_df("""
 2022-01-01    11.0
 2022-01-02    11.0
 2022-01-03    11.0

@@ -31,6 +31,10 @@ class name_stopper:
         return False
 
 
+def utcnow():
+    return pd.Timestamp.utcnow()
+
+
 def infer_freq(idates):
     assert len(idates) > 1
     index = pd.Series(idates)
@@ -69,14 +73,29 @@ class timeseries(xlts):
         if nocache or not self.cache.exists(cn, name):
             return super().get(cn, name, nocache=nocache, live=live, **kw)
 
+        # there is a cache and we want hard to use it ...
+        # what if it is stale or old or just initially building ?
+        # we try an heuristics based on regularity of the cache insertion dates
+        # -> if they are regular and we are missing at least two revisions
+        # we do a live query ...
+
+        # asking all cache idates is not a too expensive operation at
+        # this point
+        cacheidates = self.cache.insertion_dates(cn, name)
+        if len(cacheidates) > 1:
+            freq, _ = infer_freq(cacheidates)
+            now = utcnow()
+            lag = now - cacheidates[-1]
+            live = lag / freq > 2
+
         cached = self.cache.get(cn, name, **kw)
         if len(cached):
             if live:
-                return self._get_live(cn, name, cached, kw)
+                return self._get_live(cn, name, cached, cacheidates, kw)
 
             return cached
 
-        # cached is empty -- here we see if we ware asked some old uncached
+        # cached is empty -- here we see if we are asked some old uncached
         # revision and serve it if available
 
         revdate = kw.get('revision_date')
@@ -85,11 +104,7 @@ class timeseries(xlts):
 
         return super().get(cn, name, nocache=nocache, live=live, **kw)
 
-    def _get_live(self, cn, name, cached, kw):
-        idates = self.cache.insertion_dates(
-            cn, name,
-            from_insertion_date=kw.get('revision_date')
-        )
+    def _get_live(self, cn, name, cached, idates, kw):
         tzaware = self.tzaware(cn, name)
 
         # save for later use
@@ -106,7 +121,7 @@ class timeseries(xlts):
         now = (
             kw.get('revision_date') or
             (idates and idates[-1]) or
-            pd.Timestamp.utcnow()
+            utcnow()
         )
         # we use the look before date span from the cache policy
         kw['from_value_date'] = cache.eval_moment(

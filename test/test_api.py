@@ -1,5 +1,6 @@
 from datetime import datetime
 from functools import partial
+from unittest.mock import patch
 
 import pytest
 import pandas as pd
@@ -871,14 +872,27 @@ insertion_date             value_date
         final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
     )
 
-    # get: cache (not live patching)
-    assert_df("""
+    now = pd.Timestamp('2022-1-3', tz='utc')
+    with patch('tshistory_refinery.tsio.utcnow', return_value=now):
+        # get: cache (not live patching)
+        assert_df("""
 2022-01-01 00:00:00+00:00    1.0
 2022-01-02 00:00:00+00:00    1.0
 2022-01-03 00:00:00+00:00    1.0
 2022-01-04 00:00:00+00:00    2.0
 2022-01-05 00:00:00+00:00    3.0
 """, tsx.get('over-ground-1'))
+
+    # get: cache, forced live patching
+    assert_df("""
+2022-01-01 00:00:00+00:00    1.0
+2022-01-02 00:00:00+00:00    1.0
+2022-01-03 00:00:00+00:00    1.0
+2022-01-04 00:00:00+00:00    1.0
+2022-01-05 00:00:00+00:00    1.0
+2022-01-06 00:00:00+00:00    2.0
+2022-01-07 00:00:00+00:00    3.0
+""", tsx.get('over-ground-1', revision_date=pd.Timestamp('2022-1-5')))
 
     # get: cache + live patching
     assert_df("""
