@@ -9,7 +9,7 @@ from tshistory_refinery import __version__
 
 class Migrator(_Migrator):
     _order = 2
-    _known_version = __version__
+    _package_version = __version__
     _package = 'tshistory-refinery'
 
     def initial_migration(self):
