@@ -21,7 +21,6 @@ from tshistory_refinery import http, blueprint
 class final_http(http.refinery_httpapi,
                  kvstore_httpapi):
 
-
     def __init__(self, tsa, uri, kvstore_apimap, vkvstore_apimap):
         http.refinery_httpapi.__init__(
             self,
@@ -35,7 +34,7 @@ class final_http(http.refinery_httpapi,
         )
 
 
-def make_app(dburi=None, sources=None, more_sections=None):
+def make_app(dburi=None, sources=None, final_http=None, more_sections=None):
     if dburi:
         # that will typically for the tests
         # or someone doing something fancy

@@ -82,7 +82,8 @@ def client(engine):
             str(engine.url),
             sources={
                 'remote': (f'{engine.url}', 'remote')
-            }
+            },
+            final_http=webapp.final_http
         )
     )
 
