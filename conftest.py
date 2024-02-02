@@ -9,6 +9,7 @@ from pytest_sa_pg import db
 from rework import api as rapi
 
 from tshistory.api import timeseries
+from tshistory.http.util import nosecurity
 from tshistory_refinery import (
     schema,
     tsio,
@@ -78,12 +79,14 @@ class NonSuckingWebTester(webtest.TestApp):
 @pytest.fixture(scope='session')
 def client(engine):
     return NonSuckingWebTester(
-        webapp.make_app(
-            str(engine.url),
-            sources={
-                'remote': (f'{engine.url}', 'remote')
-            },
-            final_http=webapp.final_http
+        nosecurity(
+            webapp.make_app(
+                str(engine.url),
+                sources={
+                    'remote': (f'{engine.url}', 'remote')
+                },
+                final_http=webapp.final_http
+            )
         )
     )
 

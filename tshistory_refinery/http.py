@@ -6,7 +6,10 @@ from flask_restx import (
     reqparse
 )
 
-from tshistory.http.util import onerror
+from tshistory.http.util import (
+    onerror,
+    required_roles
+)
 from tshistory.http.client import unwraperror
 from tshistory_xl.http import (
     xl_httpapi,
@@ -129,6 +132,7 @@ class refinery_httpapi(xl_httpapi):
 
             @api.expect(newcp)
             @onerror
+            @required_roles('admin', 'rw')
             def put(self):
                 args = newcp.parse_args()
                 try:
@@ -148,6 +152,7 @@ class refinery_httpapi(xl_httpapi):
 
             @api.expect(newcp)
             @onerror
+            @required_roles('admin', 'rw')
             def patch(self):
                 args = newcp.parse_args()
                 try:
@@ -166,6 +171,7 @@ class refinery_httpapi(xl_httpapi):
 
             @api.expect(deletecp)
             @onerror
+            @required_roles('admin', 'rw')
             def delete(self):
                 args = deletecp.parse_args()
                 tsa.delete_cache_policy(
@@ -179,6 +185,7 @@ class refinery_httpapi(xl_httpapi):
 
             @api.expect(mapcp)
             @onerror
+            @required_roles('admin', 'rw')
             def put(self):
                 args = mapcp.parse_args()
                 tsa.set_cache_policy(
@@ -190,6 +197,7 @@ class refinery_httpapi(xl_httpapi):
 
             @api.expect(unmapcp)
             @onerror
+            @required_roles('admin', 'rw')
             def delete(self):
                 args = unmapcp.parse_args()
                 tsa.unset_cache_policy(
@@ -203,6 +211,7 @@ class refinery_httpapi(xl_httpapi):
 
             @api.expect(cacheable)
             @onerror
+            @required_roles('admin', 'rw', 'ro')
             def get(self):
                 args = cacheable.parse_args()
                 return tsa.cache_free_series(args.allsources)
@@ -211,6 +220,7 @@ class refinery_httpapi(xl_httpapi):
         class cache_policies(Resource):
 
             @onerror
+            @required_roles('admin', 'rw', 'ro')
             def get(self):
                 return tsa.cache_policies()
 
@@ -219,6 +229,7 @@ class refinery_httpapi(xl_httpapi):
 
             @api.expect(cp)
             @onerror
+            @required_roles('admin', 'rw', 'ro')
             def get(self):
                 args = cp.parse_args()
                 return tsa.cache_policy_series(args.name)
@@ -228,6 +239,7 @@ class refinery_httpapi(xl_httpapi):
 
             @api.expect(series_policy)
             @onerror
+            @required_roles('admin', 'rw', 'ro')
             def get(self):
                 args = series_policy.parse_args()
                 return tsa.cache_series_policy(args.name)
@@ -237,23 +249,25 @@ class refinery_httpapi(xl_httpapi):
 
             @api.expect(shc)
             @onerror
+            @required_roles('admin', 'rw', 'ro')
             def get(self):
                 args = shc.parse_args()
                 return tsa.has_cache(args.name)
 
             @api.expect(delete_cache)
             @onerror
+            @required_roles('admin', 'rw')
             def delete(self):
                 args = delete_cache.parse_args()
                 tsa.delete_cache(args.name)
                 return '', 204
-
 
         @nsc.route('/refresh-policy-now')
         class refresh_policy_now(Resource):
 
             @api.expect(cp)
             @onerror
+            @required_roles('admin', 'rw')
             def put(self):
                 args = cp.parse_args()
                 tid = tsa.refresh_series_policy_now(args.name)
