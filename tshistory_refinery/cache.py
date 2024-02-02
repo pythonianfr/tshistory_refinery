@@ -436,7 +436,7 @@ def has_today(formula):
 
     def _findtoday(tree):
         if isinstance(tree, list):
-            if tree[0] == 'today':
+            if tree[0] == 'now':
                 return True
 
             for item in tree[1:]:

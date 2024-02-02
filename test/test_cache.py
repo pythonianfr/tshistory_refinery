@@ -2015,7 +2015,7 @@ def test_cache_slice(tsa):
     formula_name = 'sliced-forecast'
     tsa.register_formula(
         formula_name,
-        f'(slice (series "{series_name}") #:todate (today))',
+        f'(slice (series "{series_name}") #:todate (now))',
     )
     # Define cache policy
     policy_name = 'daily-cached'
