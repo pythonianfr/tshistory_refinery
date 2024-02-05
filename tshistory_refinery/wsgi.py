@@ -1,5 +1,5 @@
 from tshistory_refinery.webapp import (
-    final_http,
+    httpapi,
     make_app
 )
 
@@ -22,5 +22,5 @@ class ReverseProxied(object):
         return self.app(environ, start_response)
 
 
-app = make_app(final_http=final_http)
+app = make_app(httpapi=httpapi)
 app.wsgi_app = ReverseProxied(app.wsgi_app)

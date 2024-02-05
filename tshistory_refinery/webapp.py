@@ -18,8 +18,8 @@ from tshistory_refinery import http, blueprint
 
 # mix refinery http stuff with dbcache stores api
 
-class final_http(http.refinery_httpapi,
-                 kvstore_httpapi):
+class httpapi(http.refinery_httpapi,
+              kvstore_httpapi):
 
     def __init__(self, tsa, uri, kvstore_apimap, vkvstore_apimap):
         http.refinery_httpapi.__init__(
@@ -34,7 +34,7 @@ class final_http(http.refinery_httpapi,
         )
 
 
-def make_app(dburi=None, sources=None, final_http=None, more_sections=None):
+def make_app(dburi=None, sources=None, httpapi=None, more_sections=None):
     if dburi:
         # that will typically for the tests
         # or someone doing something fancy
@@ -95,7 +95,7 @@ def make_app(dburi=None, sources=None, final_http=None, more_sections=None):
 
     # refinery api
     app.register_blueprint(
-        final_http(
+        httpapi(
             tsa,
             dburi,
             {
