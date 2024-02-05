@@ -47,23 +47,14 @@ def make_app(dburi=None, sources=None, httpapi=None, more_sections=None):
     app = Flask('refinery')
     engine = create_engine(dburi)
 
-    def has_permission(perm):
-        return True
-
     # tsview
     app.register_blueprint(
-        tsview(
-            tsa,
-            has_permission=has_permission
-        )
+        tsview(tsa)
     )
 
     # rework-ui
     app.register_blueprint(
-        reworkui(
-            engine,
-            has_permission=has_permission
-        ),
+        reworkui(engine),
         url_prefix='/tasks'
     )
 
@@ -78,7 +69,6 @@ def make_app(dburi=None, sources=None, httpapi=None, more_sections=None):
     editor(
         app,
         tsa,
-        has_permission=has_permission,
         request_pathname_prefix='/'
     )
 
