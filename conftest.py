@@ -80,13 +80,12 @@ class NonSuckingWebTester(webtest.TestApp):
 def client(engine):
     return NonSuckingWebTester(
         nosecurity(
-            webapp.make_app(
+            webapp.AppMaker(
                 str(engine.url),
                 sources={
                     'remote': (f'{engine.url}', 'remote')
-                },
-                httpapi=webapp.httpapi
-            )
+                }
+            ).app()
         )
     )
 

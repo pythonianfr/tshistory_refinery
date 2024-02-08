@@ -1,5 +1,4 @@
 import io
-import json
 from pathlib import Path
 
 import pandas as pd
@@ -485,32 +484,3 @@ def test_edit_policy(client, engine):
          }
     ]
 
-
-# stores
-
-def test_basic_kvstore(client, engine):
-    res = client.get('/api/kvstore/keys', params={'namespace': 'tswatch'})
-    assert res.json == [
-        'catalog-models',
-        'catalog-scrapers',
-        'namespaces'
-    ]
-
-    res = client.get('/api/kvstore/keys', params={'namespace': 'dashboards'})
-    assert res.json == []
-
-    res = client.get('/api/kvstore/keys', params={'namespace': 'balances'})
-    assert res.json == []
-
-    res = client.put(
-        '/api/kvstore/item',
-        params={
-            'namespace': 'tswatch',
-            'key': 'test',
-            'value': json.dumps('Hello')
-        }
-    )
-    assert res.status_code == 204
-
-    res = client.get('/api/kvstore/all', params={'namespace': 'tswatch'})
-    assert res.json['test'] == 'Hello'

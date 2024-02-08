@@ -11,7 +11,6 @@ from rework_ui.blueprint import reworkui
 
 from tshistory.api import timeseries
 from tshistory_xl.blueprint import blueprint as excel
-from tswatch.webapp import make_blueprint as tswatch
 
 from tshistory_refinery import http, blueprint
 
@@ -34,76 +33,77 @@ class httpapi(http.refinery_httpapi,
         )
 
 
-def make_app(dburi=None, sources=None, httpapi=None, more_sections=None):
-    if dburi:
-        # that will typically for the tests
-        # or someone doing something fancy
-        tsa = timeseries(dburi, sources=sources)
-    else:
-        # this will take everything from `tshistory.cfg`
-        tsa = timeseries()
-        dburi = str(tsa.engine.url)
+class AppMaker:
 
-    app = Flask('refinery')
-    engine = create_engine(dburi)
+    def __init__(self, dburi=None, sources=None, more_sections=None):
+        if dburi:
+            # that will typically for the tests
+            # or someone doing something fancy
+            self.tsa = timeseries(dburi, sources=sources)
+        else:
+            # this will take everything from `tshistory.cfg`
+            self.tsa = timeseries()
+            dburi = str(self.tsa.engine.url)
 
-    # tsview
-    app.register_blueprint(
-        tsview(tsa)
-    )
+        self.dburi = dburi
+        self.sources = sources
+        self.more_sections = more_sections
+        self.engine = create_engine(dburi)
 
-    # rework-ui
-    app.register_blueprint(
-        reworkui(engine),
-        url_prefix='/tasks'
-    )
+    def app(self):
+        app = Flask('refinery')
+        self.tsview(app)
+        self.reworkui(app)
+        self.excel(app)
+        self.api(app)
+        self.refinery(app)
+        return app
 
-    # history (tsview)
-    historic(
-        app,
-        tsa,
-        request_pathname_prefix='/'
-    )
-
-    # editor (tsview)
-    editor(
-        app,
-        tsa,
-        request_pathname_prefix='/'
-    )
-
-    # tswatch
-    app.register_blueprint(
-        tswatch(tsa),
-        url_prefix='/tswatch',
-    )
-
-    # excel
-    app.register_blueprint(
-        excel(tsa)
-    )
-
-    # refinery api
-    app.register_blueprint(
-        httpapi(
-            tsa,
-            dburi,
-            {
-                'tswatch': kvstore(dburi, 'tswatch'),
-                'dashboards': kvstore(dburi, 'dashboards'),
-                'balances': kvstore(dburi, 'balances')
-             },
-            {}  # no vkvstore yet
-        ).bp,
-        url_prefix='/api'
-    )
-
-    # refinery web ui
-    app.register_blueprint(
-        blueprint.refinery_bp(
-            tsa,
-            more_sections=more_sections
+    def tsview(self, app):
+        app.register_blueprint(
+            tsview(self.tsa)
         )
-    )
+        historic(
+            app,
+            self.tsa,
+            request_pathname_prefix='/'
+        )
+        editor(
+            app,
+            self.tsa,
+            request_pathname_prefix='/'
+        )
 
-    return app
+    def reworkui(self, app):
+        app.register_blueprint(
+            reworkui(self.engine),
+            url_prefix='/tasks'
+        )
+
+    def excel(self, app):
+        app.register_blueprint(
+            excel(self.tsa)
+        )
+
+    def api(self, app):
+        # refinery api
+        app.register_blueprint(
+            httpapi(
+                self.tsa,
+                self.dburi,
+                {
+                    'dashboards': kvstore(self.dburi, 'dashboards'),
+                    'balances': kvstore(self.dburi, 'balances')
+                 },
+                {}  # no vkvstore yet
+            ).bp,
+            url_prefix='/api'
+        )
+
+    def refinery(self, app):
+        app.register_blueprint(
+            blueprint.refinery_bp(
+                self.tsa,
+                more_sections=self.more_sections
+            )
+        )

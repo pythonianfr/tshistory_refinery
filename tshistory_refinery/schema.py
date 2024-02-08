@@ -8,7 +8,6 @@ from rework_ui.schema import init as rework_ui_init
 from tshistory.schema import tsschema
 from tshistory_supervision.schema import supervision_schema
 from tshistory_formula.schema import formula_schema
-from tswatch.utils import tswatch_init
 
 
 CACHE_POLICY = Path(__file__).parent / 'schema.sql'
@@ -23,11 +22,10 @@ class refinery_schema(supervision_schema, formula_schema):
             rework_init(engine, drop=reset)
             rework_ui_init(engine)
 
-        for store_ns in ('tswatch', 'dashboards', 'balances'):
+        for store_ns in ('dashboards', 'balances'):
             stores_schema.init(engine, ns=store_ns, drop=reset)
 
         with engine.begin() as cn:
             cn.execute(sqlfile(CACHE_POLICY, ns=self.namespace))
 
         tsschema(f'{self.namespace}-cache').create(engine)
-        tswatch_init(engine, drop=True)

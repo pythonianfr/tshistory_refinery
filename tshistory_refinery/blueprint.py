@@ -91,7 +91,6 @@ def refinery_bp(tsa, more_sections=None):
             },
             'Monitoring': {
                 'Tasks': url_for('reworkui.home'),
-                'Series': url_for('tswatch.watchseries')
             }
         }
 
