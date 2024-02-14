@@ -24,6 +24,7 @@ from psyl.lisp import (
 
 from sqlhelp import select
 from tshistory_formula import registry
+from tshistory_formula.helper import BadKeyword, validate
 from tsview.util import format_formula as pretty_formula
 from tsview.blueprint import homeurl
 
@@ -137,14 +138,16 @@ def refinery_bp(tsa, more_sections=None):
         errors = defaultdict(list)
         warnings = defaultdict(list)
 
+        ok = set()
+        syntax_error = set()
+        missing = set()
+
         # conflicts with primary series are an error
         primaries = {
             name for name in np.unique(df_formula['name'])
             if tsa.type(name) == 'primary'
                and tsa.exists(name)
         }
-        if primaries:
-            errors['primary'] = sorted(primaries)
 
         # overriding an existing formula yields a warning
         formulas = {
@@ -152,18 +155,11 @@ def refinery_bp(tsa, more_sections=None):
             if tsa.type(name) == 'formula'
                and tsa.exists(name)
         }
-        if formulas:
-            warnings['existing'] = sorted(formulas)
 
-        # formula syntax error detection
-        # and needed series
         uploadset = {
             row.name
             for row in df_formula.itertuples()
         }
-        ok = set()
-        syntax_error = set()
-        missing = set()
 
         def exists(sname):
             if not tsa.exists(sname):
@@ -173,12 +169,20 @@ def refinery_bp(tsa, more_sections=None):
             return True
 
         for row in df_formula.itertuples():
+            # formula syntax error detection
             try:
                 parsed = fparse(row.text)
+                try:
+                    validate(parsed)
+                except Exception as error:
+                    syntax_error.add(row.name + ' : ' + repr(error))
+                    continue
+
             except SyntaxError:
                 syntax_error.add(row.name)
                 continue
 
+            # and needed series
             needset = set(
                 tsa.tsh.find_metas(tsa.engine, parsed)
             )
@@ -192,6 +196,25 @@ def refinery_bp(tsa, more_sections=None):
             missing |= newmissing
             if not newmissing:
                 ok.add(row.name)
+
+                # and last but not least.. tz compatibility
+                # we need to check if the needed series exist otherwise it will raise a tz error
+                need_uploadset = {
+                    needname
+                    for needname in needset
+                    if needname in uploadset and not exists(needname)
+                }
+                if not need_uploadset:
+                    try:
+                        tsa.tsh.check_tz_compatibility(tsa.engine, parsed)
+                    except Exception as error:
+                        syntax_error.add(row.name + ' : ' + repr(error))
+
+        if primaries:
+            errors['primary'] = sorted(primaries)
+
+        if formulas:
+            warnings['existing'] = sorted(formulas)
 
         if syntax_error:
             errors['syntax'] = sorted(syntax_error)

@@ -118,7 +118,11 @@ def test_formula_form_base(engine, client, tsh):
     )
     assert response.json == {
         'errors': {
-            'syntax': ['syntax']
+            'syntax': [
+                'syntax',
+                "syntax_keyword : BadKeyword('keyword `#:ffill` not followed by a value')",
+                'timezone : ValueError("Formula `constant` has tzaware vs tznaive series:`(\'gas-b\', (\'add, \'series)):tznaive`,`(\'constant\', (\'add, \'constant)):tzaware`")'
+            ]
         },
         'warnings': {
             'existing': ['prio1']
