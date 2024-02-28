@@ -4,7 +4,7 @@ from rework.api import task
 import rework.io as rio
 
 from tshistory.api import timeseries
-from tshistory.util import objects
+from tshistory.util import objects, replicate_series
 from tshistory_refinery import (
     cache,
     scrap
@@ -40,6 +40,24 @@ def refresh_formula_cache_now(task):
     with task.capturelogs(std=True):
         cache.refresh_policy_now(tsa, policy)
 
+
+@task(inputs=(
+    rio.string('url_refinery_origin'),
+    rio.string('seriesname_origin'),
+    rio.string('seriesname_target'),
+    )
+)
+def replicate_series_from_refinery(task):
+    tsa = timeseries()
+    with task.capturelogs(std=True):
+        inputs = task.input
+        tsa_origin = timeseries(inputs['url_refinery_origin'])
+        replicate_series(
+            tsa_origin,
+            tsa,
+            inputs['seriesname_origin'],
+            inputs['seriesname_target']
+        )
 
 # scrap
 
