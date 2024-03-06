@@ -53,7 +53,8 @@ class timeseries(xlts):
         super().__init__(*a, **kw)
         self.cache = basets(namespace='{}-cache'.format(self.namespace))
 
-    def _expanded_formula(self, cn, formula, stopnames=(), level=-1, qargs=None):
+    def _expanded_formula(self, cn, formula, stopnames=(), level=-1,
+                          display=True, remote=True, qargs=None):
         # stopnames dynamic lookup for series that have a cache
         # (we won't expand them since we can litterally stop at them)
         if qargs is not None and (not qargs.get('live') and not qargs.get('nocache')):
@@ -62,6 +63,8 @@ class timeseries(xlts):
             cn, formula,
             stopnames=stopnames,
             level=level,
+            display=display,
+            remote=remote,
             qargs=qargs
         )
 
