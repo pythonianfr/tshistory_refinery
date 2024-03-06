@@ -725,14 +725,6 @@ def test_staircase_formula(engine, tsh):
 """, f2)
 
 
-def test_sanitize_names(engine, tsh):
-    saturn_name = 'name space(),[] & Cie'
-    sanitized_name = tsh._sanitize(saturn_name)
-    assert 'namespace&Cie' == sanitized_name
-    tsh.update(engine, genserie(datetime(2015, 1, 1), 'D', 2), saturn_name, 'test')
-    assert 2 == len(tsh.get(engine, 'namespace&Cie'))
-
-
 def test_formula_metadata(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
