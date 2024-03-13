@@ -45,19 +45,19 @@ def comparator(tsh, engine):
         d2 = tsh.dependents(engine, n2)
         # base case: if any has no dep we are done
         if not len(d1) and not len(d2):
-            return -1 if n1 < n2 else 0 if n1 == n2 else 1
+            return 0
         if not len(d1):
-            return -1
-        if not len(d2):
             return 1
+        if not len(d2):
+            return -1
         # general case
         assert not (n1 in d2 and n2 in d1)
         if n1 in d2:
-            return -1
-        elif n2 in d1:
             return 1
+        elif n2 in d1:
+            return -1
         # no dependency
-        return -1 if n1 < n2 else 0 if n1 == n2 else 1
+        return 0
 
     return compare
 

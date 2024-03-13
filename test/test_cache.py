@@ -927,15 +927,15 @@ def test_formula_order(engine, tsh):
 
     cmp = comparator(tsh, engine)
     assert cmp('a', 'a') == 0
-    assert cmp('a', 'b') == -1
+    assert cmp('a', 'b') == 0
 
-    assert cmp('dep-bottom', 'dep-top') == 1
-    assert cmp('dep-bottom', 'dep-middle-left') == 1
-    assert cmp('dep-bottom', 'dep-middle-right') == 1
-    assert cmp('dep-middle-left', 'dep-top') == 1
-    assert cmp('dep-middle-right', 'dep-top') == 1
+    assert cmp('dep-bottom', 'dep-top') == -1
+    assert cmp('dep-bottom', 'dep-middle-left') == -1
+    assert cmp('dep-bottom', 'dep-middle-right') == -1
+    assert cmp('dep-middle-left', 'dep-top') == -1
+    assert cmp('dep-middle-right', 'dep-top') == -1
 
-    assert cmp('dep-top', 'dep-middle-left') == -1
+    assert cmp('dep-top', 'dep-middle-left') == 1
 
     names = [
         'dep-bottom',
@@ -945,10 +945,56 @@ def test_formula_order(engine, tsh):
     ]
     names.sort(key=cmp_to_key(cmp))
     assert names == [
-        'dep-top',
+        'dep-bottom',
         'dep-middle-left',
         'dep-middle-right',
-        'dep-bottom'
+        'dep-top'
+    ]
+
+def test_formula_order_two_series(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(
+        engine,
+        ts,
+        'primary',
+        'Babar'
+    )
+    tsh.register_formula(
+        engine,
+        'mwh',
+        '(series "primary")'
+    )
+    tsh.register_formula(
+        engine,
+        'pc',
+        '(+ -1 (series "mwh"))'
+    )
+
+    cmp = comparator(tsh, engine)
+    assert cmp('mwh', 'pc') == -1
+    assert cmp('pc', 'mwh') == 1
+
+    names = [
+        'pc',
+        'mwh',
+    ]
+    names.sort(key=cmp_to_key(cmp))
+    assert names == [
+        'mwh',
+        'pc',
+    ]
+    # on the other side to be sure
+    names = [
+        'mwh',
+        'pc',
+    ]
+    names.sort(key=cmp_to_key(cmp))
+    assert names == [
+        'mwh',
+        'pc',
     ]
 
 
