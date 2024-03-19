@@ -24,7 +24,10 @@ from psyl.lisp import (
 
 from sqlhelp import select
 from tshistory_formula import registry
-from tshistory_formula.helper import BadKeyword, validate
+from tshistory_formula.helper import (
+    BadKeyword,
+    validate
+)
 from tsview.util import format_formula as pretty_formula
 from tsview.blueprint import homeurl
 
@@ -174,7 +177,7 @@ def refinery_bp(tsa, more_sections=None):
                 parsed = fparse(row.text)
                 try:
                     validate(parsed)
-                except Exception as error:
+                except BadKeyword as error:
                     syntax_error.add(row.name + ' : ' + repr(error))
                     continue
 
