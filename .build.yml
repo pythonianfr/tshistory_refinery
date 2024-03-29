@@ -11,7 +11,6 @@ sources:
   - hg+ssh://hg@hg.sr.ht/~pythonian/tshistory_formula
   - hg+ssh://hg@hg.sr.ht/~pythonian/tshistory_xl
   - hg+ssh://hg@hg.sr.ht/~pythonian/tsview
-  - hg+ssh://hg@hg.sr.ht/~pythonian/tswatch
   - hg+ssh://hg@hg.sr.ht/~pythonian/tshistory_refinery
 secrets:
   -  2697538f-6b29-4af7-9fb2-e17694886c3f
@@ -28,7 +27,6 @@ tasks:
       pip install -e tshistory_formula
       pip install -e tshistory_xl
       pip install -e tsview
-      pip install -e tswatch
       pip install -e tshistory_refinery
   - run-tests: |
       export PIP_BREAK_SYSTEM_PACKAGES=1
