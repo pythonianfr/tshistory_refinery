@@ -6,7 +6,6 @@ from dbcache.http import kvstore_httpapi
 from dbcache.api import kvstore
 from tsview.blueprint import tsview
 from tsview.history import historic
-from tsview.editor import editor
 from rework_ui.blueprint import reworkui
 
 from tshistory.api import timeseries
@@ -64,11 +63,6 @@ class AppMaker:
             tsview(self.tsa)
         )
         historic(
-            app,
-            self.tsa,
-            request_pathname_prefix='/'
-        )
-        editor(
             app,
             self.tsa,
             request_pathname_prefix='/'
