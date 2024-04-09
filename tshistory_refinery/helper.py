@@ -63,7 +63,9 @@ def comparator(tsh, engine):
 
 
 def reduce_frequency(tempo, idates):
-    assert len(tempo)
+    if not len(tempo):
+        return tempo
+
     assert len(idates)
     new_tempo = []
     for cdate in tempo:
