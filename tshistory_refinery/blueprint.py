@@ -1,11 +1,5 @@
-import io
-import json
-import traceback
-from collections import defaultdict
-from contextlib import redirect_stdout
 from operator import itemgetter
 
-import numpy as np
 import pandas as pd
 from flask import (
     Blueprint,
@@ -17,17 +11,8 @@ from flask import (
 )
 from pml import HTML
 from rework_ui.helper import argsdict as _args
-from psyl.lisp import (
-    parse as fparse,
-    serialize,
-)
 
 from sqlhelp import select
-from tshistory_formula import registry
-from tshistory_formula.helper import (
-    BadKeyword,
-    validate
-)
 from tsview.util import format_formula as pretty_formula
 from tsview.blueprint import homeurl
 
@@ -77,35 +62,8 @@ def refinery_bp(tsa, more_sections=None):
         static_folder='refinery_static',
     )
 
-    @bp.route('/')
-    def welcome():
-        title = 'Refinery cockpit'
-        sections = {
-            'Time series': {
-                'Series Catalog': url_for('tsview.tssearch'),
-                'Series Quick-View': url_for('tsview.home'),
-                'Delete Series': url_for('tsview.tsdelete'),
-            },
-            'Formula': {
-                'All Formulas': url_for('refinery.formulas'),
-                'Upload New Formulas': url_for('refinery.addformulas'),
-                'Edit a new Formula': url_for('tsview.tsformula'),
-                'Edit the formula cache': url_for('tsview.formulacache'),
-                'Formula operators documentation': url_for('tsview.formula_operators'),
-            },
-            'Monitoring': {
-                'Tasks': url_for('reworkui.home'),
-            }
-        }
 
-        if more_sections is not None:
-            sections.update(more_sections())
 
-        return render_template(
-            'summary.html',
-            title=title,
-            sections=sections
-        )
 
     # extra formula handling
 
@@ -137,162 +95,6 @@ def refinery_bp(tsa, more_sections=None):
                 )
             )
 
-    def validate_formula(df_formula):
-        errors = defaultdict(list)
-        warnings = defaultdict(list)
-
-        ok = set()
-        syntax_error = set()
-        missing = set()
-
-        # conflicts with primary series are an error
-        primaries = {
-            name for name in np.unique(df_formula['name'])
-            if tsa.type(name) == 'primary'
-               and tsa.exists(name)
-        }
-
-        # overriding an existing formula yields a warning
-        formulas = {
-            name for name in np.unique(df_formula['name'])
-            if tsa.type(name) == 'formula'
-               and tsa.exists(name)
-        }
-
-        uploadset = {
-            row.name
-            for row in df_formula.itertuples()
-        }
-
-        def exists(sname):
-            if not tsa.exists(sname):
-                if sname in registry.AUTO:
-                    return True
-                return False
-            return True
-
-        for row in df_formula.itertuples():
-            # formula syntax error detection
-            try:
-                parsed = fparse(row.text)
-                try:
-                    validate(parsed)
-                except BadKeyword as error:
-                    syntax_error.add(row.name + ' : ' + repr(error))
-                    continue
-
-            except SyntaxError:
-                syntax_error.add(row.name)
-                continue
-
-            # and needed series
-            needset = set(
-                tsa.tsh.find_metas(tsa.engine, parsed)
-            )
-            # even if ok, the def might refer to the current
-            # uploaded set, or worse ...
-            newmissing = {
-                needname
-                for needname in needset
-                if needname not in uploadset and not exists(needname)
-            }
-            missing |= newmissing
-            if not newmissing:
-                ok.add(row.name)
-
-                # and last but not least.. tz compatibility
-                # we need to check if the needed series exist otherwise it will raise a tz error
-                need_uploadset = {
-                    needname
-                    for needname in needset
-                    if needname in uploadset and not exists(needname)
-                }
-                if not need_uploadset:
-                    try:
-                        tsa.tsh.check_tz_compatibility(tsa.engine, parsed)
-                    except Exception as error:
-                        syntax_error.add(row.name + ' : ' + repr(error))
-
-        if primaries:
-            errors['primary'] = sorted(primaries)
-
-        if formulas:
-            warnings['existing'] = sorted(formulas)
-
-        if syntax_error:
-            errors['syntax'] = sorted(syntax_error)
-
-        if missing:
-            errors['missing'] = sorted(missing)
-
-        return errors, warnings
-
-    @bp.route('/addformulas')
-    def addformulas():
-        return render_template(
-            'formula_form.html'
-        )
-
-    @bp.route('/updateformulas', methods=['POST'])
-    def updateformulas():
-        if not request.files:
-            return jsonify({'errors': ['Missing CSV file']})
-        args = _args(request.form)
-        stdout = io.StringIO()
-        try:
-            content = request.files['new_formulas.csv'].stream.read().decode("utf-8")
-            stdout.write(content)
-            stdout.seek(0)
-            df_formula = pd.read_csv(stdout, dtype={'name': str, 'serie': str}, sep=',')
-
-            errors, warnings = validate_formula(df_formula)
-            if errors or not args.reallydoit:
-                return jsonify({
-                    'errors': errors,
-                    'warnings': warnings
-                })
-
-            with redirect_stdout(stdout):
-                for row in df_formula.itertuples():
-                    tsa.register_formula(
-                        row.name,
-                        row.text,
-                        reject_unknown=False
-                    )
-
-        except Exception:
-            traceback.print_exc()
-            h = HTML()
-            return json.dumps({
-                'crash': str(h(traceback.format_exc())),
-                'output': stdout.getvalue().replace('\n', '<br>')
-            })
-        return jsonify({
-            'output': stdout.getvalue().replace('\n', '<br>'),
-            'crash': ''
-        })
-
-    @bp.route('/downloadformulas')
-    def downloadformulas():
-        formulas = pd.read_sql(
-            'select name, internal_metadata->\'formula\' as text '
-            'from tsh.registry '
-            'where internal_metadata->\'formula\' is not null',
-            engine
-        )
-        df = formulas.sort_values(
-            by=['name', 'text'],
-            kind='mergesort'
-        )
-        df['text'] = df['text'].apply(lambda x: serialize(fparse(x)))
-        response = make_response(
-            df.to_csv(
-                index=False,
-                quotechar="'"
-            ), 200
-        )
-        response.headers['Content-Type'] = 'text/json'
-        return response
 
     # /formula
     # formula cache
