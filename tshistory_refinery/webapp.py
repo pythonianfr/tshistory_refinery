@@ -5,7 +5,6 @@ from sqlalchemy import create_engine
 from dbcache.http import kvstore_httpapi
 from dbcache.api import kvstore
 from tsview.blueprint import tsview
-from tsview.history import historic
 from rework_ui.blueprint import reworkui
 
 from tshistory.api import timeseries
@@ -61,11 +60,6 @@ class AppMaker:
     def tsview(self, app):
         app.register_blueprint(
             tsview(self.tsa)
-        )
-        historic(
-            app,
-            self.tsa,
-            request_pathname_prefix='/'
         )
 
     def reworkui(self, app):
