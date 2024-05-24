@@ -51,7 +51,7 @@ class timeseries(xlts):
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
-        self.cache = basets(namespace='{}-cache'.format(self.namespace))
+        self.cache = basets(namespace=f'{self.namespace}-cache')
 
     def _expanded_formula(self, cn, formula, stopnames=(), level=-1,
                           display=True, remote=True, qargs=None):
