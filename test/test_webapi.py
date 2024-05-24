@@ -34,15 +34,16 @@ def test_formula_form_base(engine, client, tsh):
     with engine.begin() as cn:
         cn.execute('delete from tsh.registry')
 
-    ts = genserie('2019-1-1', 'D', 3)
+    ts = genserie('2024-1-1', 'D', 3)
     tsh.update(engine, ts, 'crude-a', 'Babar')
 
     user_file = DATADIR / 'goodformula.csv'
     # the user is pushing its own formulas
-    response = client.post(
+
+    response = client.put(
         '/updateformulas',
         upload_files=[
-            ('new_formulas.csv',
+            ('new_formula.csv',
              user_file.name,
              user_file.read_bytes(),
              'text/csv')
@@ -50,7 +51,7 @@ def test_formula_form_base(engine, client, tsh):
     )
     assert response.status_code == 200
     assert response.json == {
-        'warnings': {},
+        'crash': '',
         'errors': {
             'missing': [
                 'crude-b',
@@ -59,18 +60,21 @@ def test_formula_form_base(engine, client, tsh):
                 'gas-b',
                 'gas-c'
             ]
-        }
+        },
+        'output': {},
+        'status': 'invalid',
+        'warnings': {}
     }
 
     # really do it
     for name in ('crude-b', 'crude-b', 'crude-c', 'gas-a', 'gas-b', 'gas-c'):
         tsh.update(engine, ts, name, 'Babar')
 
-    _posted = client.post(
+    _posted = client.put(
         '/updateformulas',
         {'reallydoit': True},
         upload_files=[
-            ('new_formulas.csv',
+            ('new_formula.csv',
              user_file.name,
              user_file.read_bytes(),
              'text/csv')
@@ -82,14 +86,14 @@ def test_formula_form_base(engine, client, tsh):
     formula_downloaded = pd.read_csv(io.StringIO(response.text))
     assert set(formula_inserted['text']) == set(formula_downloaded['text'])
 
-    assert tsh.internal_metadata(engine, 'arith2')['tzaware'] is False
+    assert not tsh.tzaware(engine, 'arith2')
 
     # We reinsert the donwloaded formulaes and check that everything is kept in the process
-    response = client.post(
+    response = client.put(
         '/updateformulas',
         {'reallydoit': True},
         upload_files=[
-            ('new_formulas.csv',
+            ('new_formula.csv',
              'formulareinserted.csv',
              formula_downloaded.to_csv().encode(),
              'text/csv')
@@ -107,16 +111,17 @@ def test_formula_form_base(engine, client, tsh):
     user_file = DATADIR / 'badformula.csv'
     formula_inserted = pd.read_csv(user_file)
     # the user is pushing its own formulaes
-    response = client.post(
+    response = client.put(
         '/updateformulas',
         upload_files=[
-            ('new_formulas.csv',
+            ('new_formula.csv',
              user_file.name,
              user_file.read_bytes(),
              'text/csv')
         ]
     )
     assert response.json == {
+        'crash': '',
         'errors': {
             'syntax': [
                 'syntax',
@@ -124,9 +129,9 @@ def test_formula_form_base(engine, client, tsh):
                 'timezone : ValueError("Formula `constant` has tzaware vs tznaive series:`(\'gas-b\', (\'add, \'series)):tznaive`,`(\'constant\', (\'add, \'constant)):tzaware`")'
             ]
         },
-        'warnings': {
-            'existing': ['prio1']
-        }
+        'output': {},
+        'status': 'invalid',
+        'warnings': {'existing': ['prio1']}
     }
 
     response = client.get('/formulas')
@@ -150,11 +155,11 @@ def test_formula_form_metadata(engine, client, tsh, remote):
     assert not tsh.exists(engine, 'remote')
 
     user_file = DATADIR / 'remoteautoformula.csv'
-    client.post(
+    client.put(
         '/updateformulas',
         {'reallydoit': True},
         upload_files=[
-            ('new_formulas.csv',
+            ('new_formula.csv',
              user_file.name,
              user_file.read_bytes(),
              'text/csv')
