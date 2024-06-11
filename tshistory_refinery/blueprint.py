@@ -1,4 +1,5 @@
 from operator import itemgetter
+from pathlib import Path
 
 import pandas as pd
 from flask import (
@@ -7,7 +8,8 @@ from flask import (
     make_response,
     render_template,
     request,
-    url_for
+    url_for,
+    send_from_directory,
 )
 from pml import HTML
 from rework_ui.helper import argsdict as _args
@@ -62,8 +64,13 @@ def refinery_bp(tsa, more_sections=None):
         static_folder='refinery_static',
     )
 
-
-
+    @bp.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(
+            Path(bp.root_path, 'refinery_static'),
+            'arrow.ico',
+            mimetype='image/vnd.microsoft.icon'
+        )
 
     # extra formula handling
 
