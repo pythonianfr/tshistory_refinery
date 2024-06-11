@@ -19,13 +19,20 @@ Then initialize the database schema:
 
    $ tsh init-db postgresql:///my_time_series --no-dry-run
 
-Last item: we need a configuration file ``refinery.cfg`` in the home
+Last item: we need a configuration file ``tshistory.cfg`` in the home
 directory, containing:
 
 .. code:: ini
 
-   [db]
-   uri = postgresql:///my_time_series
+   [dburi]
+   refinery = postgresql:///my_time_series
+
+From this point you can start a local server and start using the
+refinery.
+
+.. code:: bash
+
+   tsh webstart
 
 
 Introduction
