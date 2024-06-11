@@ -97,7 +97,7 @@ However here’s a simple example:
     >>> import pandas as pd
     >>> from tshistory.api import timeseries
     >>>
-    >>> tsa = timeseries('postgres://me:password@localhost/mydb')
+    >>> tsa = timeseries('postgresql://me:password@localhost/mydb')
     >>>
     >>> series = pd.Series([1, 2, 3],
     ...                    pd.date_range(start=pd.Timestamp(2017, 1, 1),
