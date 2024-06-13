@@ -154,7 +154,7 @@ def test_cache_a_series(engine, tsa):
         [1., 2., 3.],
         index=pd.date_range(
             pd.Timestamp('2022-1-1'),
-            freq='D', periods=3
+            freq='d', periods=3
         )
     )
 
@@ -257,7 +257,7 @@ def test_cache_refresh(engine, tsa):
     for idx, idate in enumerate(
             pd.date_range(
                 utcdt(2022, 1, 1),
-                freq='D',
+                freq='d',
                 periods=5
             )
     ):
@@ -265,7 +265,7 @@ def test_cache_refresh(engine, tsa):
             [1, 2, 3],
             index=pd.date_range(
                 utcdt(2022, 1, 1 + idx),
-                freq='D',
+                freq='d',
                 periods=3
             )
         )
@@ -589,7 +589,7 @@ insertion_date             value_date
     for idx, idate in enumerate(
             pd.date_range(
                 utcdt(2022, 1, 1),
-                freq='D',
+                freq='d',
                 periods=5
             )
     ):
@@ -597,7 +597,7 @@ insertion_date             value_date
             [1.1, 2.1, 3.1],
             index=pd.date_range(
                 utcdt(2022, 1, 1 + idx),
-                freq='D',
+                freq='d',
                 periods=3
             )
         )
@@ -671,7 +671,7 @@ def test_rename_delete(engine, tsa):
         [1, 2, 3],
         index=pd.date_range(
             utcdt(2022, 1, 1),
-            freq='D',
+            freq='d',
             periods=3
         )
     )
@@ -722,7 +722,7 @@ def test_cache_coherency(engine, tsa):
         [1, 2, 3],
         index=pd.date_range(
             utcdt(2022, 1, 1),
-            freq='D',
+            freq='d',
             periods=3
         )
     )
@@ -818,7 +818,7 @@ def test_federation_cache_coherency(engine, federated, remote):
         [1, 2, 3],
         index=pd.date_range(
             utcdt(2022, 1, 1),
-            freq='D',
+            freq='d',
             periods=3
         )
     )
@@ -894,7 +894,7 @@ def test_federation_cache_coherency(engine, federated, remote):
 def test_formula_order(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='d')
     )
 
     tsh.update(
@@ -954,7 +954,7 @@ def test_formula_order(engine, tsh):
 def test_formula_order_two_series(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='D')
+        index=pd.date_range(utcdt(2022, 1, 1), periods=3, freq='d')
     )
     tsh.update(
         engine,
@@ -1008,7 +1008,7 @@ def test_refresh_policy(engine, tsa):
             [i] * 3,
             index=pd.date_range(
                 utcdt(2022, 1, 1 + i),
-                freq='D',
+                freq='d',
                 periods=3
             )
         )
@@ -1073,7 +1073,7 @@ def test_cache_refresh_series_now(engine, tsa):
             range(3),
             index=pd.date_range(
                 pd.Timestamp('2022-1-1'),
-                freq='D',
+                freq='d',
                 periods=3
             )
         ),
@@ -1126,7 +1126,7 @@ def test_cache_refresh_series_now(engine, tsa):
             range(5),
             index=pd.date_range(
                 pd.Timestamp('2022-1-1'),
-                freq='D',
+                freq='d',
                 periods=5
             )
         ),
@@ -1153,7 +1153,7 @@ def test_cache_refresh_series_now(engine, tsa):
             range(7),
             index=pd.date_range(
                 pd.Timestamp('2022-1-1'),
-                freq='D',
+                freq='d',
                 periods=7
             )
         ),
@@ -1179,7 +1179,7 @@ def test_always_live_in_the_deep_past(engine, tsa):
     for m in range(1, 5):
         ts = pd.Series(
             [m] * 5,
-            index=pd.date_range(f'2022-{m}-1', freq='D', periods=5)
+            index=pd.date_range(f'2022-{m}-1', freq='d', periods=5)
         )
         tsa.update(
             'deep-fried',
@@ -1371,7 +1371,7 @@ def test_values_marker_origin_and_cache(engine, tsa):
         [1.] * 3,
         index=pd.date_range(
             pd.Timestamp('2022-1-1'),
-            freq='D', periods=3
+            freq='d', periods=3
         )
     )
     tsa.update(
@@ -1419,7 +1419,7 @@ def test_values_marker_origin_and_cache(engine, tsa):
         [1.] * 5,
         index=pd.date_range(
             pd.Timestamp('2022-1-1'),
-            freq='D', periods=5
+            freq='d', periods=5
         )
     )
     tsa.update(
@@ -1454,7 +1454,7 @@ def test_errors_in_refresh_policy(engine, tsa):
         [1.] * 3,
         index=pd.date_range(
             pd.Timestamp('2022-1-1'),
-            freq='D', periods=3
+            freq='d', periods=3
         )
     )
     tsa.update(
@@ -1506,7 +1506,7 @@ def test_cache_revdate(engine, tsa):
         [0] * 5,
         index=pd.date_range(
             pd.Timestamp('2022-1-1'),
-            freq='D', periods=5
+            freq='d', periods=5
         )
     )
     tsa.update(
@@ -1549,14 +1549,14 @@ def test_cache_revdate(engine, tsa):
     # smaller that the original series)
     tsh.cache.update(
         engine,
-        ts[:3] + 10 ,
+        ts.iloc[:3] + 10 ,
         'formula-revdate',
         'pseudo-cache',
         insertion_date=pd.Timestamp('2022-1-1 01:00:00', tz='UTC')
     )
     tsh.cache.update(
         engine,
-        ts[:3] + 11 ,
+        ts.iloc[:3] + 11 ,
         'formula-revdate',
         'pseudo-cache',
         insertion_date=pd.Timestamp('2022-1-2 01:00:00', tz='UTC')
@@ -1642,7 +1642,7 @@ def test_refresh_using_middle_cache(engine, tsa):
                 [i],
                 index=pd.date_range(
                     pd.Timestamp(f'2022-1-{i}', tz='utc'),
-                    freq='D',
+                    freq='d',
                     periods=1
                 )
             ),
@@ -1732,7 +1732,7 @@ def test_interaction_hijack_and_cache(engine, tsa):
         [1., 2., 3.],
         index=pd.date_range(
             pd.Timestamp('2022-1-1'),
-            freq='D', periods=3
+            freq='d', periods=3
         )
     )
 
@@ -1740,7 +1740,7 @@ def test_interaction_hijack_and_cache(engine, tsa):
         [[0, 1, 2], [1, 2, 3], [2, 3, 4]],
         index=pd.date_range(
             pd.Timestamp('2022-1-1'),
-            freq='D', periods=3
+            freq='d', periods=3
         ),
         columns=['a', 'b', 'c']
     )
@@ -1873,7 +1873,7 @@ def test_autotrophic_series_in_cache(engine, tsa):
         [1] * 7,
         index=pd.date_range(
             start=datetime(2014, 12, 31),
-            freq='D',
+            freq='d',
             periods=7,
         )
     )
@@ -1948,7 +1948,7 @@ def test_autotrophic_series_in_cache(engine, tsa):
         [2] * 7,
         index=pd.date_range(
             start=datetime(2022, 1, 25),
-            freq='D',
+            freq='d',
             periods=7,
         )
     )

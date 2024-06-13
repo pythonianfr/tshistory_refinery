@@ -172,7 +172,7 @@ def genserie(start, freq, repeat, initval=None, tz=None, name=None):
 
 def test_manual_overrides(tsx):
     # start testing manual overrides
-    ts_begin = genserie(datetime(2010, 1, 1), 'D', 5, [2.])
+    ts_begin = genserie(datetime(2010, 1, 1), 'd', 5, [2.])
     ts_begin.loc['2010-01-04'] = -1
     tsx.update('ts_mixte', ts_begin, 'test')
 
@@ -190,7 +190,7 @@ def test_manual_overrides(tsx):
     assert not marker.any()
 
     # refresh all the period + 1 extra data point
-    ts_more = genserie(datetime(2010, 1, 2), 'D', 5, [2])
+    ts_more = genserie(datetime(2010, 1, 2), 'd', 5, [2])
     ts_more.loc['2010-01-04'] = -1
     tsx.update('ts_mixte', ts_more, 'test')
 
@@ -205,7 +205,7 @@ def test_manual_overrides(tsx):
 
     # just append an extra data point
     # with no intersection with the previous ts
-    ts_one_more = genserie(datetime(2010, 1, 7), 'D', 1, [2])
+    ts_one_more = genserie(datetime(2010, 1, 7), 'd', 1, [2])
     tsx.update('ts_mixte', ts_one_more, 'test')
 
     assert_df("""
@@ -222,7 +222,7 @@ def test_manual_overrides(tsx):
 
     # edit the bogus upstream data: -1 -> 3
     # also edit the next value
-    ts_manual = genserie(datetime(2010, 1, 4), 'D', 2, [3])
+    ts_manual = genserie(datetime(2010, 1, 4), 'd', 2, [3])
     tsx.update('ts_mixte', ts_manual, 'test', manual=True)
     assert tsx.supervision_status('ts_mixte') == 'supervised'
 
@@ -279,7 +279,7 @@ def test_manual_overrides(tsx):
 """, ts)
 
     # another iterleaved editing session
-    ts_edit = genserie(datetime(2010, 1, 4), 'D', 1, [2])
+    ts_edit = genserie(datetime(2010, 1, 4), 'd', 1, [2])
     tsx.update('ts_mixte', ts_edit, 'test', manual=True)
     assert 2 == tsx.get('ts_mixte')['2010-01-04']  # still
     ts, marker = tsx.edited('ts_mixte')
@@ -324,10 +324,10 @@ def test_manual_overrides(tsx):
 2010-01-07    2.0
 """, ts_auto)
 
-    ts_manual = genserie(datetime(2010, 1, 5), 'D', 2, [3])
+    ts_manual = genserie(datetime(2010, 1, 5), 'd', 2, [3])
     tsx.update('ts_mixte', ts_manual, 'test', manual=True)
 
-    ts_manual = genserie(datetime(2010, 1, 9), 'D', 1, [3])
+    ts_manual = genserie(datetime(2010, 1, 9), 'd', 1, [3])
     tsx.update('ts_mixte', ts_manual, 'test', manual=True)
     tsx.update('ts_mixte', ts_auto, 'test')
 
@@ -378,7 +378,7 @@ def test_get_many(tsx):
     for name in ('scalarprod', 'base'):
         tsx.delete(name)
 
-    ts_base = genserie(datetime(2010, 1, 1), 'D', 3, [1])
+    ts_base = genserie(datetime(2010, 1, 1), 'd', 3, [1])
     tsx.update('base', ts_base, 'test')
 
     tsx.register_formula(
@@ -398,7 +398,7 @@ def test_get_many(tsx):
     # get_many, republications & revision date
     for idx, idate in enumerate(pd.date_range(datetime(2015, 1, 1),
                                               datetime(2015, 1, 3),
-                                              freq='D',
+                                              freq='d',
                                               tz='utc')):
         tsx.update('comp1', ts_base * idx, 'test',
                    insertion_date=idate)
@@ -459,7 +459,7 @@ def test_get_many_federated(tsa1, tsa2):
     for name in ('scalarprod', 'base', 'comp1', 'comp2', 'repusum', 'repuprio'):
         tsa2.delete(name)
 
-    ts_base = genserie(datetime(2010, 1, 1), 'D', 3, [1])
+    ts_base = genserie(datetime(2010, 1, 1), 'd', 3, [1])
     tsa2.update('base', ts_base, 'test')
 
     tsa2.register_formula(
@@ -479,7 +479,7 @@ def test_get_many_federated(tsa1, tsa2):
     # get_many, republications & revision date
     for idx, idate in enumerate(pd.date_range(datetime(2015, 1, 1),
                                               datetime(2015, 1, 3),
-                                              freq='D',
+                                              freq='d',
                                               tz='utc')):
         tsa2.update('comp1', ts_base * idx, 'test',
                    insertion_date=idate)
@@ -534,9 +534,9 @@ def test_get_many_federated(tsa1, tsa2):
 
 
 def test_origin(tsx):
-    ts_real = genserie(datetime(2010, 1, 1), 'D', 10, [1])
-    ts_nomination = genserie(datetime(2010, 1, 1), 'D', 12, [2])
-    ts_forecast = genserie(datetime(2010, 1, 1), 'D', 20, [3])
+    ts_real = genserie(datetime(2010, 1, 1), 'd', 10, [1])
+    ts_nomination = genserie(datetime(2010, 1, 1), 'd', 12, [2])
+    ts_forecast = genserie(datetime(2010, 1, 1), 'd', 20, [3])
 
     tsx.update('realised', ts_real, 'test')
     tsx.update('nominated', ts_nomination, 'test')
@@ -600,9 +600,9 @@ def test_origin_federated(tsa1, tsa2):
     # same test as above
     # tsa1: local with remote source
     # tsa2: remote source
-    ts_real = genserie(datetime(2010, 1, 1), 'D', 10, [1])
-    ts_nomination = genserie(datetime(2010, 1, 1), 'D', 12, [2])
-    ts_forecast = genserie(datetime(2010, 1, 1), 'D', 20, [3])
+    ts_real = genserie(datetime(2010, 1, 1), 'd', 10, [1])
+    ts_nomination = genserie(datetime(2010, 1, 1), 'd', 12, [2])
+    ts_forecast = genserie(datetime(2010, 1, 1), 'd', 20, [3])
 
     for name in ('realised', 'nominated', 'forecasted', 'serie5', 'serie6', 'serie7'):
         tsa2.delete(name)
@@ -682,7 +682,7 @@ def test_today_vs_revision_date(tsx):
 
 
 def test_find_bypolicy(tsx):
-    ts = genserie(utcdt(2023, 1, 1), 'D', 10, [1])
+    ts = genserie(utcdt(2023, 1, 1), 'd', 10, [1])
     tsx.update(
         'find.base',
         ts,
@@ -789,7 +789,7 @@ def test_cache(engine, tsx, tsa3):
     for idx, idate in enumerate(
             pd.date_range(
                 utcdt(2022, 1, 1),
-                freq='D',
+                freq='d',
                 periods=5
             )
     ):
@@ -797,7 +797,7 @@ def test_cache(engine, tsx, tsa3):
             [1, 2, 3],
             index=pd.date_range(
                 utcdt(2022, 1, 1 + idx),
-                freq='D',
+                freq='d',
                 periods=3
             )
         )
@@ -975,7 +975,7 @@ insertion_date             value_date
         [7] * 5,
         index=pd.date_range(
             utcdt(2022, 1, 10),
-            freq='D',
+            freq='d',
             periods=5
         )
     )
@@ -1020,7 +1020,7 @@ insertion_date             value_date
 def test_cacheable_formulas(tsa1, tsa2):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2022, 1, 1), freq='D', periods=3)
+        index=pd.date_range(utcdt(2022, 1, 1), freq='d', periods=3)
     )
     tsa1.update('cacheable-base-local', ts, 'Babar')
     tsa2.update('cacheable-base-remote', ts, 'Celeste')
@@ -1098,7 +1098,7 @@ def test_insertion_dates_vs_cache(tsa):
             [1, 2, 3],
             index=pd.date_range(
                 utcdt(2022, 1, i),
-                freq='D',
+                freq='d',
                 periods=3
             )
         )
@@ -1156,7 +1156,7 @@ def test_insertion_dates_vs_cache(tsa):
                 [1, 2, 3],
                 index=pd.date_range(
                     utcdt(2022, 1, 1 + i),
-                    freq='D',
+                    freq='d',
                     periods=3
                 )
             ),

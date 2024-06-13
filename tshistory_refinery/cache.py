@@ -1,4 +1,3 @@
-from datetime import datetime
 from contextlib import contextmanager
 from functools import cmp_to_key
 import traceback
@@ -39,7 +38,7 @@ def validate_policy(
 ):
     """ Validate each of the four parameters of a given cache policy """
     badinputs = []
-    env = {'now': datetime.utcnow()}
+    env = {'now': pd.Timestamp.utcnow()}
     for name, val in (
             ('initial_revdate', initial_revdate),
             ('look_before', look_before),
@@ -507,7 +506,7 @@ def refresh_series(engine, tsa, name, final_revdate=None):
             print(f'no idate over {initial_revdate} -> {now}, no refresh')
             return  # that's an odd series, let's bail out
 
-        final_revdate = final_revdate or pd.Timestamp(datetime.utcnow(), tz='UTC')
+        final_revdate = final_revdate or pd.Timestamp.utcnow()
         if initial_revdate >= final_revdate:
             print('empty interval, nothing to do')
             return

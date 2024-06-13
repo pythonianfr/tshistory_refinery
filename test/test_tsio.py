@@ -30,9 +30,9 @@ def ingest_formulas(tsh, engine, formula_file):
 
 
 def test_rename(engine, tsh):
-    tsh.update(engine, genserie(datetime(2010, 1, 1), 'D', 3),
+    tsh.update(engine, genserie(datetime(2010, 1, 1), 'd', 3),
                'rename-me', 'Babar')
-    tsh.update(engine, genserie(datetime(2010, 1, 1), 'D', 3),
+    tsh.update(engine, genserie(datetime(2010, 1, 1), 'd', 3),
                'rename-me', 'Celeste', manual=True)
 
     tsh.rename(engine, 'rename-me', 'renamed')
@@ -53,7 +53,7 @@ def test_delete_formula_create_primary(engine, tsh):
     with engine.begin() as cn:
         tsh.delete(cn, 'formula-then-primary')
 
-    series = genserie(datetime(2020, 1, 1), 'D', 3)
+    series = genserie(datetime(2020, 1, 1), 'd', 3)
     tsh.update(engine, series, 'formula-then-primary', 'Babar')
 
     series = tsh.get(engine, 'formula-then-primary')
@@ -66,7 +66,7 @@ def test_delete_formula_create_primary(engine, tsh):
 
 def test_manual_overrides(engine, tsh):
     # start testing manual overrides
-    ts_begin = genserie(datetime(2010, 1, 1), 'D', 5, [2.])
+    ts_begin = genserie(datetime(2010, 1, 1), 'd', 5, [2.])
     ts_begin.loc['2010-01-04'] = -1
     tsh.update(engine, ts_begin, 'ts_mixte', 'test')
 
@@ -84,7 +84,7 @@ def test_manual_overrides(engine, tsh):
     assert not marker.any()
 
     # refresh all the period + 1 extra data point
-    ts_more = genserie(datetime(2010, 1, 2), 'D', 5, [2])
+    ts_more = genserie(datetime(2010, 1, 2), 'd', 5, [2])
     ts_more.loc['2010-01-04'] = -1
     tsh.update(engine, ts_more, 'ts_mixte', 'test')
 
@@ -99,7 +99,7 @@ def test_manual_overrides(engine, tsh):
 
     # just append an extra data point
     # with no intersection with the previous ts
-    ts_one_more = genserie(datetime(2010, 1, 7), 'D', 1, [2])
+    ts_one_more = genserie(datetime(2010, 1, 7), 'd', 1, [2])
     tsh.update(engine, ts_one_more, 'ts_mixte', 'test')
 
     assert_df("""
@@ -116,7 +116,7 @@ def test_manual_overrides(engine, tsh):
 
     # edit the bogus upstream data: -1 -> 3
     # also edit the next value
-    ts_manual = genserie(datetime(2010, 1, 4), 'D', 2, [3])
+    ts_manual = genserie(datetime(2010, 1, 4), 'd', 2, [3])
     tsh.update(engine, ts_manual, 'ts_mixte', 'test', manual=True)
     assert tsh.supervision_status(engine, 'ts_mixte') == 'supervised'
 
@@ -173,7 +173,7 @@ def test_manual_overrides(engine, tsh):
 """, ts)
 
     # another iterleaved editing session
-    ts_edit = genserie(datetime(2010, 1, 4), 'D', 1, [2])
+    ts_edit = genserie(datetime(2010, 1, 4), 'd', 1, [2])
     tsh.update(engine, ts_edit, 'ts_mixte', 'test', manual=True)
     assert 2 == tsh.get(engine, 'ts_mixte')['2010-01-04']  # still
     ts, marker = tsh.get_ts_marker(engine, 'ts_mixte')
@@ -218,10 +218,10 @@ def test_manual_overrides(engine, tsh):
 2010-01-07    2.0
 """, ts_auto)
 
-    ts_manual = genserie(datetime(2010, 1, 5), 'D', 2, [3])
+    ts_manual = genserie(datetime(2010, 1, 5), 'd', 2, [3])
     tsh.update(engine, ts_manual, 'ts_mixte', 'test', manual=True)
 
-    ts_manual = genserie(datetime(2010, 1, 9), 'D', 1, [3])
+    ts_manual = genserie(datetime(2010, 1, 9), 'd', 1, [3])
     tsh.update(engine, ts_manual, 'ts_mixte', 'test', manual=True)
     tsh.update(engine, ts_auto, 'ts_mixte', 'test')
 
@@ -269,7 +269,7 @@ def test_manual_overrides(engine, tsh):
 
 
 def test_first_manual(engine, tsh):
-    ts_begin = genserie(datetime(2010, 1, 1), 'D', 10)
+    ts_begin = genserie(datetime(2010, 1, 1), 'd', 10)
     tsh.update(engine, ts_begin, 'ts_only', 'test', manual=True)
 
     assert_df("""
@@ -324,10 +324,10 @@ def test_first_manual(engine, tsh):
 
 
 def test_more_manual(engine, tsh):
-    ts = genserie(datetime(2015, 1, 1), 'D', 5)
+    ts = genserie(datetime(2015, 1, 1), 'd', 5)
     tsh.update(engine, ts, 'ts_exp1', 'test')
 
-    ts_man = genserie(datetime(2015, 1, 3), 'D', 3, -1)
+    ts_man = genserie(datetime(2015, 1, 3), 'd', 3, -1)
     ts_man.iloc[-1] = np.nan
     # erasing of the laste value for the date 5/1/2015
     tsh.update(engine, ts_man, 'ts_exp1', 'test', manual=True)
@@ -351,19 +351,19 @@ def test_more_manual(engine, tsh):
 
 
 def test_revision_date(engine, tsh):
-    ts = genserie(datetime(2010, 1, 4), 'D', 4, [1], name='truc')
+    ts = genserie(datetime(2010, 1, 4), 'd', 4, [1], name='truc')
     tsh.update(
         engine, ts, 'ts_through_time', 'test',
         insertion_date=pd.Timestamp(datetime(2015, 1, 1, 15, 43, 23), tz='UTC')
     )
 
-    ts = genserie(datetime(2010, 1, 4), 'D', 4, [2], name='truc')
+    ts = genserie(datetime(2010, 1, 4), 'd', 4, [2], name='truc')
     tsh.update(
         engine, ts, 'ts_through_time', 'test',
         insertion_date=pd.Timestamp(datetime(2015, 1, 2, 15, 43, 23), tz='UTC')
     )
 
-    ts = genserie(datetime(2010, 1, 4), 'D', 4, [3], name='truc')
+    ts = genserie(datetime(2010, 1, 4), 'd', 4, [3], name='truc')
     tsh.update(
         engine, ts, 'ts_through_time', 'test',
         insertion_date=pd.Timestamp(datetime(2015, 1, 3, 15, 43, 23), tz='UTC')
@@ -410,7 +410,7 @@ def test_revision_date(engine, tsh):
 
 
 def test_before_first_insertion(engine, tsh):
-    tsh.update(engine, genserie(datetime(2010, 1, 1), 'D', 11), 'ts_shtroumpf', 'test')
+    tsh.update(engine, genserie(datetime(2010, 1, 1), 'd', 11), 'ts_shtroumpf', 'test')
 
     # test get_marker with an unknown series vs a serie  displayed with
     # a revision date before the first insertion
@@ -431,7 +431,7 @@ def test_get_many(engine, tsh):
         for name in ('scalarprod', 'base', 'comp1', 'comp2', 'repusum', 'repuprio'):
             tsh.delete(cn, name)
 
-    ts_base = genserie(datetime(2010, 1, 1), 'D', 3, [1])
+    ts_base = genserie(datetime(2010, 1, 1), 'd', 3, [1])
     tsh.update(engine, ts_base, 'base', 'test')
 
     tsh.register_formula(
@@ -451,7 +451,7 @@ def test_get_many(engine, tsh):
     # get_many, republications & revision date
     for idx, idate in enumerate(pd.date_range(datetime(2015, 1, 1),
                                               datetime(2015, 1, 3),
-                                              freq='D',
+                                              freq='d',
                                               tz='utc')):
         tsh.update(engine, ts_base * idx, 'comp1', 'test',
                    insertion_date=idate)
@@ -498,9 +498,9 @@ def test_get_many(engine, tsh):
 
 
 def test_origin(engine, tsh):
-    ts_real = genserie(datetime(2010, 1, 1), 'D', 10, [1])
-    ts_nomination = genserie(datetime(2010, 1, 1), 'D', 12, [2])
-    ts_forecast = genserie(datetime(2010, 1, 1), 'D', 20, [3])
+    ts_real = genserie(datetime(2010, 1, 1), 'd', 10, [1])
+    ts_nomination = genserie(datetime(2010, 1, 1), 'd', 12, [2])
+    ts_forecast = genserie(datetime(2010, 1, 1), 'd', 20, [3])
 
     tsh.update(engine, ts_real, 'realised', 'test')
     tsh.update(engine, ts_nomination, 'nominated', 'test')
@@ -562,7 +562,7 @@ def test_origin(engine, tsh):
 
 
 def test_na_and_delete(engine, tsh):
-    ts_repushed = genserie(datetime(2010, 1, 1), 'D', 11)
+    ts_repushed = genserie(datetime(2010, 1, 1), 'd', 11)
     ts_repushed[0:3] = np.nan
     tsh.update(engine, ts_repushed, 'ts_repushed', 'test')
     diff = tsh.update(engine, ts_repushed, 'ts_repushed', 'test')
@@ -570,7 +570,7 @@ def test_na_and_delete(engine, tsh):
 
 
 def test_exotic_name(engine, tsh):
-    ts = genserie(datetime(2010, 1, 1), 'D', 11)
+    ts = genserie(datetime(2010, 1, 1), 'd', 11)
     tsh.update(engine, ts, 'ts-with_dash', 'test')
     tsh.get(engine, 'ts-with_dash')
 
@@ -579,8 +579,8 @@ def test_historic_delta(engine, tsh):
     tictac = False
     for insertion_date in pd.date_range(start=datetime(2015, 1, 1),
                                         end=datetime(2015, 1, 2),
-                                        freq='H'):
-        ts = genserie(start=insertion_date, freq='H', repeat=6)
+                                        freq='h'):
+        ts = genserie(start=insertion_date, freq='h', repeat=6)
         tsh.update(engine, ts, 'republication', 'test',
                    insertion_date=pd.Timestamp(insertion_date, tz='UTC'),
                    manual=tictac)
@@ -622,10 +622,10 @@ def test_staircase_formula(engine, tsh):
     dr = pd.date_range(
         start=datetime(2015, 1, 1),
         end=datetime(2015, 1, 2),
-        freq='H'
+        freq='h'
     )
     for insertion_date in dr:
-        ts1 = genserie(start=insertion_date, freq='H', repeat=6)
+        ts1 = genserie(start=insertion_date, freq='h', repeat=6)
         ts2 = ts1 + 1
         tsh.update(
             engine, ts1, 'rep1', 'test',
@@ -728,7 +728,7 @@ def test_staircase_formula(engine, tsh):
 def test_formula_metadata(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
-        index=pd.date_range(utcdt(2020, 1, 1), freq='D', periods=3)
+        index=pd.date_range(utcdt(2020, 1, 1), freq='d', periods=3)
     )
 
     tsh.update(
