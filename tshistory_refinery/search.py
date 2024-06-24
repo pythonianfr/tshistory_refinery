@@ -27,6 +27,13 @@ class hascachepolicy(query):
             {}
         )
 
+    @staticmethod
+    def __sig__():
+        return {
+            'return': 'query'
+        }
+
+
 class cachepolicy(query):
     __slots__ = ('query',)
 
@@ -54,6 +61,13 @@ class cachepolicy(query):
             f')',
             {vid: f'%%{self.query}%%'}
         )
+
+    @staticmethod
+    def __sig__():
+        return {
+            'query': 'str',
+            'return': 'query'
+        }
 
 
 _OPMAP['by.cache'] = 'hascachepolicy'
