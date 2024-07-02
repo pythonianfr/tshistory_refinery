@@ -330,7 +330,7 @@ def test_more_manual(engine, tsh):
     ts_man = genserie(datetime(2015, 1, 3), 'd', 3, -1)
     ts_man.iloc[-1] = np.nan
     # erasing of the laste value for the date 5/1/2015
-    tsh.update(engine, ts_man, 'ts_exp1', 'test', manual=True)
+    tsh.update(engine, ts_man, 'ts_exp1', 'test', manual=True, keepnans=True)
 
     ts_get = tsh.get(engine, 'ts_exp1')
 
