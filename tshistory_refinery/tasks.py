@@ -151,3 +151,25 @@ def refresh(task):
                 'ts_status': json.dumps(status)
             }
         )
+
+
+# migration
+
+@task(
+    domain='default',
+    inputs=(
+        rio.number('cpus', required=True),
+    )
+)
+def migrate_diffs(task):
+    from tshistory.migrate import migrate_add_diffstart_diffend
+
+    cpus = task.input['cpus']
+
+    engine = task.engine
+    with task.capturelogs(std=True):
+        migrate_add_diffstart_diffend(engine, 'tsh', False, True, cpus=cpus)
+        migrate_add_diffstart_diffend(engine, 'tsh.group', False, True, cpus=cpus)
+        migrate_add_diffstart_diffend(engine, 'tsh-upstream', False, True, cpus=cpus)
+        migrate_add_diffstart_diffend(engine, 'tsh-formula-patch', False, True, cpus=cpus)
+        migrate_add_diffstart_diffend(engine, 'tsh-cache', False, True, cpus=cpus)
