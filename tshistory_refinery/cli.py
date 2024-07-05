@@ -6,8 +6,8 @@ from sqlhelp import sqlfile
 
 from rework.helper import host
 from rework import api
+from tshistory.api import timeseries
 from tshistory.util import find_dburi
-from tshistory_refinery.helper import config, apimaker
 from tshistory_refinery.schema import refinery_schema
 from tshistory_refinery import cache
 
@@ -64,7 +64,7 @@ def list_series_locks(db_uri, policy_name=None, kill=False):
     dburi = find_dburi(db_uri)
     engine = create_engine(dburi)
 
-    tsa = apimaker(config())
+    tsa = timeseries()
     print('Series having a lock, per policy')
 
     if policy_name:
