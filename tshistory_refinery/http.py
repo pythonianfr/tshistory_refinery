@@ -11,7 +11,7 @@ from tshistory.http.util import (
     required_roles
 )
 from tshistory.http.client import unwraperror
-from tshistory_xl.http import (
+from tshistory_xl.http_xl import (
     xl_httpapi,
     xl_httpclient
 )
