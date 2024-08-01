@@ -222,11 +222,11 @@ class timeseries(xlts):
         )
 
     @tx
-    def rename(self, cn, oldname, newname):
+    def rename(self, cn, oldname, newname, propagate=True):
         if self.type(cn, oldname) == 'formula':
-            self.cache.rename(cn, oldname, newname)
+            self.cache.rename(cn, oldname, newname, propagate=propagate)
 
-        return super().rename(cn, oldname, newname)
+        return super().rename(cn, oldname, newname, propagate=propagate)
 
     @tx
     def delete(self, cn, name):
