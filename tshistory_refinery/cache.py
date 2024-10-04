@@ -312,25 +312,6 @@ def series_ready(cn, series_name, namespace='tsh'):
     ).scalar()
 
 
-def _set_series_ready(engine, series_name, val, namespace='tsh'):
-    """ Mark the cache readiness for a series """
-    assert isinstance(val, bool)
-    print('set ready', series_name, val, namespace)
-    q = (
-        f'update "{namespace}".cache_policy_series as middle '
-        f'set ready = %(val)s '
-        f'from "{namespace}".registry as series '
-        f'where middle.series_id = series.id and '
-        f'      series.name = %(seriesname)s'
-    )
-    with engine.begin() as cn:
-        cn.execute(
-            q,
-            seriesname=series_name,
-            val=val
-        )
-
-
 def series_policy(cn, series_name, namespace='tsh'):
     """ Return the cache policy for a series """
     q = (
@@ -355,14 +336,16 @@ def series_policy(cn, series_name, namespace='tsh'):
 
 @contextmanager
 def series_refresh_lock(engine, name, namespace):
-    _set_series_ready(engine, name, False, namespace=namespace)
-    try:
-        yield
-    except:
-        traceback.print_exc()
-        raise
-    finally:
-        _set_series_ready(engine, name, True, namespace=namespace)
+    with engine.begin() as cn:
+        xactkey = helper.hash64(name)
+        cn.execute(
+            f'select pg_advisory_xact_lock({xactkey})'
+        )
+        try:
+            yield
+        except:
+            traceback.print_exc()
+            raise
 
 
 def _insertion_dates(tsa,
