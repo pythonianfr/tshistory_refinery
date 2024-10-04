@@ -19,6 +19,16 @@ class Migrator(_Migrator):
         fix_user_metadata(self.engine, f'{self.namespace}-cache', self.interactive)
 
 
+@version('tshistory-refinery', '0.9.1')
+def migrate_drop_ready(engine, namespace, interactive):
+    sql = (
+        f'alter table "{namespace}".cache_policy_series '
+        f'drop column if exists ready'
+    )
+    with engine.begin() as cn:
+        cn.execute(sql)
+
+
 @version('tshistory-refinery', '0.9.0')
 def migrate_revision_table(engine, namespace, interactive):
     from tshistory.migrate import migrate_add_diffstart_diffend

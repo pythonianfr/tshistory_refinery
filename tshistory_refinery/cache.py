@@ -297,21 +297,6 @@ def unset_policy(cn, series_name, namespace='tsh'):
     )
 
 
-def series_ready(cn, series_name, namespace='tsh'):
-    """ Return the cache readiness for a series """
-    q = (
-        f'select middle.ready '
-        f'from "{namespace}".cache_policy_series as middle, '
-        f'     "{namespace}".registry as series '
-        f'where middle.series_id = series.id and '
-        f'      series.name = %(seriesname)s'
-    )
-    return cn.execute(
-        q,
-        seriesname=series_name
-    ).scalar()
-
-
 def series_policy(cn, series_name, namespace='tsh'):
     """ Return the cache policy for a series """
     q = (
@@ -435,10 +420,6 @@ def refresh_series(engine, tsa, name, final_revdate=None):
     tsh = tsa.tsh
     policy = series_policy(engine, name, tsh.namespace)
 
-    if not series_ready(engine, name, namespace=tsh.namespace):
-        print(f'Series {name} already being updated. Bailing out. {tsh.namespace=}')
-        return
-
     # now, prepare the formula
     formula = tsa.formula(name)
 
@@ -550,10 +531,6 @@ def refresh_now(engine, tsa, name):
     """ Refresh a series cache on the spot (do not follow revdate_rule) """
     tsh = tsa.tsh
     policy = series_policy(engine, name, tsh.namespace)
-
-    if not series_ready(engine, name, namespace=tsh.namespace):
-        print(f'Series {name} already being updated. Bailing out.')
-        return
 
     exists = tsh.cache.exists(engine, name)
     if not exists:
