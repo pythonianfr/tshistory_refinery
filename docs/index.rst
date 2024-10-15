@@ -20,9 +20,7 @@ The Timeseries Refinery is a tool that :
    :maxdepth: 2
    :caption: Content
 
-   usage
-   supervision
-   formula
-   rework
+   getting_started/index
+   fundamental_blocks/index
    api
 

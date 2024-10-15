@@ -1,5 +1,5 @@
 API documentation
-==============================================
+=================
 
 All the api points are available through the `timeseries` object. As in:
 
