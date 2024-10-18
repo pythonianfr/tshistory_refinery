@@ -17,7 +17,7 @@ The Timeseries Refinery is a tool that :
 .. image:: _static/TSR.png
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Content
 
    getting_started/index
