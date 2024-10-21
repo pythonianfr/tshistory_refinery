@@ -4,34 +4,93 @@ Package overview
 Purpose
 -------
 
-``tshistory`` is targetted at applications using time series where
-`backtesting <https://en.wikipedia.org/wiki/Backtesting>`__ and
-`cross-validation <https://en.wikipedia.org/wiki/Cross-validation_(statistics)>`__
-are an essential feature.
+The "timeseries refinery" is a powerful tool to build complete time
+series information systems.
 
-It provides exhaustivity and efficiency of the storage, with a simple
-Python api.
+It provides:
+
+* a **versioned** time series (compact) storage system with a simple
+  yet powerful API (direct in python + REST)
+
+* an edition/supervision workflow for experts
+
+* **computed** versioned time series using a simple yet expressive
+  dedicated **formula language** (think about Excel formulas, but
+  simpler and specialised for time series) with a simple API
+
+* a cache system for the computed series
+
+* a **central repository** of time series (stored or computed)
+
+* rich **metadata** support and **querying/filtering** over various
+  kinds of metadata
+
+* support for **timezone aware** and naive time series
+
+* a **data-mesh** distributed architecture allowing to connect to
+  other refineries (for **collaborative work**) or other time series
+  silos
+
+* a task manager and a mini-framework to handle regular **ingestion**
+  of time series from external or internal sources, and also **model
+  runs**
+
+* a tool to **detect/watch** the series lagging behind (because of
+  failing sources)
+
+* a powerful **low-code declarative dashboard** system (specially
+  targetted at energy comodity markets)
+
+* a **rich web user interface** allowing exploration of the catalog,
+  visualisation and edition of series, formulas, caches, tasks,
+  watchers and dashboards
 
 It can be used as a building block for machine learning, model
 optimization and validation, both for inputs and outputs.
 
 
-Principles
-----------
+Usages
+------
 
-There are many ways to represent timeseries in a relational database,
-and ``tshistory`` provides two things:
+The time series repository can be used from the user interface. It has
+also been prominently designed with a data analyst friendly Python
+level API (in addition to the standard REST API).
 
--  a base python API which abstracts away the underlying storage
+The refinery can be used:
 
--  a postgres model, which emphasizes the compact storage of successive
-   states of series
+* as a standalone tool
 
-The core idea of tshistory is to handle successive versions of
-timeseries as they grow in time, allowing to get older states of any
-series.
+* as a framework to build your own applications on top
 
-TO BE ADDED : Timeseries versioned, tzawareness, naming convention, federation
+* as a library that you can embed in your (Python) applications
+
+It provides several extension points through a plugin system. The API
+can be extended, the formula system can receive new custom
+operators/functions.
+
+It has been designed to cooperate nicely within any existing IT
+infrastructure addressing time series data needs.
+
+Its primary purposes and design goals are:
+
+* to give maximum **autonomy** to non-programmers working with time
+  series data (analysts, data scientists), without having to beg the
+  IT department
+
+* to give very **user-friendly APIs** to manipulate data and
+  computations
+
+* to provide an extensive **audit trail** from the acquired external
+  data to the final dashboard product (it makes it easy to understand
+  the provenance of all the data)
+
+* to foster good **data governance** and **collaboration** over the
+  time series repository
+
+* all that while providing an **efficient storage** system and
+  **horizontal scalability**
+
+
 
 License
 -------
