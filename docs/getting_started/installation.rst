@@ -5,18 +5,54 @@ Installation
 The different ways to install (pypi, docker)
 --------------------------------------------
 
-To be filled
+The installation can be realised by two means:
+
+* directly from pypi (the public one, where one finds a stable - if
+  old - version of the refinery, or the private one at
+  `pypi.pythonian.fr`, where we make the latest fixes and major
+  versions available to subscribers)
+
+* from docker images (available to subscribers)
+
+
+To get a fresh installation of the Refinery on your Python
+environment, just type:
+
+.. code:: bash
+
+   pip install tshistory_refinery
+
+For an upgrade:
+
+.. code:: bash
+
+   pip install tshistory_refinery --upgrade
+
+
+To get the code from pypi.pythonian.fr, just do a:
+
+.. code:: bash
+
+   pip install tshistory_refinery --index-url https://pypi.pythonian.fr
+
+
 
 Installing on Linux, Macos, Windows
 -----------------------------------
 
-Just pip-install it:
+Once pip-installed, you need also a working Postgres database.
+
+On Linux, getting postgres can be made using
+https://www.postgresql.org/download/linux/. On MacOs, doing a:
 
 .. code:: bash
 
-   $ pip install tshistory_refinery
+   brew install postgresql
 
-Create first a postgresql database:
+For Windows: get it from https://www.postgresql.org/download/windows/.
+
+Once installed and configured, you can create first a postgresql
+database:
 
 .. code:: bash
 
@@ -42,6 +78,15 @@ refinery.
 .. code:: bash
 
    tsh webstart
+
+.. note::
+
+   The `tsh webstart` command is suitable for a local development
+   environement. For production purposes you probably want to use a
+   wsgi container such as `gunicorn`.
+
+   The `app` object used by wsgi containers can be found at
+   `tshistory_refinery.wsgi:app`.
 
 
 Upgrading and migrating
