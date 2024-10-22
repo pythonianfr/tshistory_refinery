@@ -148,14 +148,100 @@ This is one of the simplest thing we can do to acquire data.
    way to organize this and address the issues listed above.
 
 
+Using the task manager
+----------------------
+
+To have this scraping function running, we need a scheduler. We
+propose a small tour of the integrated task manager.
+
+Here is how it looks:
+
+.. image:: ./tasks.png
+
+The first tab shows the list of tasks that are either:
+
+* queued
+
+* running
+
+* done (or failed or aborted)
+
+Each task shown there is defined by a Python function and an input.
+
+The tasks do not run at arbitrary times: the scheduler tab shows how
+tasks will be scheduled.
+
+.. image:: ./schedulers.png
+
+The most important column in this view is `scheduler`: it exposes a
+scheduling rule whose syntax obeys the laws of the `cron
+<https://en.wikipedia.org/wiki/Cron>`_ tool, plus support for the
+seconds.
+
+The `plan` tab shows the tasks that will be scheduled in the next 1
+hour.
+
+.. image:: ./plan.png
+
+This is all what we need to finely control our scraping
+activities. Now let's look at how to land it there !
+
+
 Writing and using scrapers for primary series
 ---------------------------------------------
+
+We need to define a task:
+
+.. code:: python
+
+   from rework.api import task
+
+   @task
+   def scrap_res_generation_forecast_entsoe(task):
+       get_res_generation_forecast_entsoe()
+
+
+This is the strict minimum. For comfort, we can do a bit more, as in
+this version:
+
+.. code:: python
+
+   from rework.api import task
+
+   @task
+   def scrap_res_generation_forecast_entsoe(task):
+       with task.capturelogs(std=True):
+           get_res_generation_forecast_entsoe()
+           print('Success !')
+
+The `capturelogs` context manager will make sure the task system will
+collect, when the task runs, all the logs. The `std` parameter allows
+to also capture everything coming out of the `print` function. Very
+handy to trace and follow what is going on.
+
+Having written this, we must register the task. We'll do like this
+(assuming you have put the code above in a Python module named
+`mytasks.py`):
+
+.. code:: bash
+
+   $ rework register-operations refinery mytasks.py
+
+Now, this is ready to run. You can go to the `Launchers` tab and start
+your task immediately, or go the `Schedulers` tab and organize its
+scheduling rule (there is an action for that at the bottom of the
+page).
+
+When the task is appearing in the tasks list, you can click on its
+name to get to see the logs. It may look like that:
+
+.. image:: ./tasklog.png
+
+
 
 Building formulas on top to get curated series
 ----------------------------------------------
 
-Introduce the task manager
---------------------------
 
 Feeding a model with series, getting the output in the system, with the task manager
 ------------------------------------------------------------------------------------
