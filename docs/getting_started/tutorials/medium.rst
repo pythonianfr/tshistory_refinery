@@ -73,12 +73,80 @@ feed the time series repository; for instance using `cron` on Linux or
 
 This is a bare-bones solution, which unsurprinsinly is largely used in
 the industry. Some prefer to use sophisticated and refined task
-schedulers such as Apache AirFlow, for the additional capacities it
-provides. Later in this document we will show how to use the Refinery
-integrated task manager to set up powerful data acquisition pipelines.
+schedulers such as `Apache AirFlow <https://airflow.apache.org/>`_,
+for the additional capacities it provides. Later in this document we
+will show how to use the Refinery integrated task manager to set up
+powerful data acquisition pipelines.
 
 Now, let's back to our scraping function and examine what it does in
 detail.
+
+.. code:: python
+
+        fromdate = pd.to_datetime('today') - pd.Timedelta(1, 'd')
+        todate = pd.to_datetime('today') + pd.Timedelta(7, 'd')
+
+Here we start by defining the time window for the data to be
+fetched. Since it is about forecasts, a window from yesterday to next
+week is reasonnable.
+
+.. code:: python
+
+        try:
+            df = EntsoePandasClient(api_key='apikey').query_wind_and_solar_forecast(
+                'FR',
+                start=fromdate.tz_localize('Europe/Paris'),
+                end=todate.tz_localize('Europe/Paris'),
+            )
+        except NoMatchingDataError:
+            return
+
+Next, we fetch the data using the ENTSO-E client dedicated method. We
+provide the `zone` and the time window. On error we exit immediately.
+
+.. code:: python
+
+        name_map = {
+            'Solar': 'power.prod.solar.fr.mwh.entsoe.fcst.h',
+            'Wind Onshore': 'power.prod.windonshore.fr.mwh.entsoe.fcst.h'
+        }
+
+The resulting data frame may have several columns. We *know* (by
+reading the documentation) that in our case (zone `FR`) we will have
+two columns. We construct a mapping from these column names to the
+series names we want to have. It is very important to have a good
+naming convention (in our case we indicate: nature of the flux, type
+of production, zone, provenance of the data, nature of the data
+- forecast is not observed nor a nomination - and finally the
+expected granularity).
+
+.. code:: python
+
+        tsa = timeseries()
+        for col, name in name_map.items():
+            tsa.update(name, df[col], 'entsoe-scraper')
+
+We create the time series refinery api object and then do an update of
+the series.
+
+This is one of the simplest thing we can do to acquire data.
+
+.. note::
+
+   This however is a bit ad-hoc and lacks separation of concerns:
+
+   * acquisition and injection happens in the same place
+
+   * the horizon/time window handling is hard-coded
+
+   * there is no handling of metadata, and we won't know easily the
+     provenance of the acquired data
+
+   * we hard-coded the zone and time window
+
+   In the chapter on advanced topics we will propose a more structured
+   way to organize this and address the issues listed above.
+
 
 Writing and using scrapers for primary series
 ---------------------------------------------
