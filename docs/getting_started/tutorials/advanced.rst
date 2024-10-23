@@ -15,6 +15,21 @@ We will address:
   raw series
 
 
+Doing your own app using the Refinery
+-------------------------------------
+
+The Refinery works well as a stand-alone tool, until you need to do
+any of the following:
+
+* data acquisition with dedicated tasks
+
+* new api points
+
+* new formula operators
+
+The first item is by far the most common.
+
+
 Data acquisition: a structured path
 ------------------------------------
 
