@@ -14,7 +14,11 @@ release = '0.8.0'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'autoapi.extension']
+extensions = [
+    'sphinx.ext.autodoc',
+    'autoapi.extension',
+    'sphinx.ext.autosectionlabel'
+]
 autoapi_dirs = ['../tshistory_refinery']
 autoapi_generate_api_docs = False
 autodoc_typehints = 'description'

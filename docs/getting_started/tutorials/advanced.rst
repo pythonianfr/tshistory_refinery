@@ -18,6 +18,10 @@ We will address:
 Data acquisition: a structured path
 ------------------------------------
 
+In the chapter :ref:`Pipelines : starting with injecting data` we
+described an effective yet rudimentary strategy to implement data
+acquisition. The Refinery provides a tool to enable a better
+organization of this.
 
 Performance aspects: time series granularity and length
 --------------------------------------------------------
