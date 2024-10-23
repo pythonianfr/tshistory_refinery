@@ -224,6 +224,12 @@ collect, when the task runs, all the logs. The `std` parameter allows
 to also capture everything coming out of the `print` function. Very
 handy to trace and follow what is going on.
 
+.. note::
+
+   The `@task` decorator supports various options not shown there. You
+   will find a complete description of its capabilities in the chapter
+   on the task manager. Notable options are `domain` and `timeout`.
+
 Having written this, we must register the task. We'll do like this
 (assuming you have put the code above in a Python module named
 `mytasks.py`):
@@ -243,7 +249,6 @@ When the task is appearing in the tasks list, you can click on its
 name to get to see the logs. It may look like that:
 
 .. image:: ./tasklog.png
-
 
 
 Building formulas on top to get curated series
