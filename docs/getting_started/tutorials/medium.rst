@@ -175,8 +175,13 @@ tasks will be scheduled.
 
 The most important column in this view is `scheduler`: it exposes a
 scheduling rule whose syntax obeys the laws of the `cron
-<https://en.wikipedia.org/wiki/Cron>`_ tool, plus support for the
-seconds.
+<https://en.wikipedia.org/wiki/Cron>`_ tool.
+
+.. note::
+
+   The cron-like notation used for the scheduler actually supports
+   rules down to the seconds, hence the 6 fields. The rules for
+   seconds are the same as for minutes.
 
 The `plan` tab shows the tasks that will be scheduled in the next 1
 hour.
