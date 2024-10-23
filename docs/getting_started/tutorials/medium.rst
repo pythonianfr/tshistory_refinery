@@ -63,7 +63,7 @@ UE power markets.
 
         tsa = timeseries()
         for col, name in name_map.items():
-            tsa.update(name, df[col], 'entsoe-scraper')
+            tsa.update(name, df[col], author='entsoe-scraper')
 
 
 Such a scraping function, put into a Python script, could then be
@@ -253,6 +253,138 @@ name to get to see the logs. It may look like that:
 
 Building formulas on top to get curated series
 ----------------------------------------------
+
+With the basics of data injection in place, we can now turn to the
+construction of the time series we actually want. It is certainly
+possible to write *computing functions* and put them into tasks like
+we did for data acquisition, but we propose a nicer way to do
+it. Indeed, arbitrary Python code is very powerful but it has
+downsides:
+
+* it is unsafe (you just can't accept random python code from your
+  analysts on the server side of operations), so you need a lengthy
+  and costly validation workflow to have it deployed
+
+* it is (by default at least) not type-safe
+
+* it takes quite some time to learn to do it properly
+
+* it is not easily reusable or composable nor shareable (still
+  possible but it takes a lot of learning to do it properly)
+
+* seeing the computation may be difficult and auditing it can become
+  very complicated quickly
+
+We have a solution to these issues:
+
+* use a very simple safe domain specific expression language to do the
+  computations
+
+* call this a "formula language" (like for Excel), suitable for
+  non-programmers
+
+* do the computations on the fly (by default: doing materialized
+  computations remains possible, especially for performance reasons)
+
+* provide a vast array of composable primitive operators (all of
+  pandas can be made available if necessary, plus more)
+
+* define computed time series from this base, that will a) belong to
+  the time series referential and b) look like a stored time series
+  for all intents and purposes (for the read operations at least)
+
+By limiting the computation power, we actually gain more powers !
+
+In the basics chapter we learnt how to create and use formulas. Let
+see how to apply this knowledge to build our time series information
+system.
+
+A first step would be *normalization*. Its purpose is to adress the
+following (non-exhaustive) list of questions :
+
+* do the raw series have the needed granularities ?
+
+* are these granularities actually constant ? If we perform our
+  analysis on e.g. hourly time series, can we make sure our
+  computation will start from hourly series (without throwing away
+  data) ?
+
+* are the raw data using the units we want to work with (e.g. MWh,
+  euros) ?
+
+* are the raw series complete or do we need to combine some together
+  to get a coherent picture ?
+
+* how do we manage outliers ?
+
+So we can write formulas that provides a first layer of
+transformation.
+
+Assuming we scrap the series
+`power.price.spot.at.da.eurmwh.entsoe.obs.raw` from ENTSO-E; that
+series flipped from hourly to 15-minutely granularity in october 22,
+and later reverted back to hourly. We want to prevent this
+discontinuity. So let's write a simple formula:
+
+.. code:: lisp
+
+   (resample "power.price.spot.at.da.eurmwh.entsoe.obs.raw" "h")
+
+Using the `register_formula` api call, we create
+`power.price.spot.at.da.eurmwh.entsoe.obs.h`:
+
+.. code:: python
+
+ tsa.register_formula(
+     'power.price.spot.at.da.eurmwh.entsoe.obs.h',
+     '(resample "power.price.spot.at.da.eurmwh.entsoe.obs.raw" "h")'
+ )
+
+Meteo temperature time series from `ERA5
+<https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5>`_ are
+provided in Kelvin. A conversion to Celsius could be useful:
+
+.. code:: lisp
+
+   (+ -273.15 (series "meteo.area.ch.2t.k.era5.obs.h"))
+
+Completeness: it is not uncommon to have raw series describing the
+same fundamental data, while being different in a subtle way. For
+instance, one source has a long history but its update frequency on
+recent data is spotty; and then you find another source with less
+history depth but more stringent update baheviour. Let's combine them
+into a well-behaved series:
+
+.. code:: lisp
+
+   (priority
+       (series "power.price.spot.dk1.da.eurmwh.entsoe.obs.h")
+       (series "power.price.spot.dk1.da.eurmwh.epex.obs.h"))
+
+The `priority` operator is immensely helpful there. It wil take the
+points of the first series if there are any - barring that, the points
+of the second series are selected.
+
+Another situation for `priority`, with 3 series this time: some flux
+have observed data, nominated data, and forecasted data. We can
+combined these three into a single series:
+
+.. code:: lisp
+
+   (priority
+       (series "gas.flow.ne.dunkirk.gassco.msmd.obs")
+       (series "gas.flow.ne.dunkirk.gassco.msmd.nom")
+       (series "gas.flow.ne.dunkirk.gassco.msmd.fcst")
+
+Outliers: this is a complex topic, which is highly dependent on the
+nature of the data. There exists simple situations where bluntly
+removing obviously bogus values works. To do that, we can use the
+`clip` operator.
+
+.. code:: lisp
+
+   (clip (series "this-series-cannot-be-negative") #:min 0)
+
 
 
 Feeding a model with series, getting the output in the system, with the task manager
