@@ -1,6 +1,24 @@
 To the next level
 =================
 
+In this chapter we will explore aspects of the system that go beyond
+the simplest steps taken to build a relatively simple time series
+information system.
+
+We will address:
+
+* performance issues regarding stored and computed series
+
+* working in depth with the task manager to build robust pipelines
+
+* how to efficiently organize the acquisition of a vast referential of
+  raw series
+
+
+Data acquisition: a structured path
+------------------------------------
+
+
 Performance aspects: time series granularity and length
 --------------------------------------------------------
 
