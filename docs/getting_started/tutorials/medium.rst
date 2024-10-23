@@ -237,6 +237,8 @@ your task immediately, or go the `Schedulers` tab and organize its
 scheduling rule (there is an action for that at the bottom of the
 page).
 
+.. image:: ./newsched.png
+
 When the task is appearing in the tasks list, you can click on its
 name to get to see the logs. It may look like that:
 
