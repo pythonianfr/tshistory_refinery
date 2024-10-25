@@ -347,8 +347,54 @@ And then schedule the regular updates like that:
 Now we are really set.
 
 
-Performance aspects: time series granularity and length
---------------------------------------------------------
+Performance aspects: stored time series and formulas
+----------------------------------------------------
+
+Managing a time series information system entails understanding a
+number of performance aspects. These are related to two main metrics:
+
+* data volumetry
+
+* amount of computation done
+
+On data, the standard metric in the industry is the number of
+points. This is too imprecise however to understand read and write
+performance aspects, and also the storage density aspect of the
+Refinery.
+
+The time series storage logical model is built on a tree of blocks. We
+basically store:
+
+* version entities, each pointing to an initial block
+
+* a tree of blocks of compressed points - up to 150 points can be
+  lumped together into a single block
+
+This model is unremarkable when it comes to store a lot of versions
+with few points. The worst case would be one version with one
+point. However it shines when it comes to handling large amounts of
+points with a reasonnable amount of versions; for instance, meteo
+forecasts which come three to four times per day with 15 days worth of
+hourly forecasts. Density storage in these circumstances is excellent.
+
+On computation (for the formulas), the effort is directly proportional to:
+
+* the amount of data involved,
+
+* the complexity of involved operations.
+
+A simple `resample` formula is cheap and can be computed on the fly
+with a reasonnably small overhead. But in a developped time series
+information system, formulas of formulas exist and it is possible to
+have a very deep level of formulas made of formulas until one hits the
+ground of stored time series, hence increasing latency, sometimes very
+noticeably.
+
+When the performance of complex formulas becomes an issue, it is
+possible to set up a regularly refreshed materialized view, or
+`cache`, which will make operational use of the complex formulas
+manageable again. This aspect is addressed in the next chapter.
+
 
 Formulas: when to use a cache/materialized view
 ------------------------------------------------
