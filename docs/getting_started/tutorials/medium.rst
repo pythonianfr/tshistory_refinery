@@ -390,7 +390,157 @@ removing obviously bogus values works. To do that, we can use the
 Feeding a model with series, getting the output in the system, with the task manager
 ------------------------------------------------------------------------------------
 
-Building a basic dashboard
---------------------------
+**Overview**
+
+In this section, we demonstrate how to implement a model in
+the timeseries refinery. As an example, we use a simple linear
+regression, to emphasize the interaction with the refinery.
+A modelisation process will alternate between two main phases:
+calibration and forecast.
+
+The calibration process needs input and output data and produces
+calibration parameters.
+
+The forecast process needs input data and calibration parameters
+and produces output estimation.
+
+The calibration parameters are stored in base, which allows to
+decouple the two operations. Moreover, the evolution of these
+parameters is valuable information, hence we want to store them
+without deleting the previous ones. For this purpose, we use the
+dbcache package shipped with `tshistory_refinery`. 
+
+This package proposes 3 types of API:
+
+- a cache with an associated lifetime
+- a key-value store
+- a versioned key-value store
+
+In this case we are using the later (called `vkvstore`).
+
+**Initialisation**
+
+We initialize in the postgres database a new namespace dedicated to
+our models parameters.
+In order to to that one has to type the following command:
+
+   > dbcache init-db  <dburi> --namespace calibration
+
+Here are now the python functions necessary:
+
+Necessary import:
+
+.. code-block:: python
+
+   import json
+
+   import pandas as pd
+   from sklearn.linear_model import LinearRegression
+   from sklearn.metrics import r2_score
 
 
+   from tshistory.api import timeseries
+   from dbcache.api import vkvstore
+
+
+calibration per se:
+
+.. code-block:: python
+
+   def calibrate(tsa):
+      # input
+      x = tsa.get('meteo.area.fr.2t.k.era5.obs.h')
+      # output
+      y = tsa.get('power.load.fr.mwh.entsoe.obs.h')
+      x.name = 'x'
+      y.name = 'y'
+      common = pd.concat([x, y], axis=1, join='inner')
+
+      predictor = LinearRegression(n_jobs=-1)
+      predictor.fit(X=common[['x']], y=common[['y']])
+      slope = predictor.coef_[0][0]
+      intercept = predictor.intercept_[0]
+
+      # we want to store some indicator of fitness:
+      r2 = r2_score(
+          common[['y']],
+          predictor.predict(common[['x']])
+      )
+      # we prepare the serialization of the calibration parameters
+      # the pickle method should be avoided for archive purpose
+      results = {
+          'slope': slope,
+          'intercept': intercept,
+          'r2': r2,
+      }
+
+      return results
+
+
+Save the calibration parameters
+
+.. code-block:: python
+
+   def save_coefficients(tsa, results):
+      store = vkvstore(tsa.uri, 'calibration')
+      # vkvstore use string as keys and bstring as values
+      json.dumps(results)
+      store.set(
+          'linear-calibration-key',
+          json.dumps(results).encode('utf-8')
+      )
+
+.. note::
+
+   Note the “calibration” string in the vkvstore api which reference the
+   string used as namespace in the dbcache init-db command
+
+
+Now for the forecasting, we need to load the saved parameters:
+
+
+.. code-block:: python
+
+   def load_coefficients(tsa):
+      store = vkvstore(tsa.uri, 'calibration')
+      stored = store.get('linear-calibration-key')
+      return json.loads(stored.decode('utf-8'))
+
+
+and finally read the input data, apply the model on it and store the
+results as a timeseries:
+
+.. code-block:: python
+
+   def forecast(tsa, coefficients):
+      x = tsa.get('meteo.area.fr.2t.k.era5.obs.h')
+      predicted = x * coefficients['slope'] + coefficients['intercept']
+      name = 'power.load.fr.mwh.linear.fcst.h'
+      tsa.update(
+          name,
+          predicted,
+          'linear-model'
+      )
+
+We can now assemble these operations in two distincts tasks:
+
+.. code-block:: python
+
+   @task(inputs=(), domain='models')
+   def linear_calibration(task):
+      with task.capturelogs(std=True):
+          tsa = timeseries()
+          results = calibrate(tsa)
+          save_coefficients(tsa, results)
+
+.. code-block:: python
+
+   @task(inputs=(), domain='models')
+   def linear_forecast(task):
+      with task.capturelogs(std=True):
+          tsa = timeseries()
+          coefficients = load_coefficients(tsa)
+          forecast(tsa, coefficients)
+
+This tasks can then be scheduled, accordingly to your calibration/forecasting
+rules.
