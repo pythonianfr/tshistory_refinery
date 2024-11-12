@@ -206,3 +206,47 @@ is how it goes:
    eflower_dev.pkce =
    eflower_dev.client_id = eflower-dev-public
    eflower_dev.domain = id.cloudcrane.tech.scaleway.cloudcrane.io/realms/pythonian
+
+
+Associating roles to users
+--------------------------
+
+Any user that connects to a Refinery instance through OIDC will be
+default have the `guest` status. Guests are unknown from the Refinery
+and can't see nor do anything at all.
+
+So one needs to assign users to relevant roles: `admin`, `rw` or
+`ro`. Two command line operations are provided to manage this:
+
+* tsh list-users-roles
+
+* tsh set-user-role
+
+The first lists the existing user / role mapping.
+Here's how it works.
+
+.. code:: bash
+
+   $ tsh list-users-roles
+   No user is currently known.
+
+   $ tsh set-user-role babar@timeseries.fr admin
+   $ tsh set-user-role celeste@timeseries.fr rw
+   $ tsh list-users-roles
+   Found 2 users.
+
+   admin → ['babar@timeseries.fr']
+   rw → ['celeste@timeseries.fr']
+
+   $ tsh set-user-role babar@timeseries.fr guest
+   $ tsh list-users-roles
+   Found 1 users.
+
+   rw → ['celeste@timeseries.fr']
+
+
+.. note::
+
+   A web ui in the `settings` section will also be provided in an
+   upcoming release to help perform these operations. The initial
+   `admin` role will still have to be set up through the command line.
