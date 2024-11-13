@@ -47,6 +47,13 @@ following:
 Working with OpenID Connect
 ...........................
 
+.. note::
+
+   The OpenID Connect adapter for the Refinery is an Open Source
+   component, like the rest of the Refinery, but it is provided in the
+   context of Pythonian's paying plans like e.g. the Premium
+   Subscription.
+
 This enables a very secure and seamless SSO experience for users if
 well configured. Moreover, it permits to assign roles to the
 users. Let's describe them right away, and their associated
