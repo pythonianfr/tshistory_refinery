@@ -399,6 +399,37 @@ manageable again. This aspect is addressed in the next chapter.
 Formulas: when to use a cache/materialized view
 ------------------------------------------------
 
+There exist two main scenarios leading to use a formula cache:
+
+* formulas with autotrophic operators
+
+* very complex (computation intensive) formulas
+
+The first case relates to custom operators made to act as a proxy for
+another time series repository. In the Refinery we have two builtin
+operators that are autotrophic: `series` and `constant`. These
+operators do not transform data, they are a source of data.
+
+Writing an autotrophic operator is a viable option if (and only if):
+
+* the remote source provides an API that can be adapted for the needs
+  of the Refinery,
+
+* the latency of the remote source remains reasonnably low.
+
+Even in the best case, such an operator can have some nasty
+performance caracteristics from the point of view of the remote
+source: a new load at arbitrary times that interferes with the load as
+initially designed. Caching formulas made with such operators can help
+smooth out the load and establish good relationships with the upstream
+source.
+
+The case of computationally intensive formulas is simple: we need to
+have access to a freshly computed version of the formula.
+
+We will explain how to do this in the next chapter.
+
+
 How to cache formulas
 ---------------------
 
