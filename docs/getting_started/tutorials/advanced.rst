@@ -433,6 +433,86 @@ We will explain how to do this in the next chapter.
 How to cache formulas
 ---------------------
 
+Caching a formula is not a matter of pushing a button and get a
+working cache ! That would be too easy ... The very nature of
+versioned time series forces us to think about how to do it properly.
+
+Let's have a look at a series from the point of view of the two time
+axis:
+
+.. image:: twoaxis.png
+
+The blue lines represent new points along the value date axis. We have
+new blue lines for each version. On this graph, we should realize that
+we are seeing elements of a forecast, for many points go into the
+future.
+
+Understanding the relationship between the `value dates` (horizontal
+axis) and `insertion dates` (vertical axis), and their regularities,
+is key to set up a working cache policy.
+
+So let's define immediately the notion of `cache policy`. It is
+caracterized by:
+
+* an `initial revision date` (or insertion date)
+
+* a `revision rule` for the advancement of the revision dates
+
+* a time window associated with the current revision date
+  (`look_before` / `look_after`)
+
+.. note::
+
+   We use the terms `revision date` and `insertion date` as pure
+   synonyms.
+
+If we apply these notions to the time series seen above, we can
+propose a cache policy like the following:
+
+.. image:: cachepolicy.png
+
+The optimal cache policy will exploit our knowledge of the time series
+temporality aspects.
+
+So with the `initial revision date` we put an arbitrary point in the
+past before which the time series formula has in effect no
+materialized counterpart. This is because old enough versions get more
+rarely accessed as time moves on. There has to be a compromise between
+time and space. Revisions before the `initial revision date` will be
+computed on the fly.
+
+The `revision rule` should match the expected refresh frequency of the
+time series. Since a formula's insertion dates is naturally the union
+of all the underlying components, it makes sense to think about this
+expected refresh frequency: we want to avoid getting spurious
+revisions, and we need to have all the relevant (business wise) ones.
+
+Lastly, the time window allows querying the system with limited
+bounds, so as to minimize the load when building the cache. For
+instance, using the full horizon all the time could have nasty
+performance implications.
+
+It must be configured so as to:
+
+* permit catching possible updates to the `observed` domain,
+
+* garantee the lossless ingestion of the `predictive` part of the
+  curve.
+
+Now let's observe how the presence of a formula cache affects the
+`reading` of such a time series:
+
+.. image:: cacheread.png
+
+.. note::
+
+   There is another aspect not mentioned in the above drawing: when
+   the time delta between `now` and the latest cache revision date is
+   two "ticks" behind according to the revision date rule (that is:
+   potentially stale), we do actually use the formula to get the
+   result.
+
+
 Tasks system: how to organize and schedule tasks
 ------------------------------------------------
 
