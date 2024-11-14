@@ -433,6 +433,9 @@ We will explain how to do this in the next chapter.
 How to cache formulas
 ---------------------
 
+Theory
+......
+
 Caching a formula is not a matter of pushing a button and get a
 working cache ! That would be too easy ... The very nature of
 versioned time series forces us to think about how to do it properly.
@@ -511,6 +514,69 @@ Now let's observe how the presence of a formula cache affects the
    two "ticks" behind according to the revision date rule (that is:
    potentially stale), we do actually use the formula to get the
    result.
+
+
+Practice
+........
+
+The Web UI provides a whole section dedicated to the maintenance of
+cache policies.
+
+.. image:: allpolicies.png
+
+The list at the top shows the existing cache policies. We can create
+or edit a policy, leading us to the following policy creation form:
+
+.. image:: editpolicy.png
+
+You need to give it a clear name. A cache policy will be associated
+with as many formulas as you want, which makes sense provided they
+have the same common time and data patterns, as explained in the
+previous chapter.
+
+The fields `initial revision date`, `look before` and `look after` all
+use the same Lisp-like mini language. Here's the list of available
+functions:
+
+* today -> produces a timestamp as of `now`
+
+* shifted <timestamp> -> takes keywords `minutes`, `hours`, `weeks`
+  and `months` to shift the input timestamp by the required time delta
+
+* date <datestr> -> turns the date string input into an actual
+  timestamp
+
+The `look before` and `look after` will generally use a `now` variable
+rather than `today`. When the cache is being updated, this variable
+will be valued with the corresponding revision date.
+
+.. code:: lisp
+
+   Examples:
+
+   (today)
+   (shifted (today) #:weeks -1)
+   (date "2024-1-1")
+   (shifted now #:days 15)
+
+The `revision date rule` and `schedule rule` must be described
+according to the `cron syntax <https://en.wikipedia.org/wiki/Cron>`_.
+
+When in doubt, you should assign the same value to `schedule rule` and
+to `revision date rule`. It sometimes makes sense to schedule the
+actual cache update using a different rule than the revision date rule
+(to smooth out the strain on server resources for instance).
+
+When the cache policy has been created, it can be of course `edited`
+again, `activated` (otherwise nothing happens) or `deleted`.
+
+.. image:: policy-actions.png
+
+The last step is managing the series associated with the policy. One
+gets there by clicking the policy name in the list.
+
+.. image:: policy-series.png
+
 
 
 Tasks system: how to organize and schedule tasks
