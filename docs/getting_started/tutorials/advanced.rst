@@ -582,5 +582,102 @@ gets there by clicking the policy name in the list.
 Tasks system: how to organize and schedule tasks
 ------------------------------------------------
 
+In this chapter we will survey the basics of the tasks system, how to
+write and run tasks, and the best ways to organize them.
+
+The built-in tasks system allows to organize, schedule and run tasks
+for (non limitative list):
+
+* data acquisition
+
+* data monitoring
+
+* running models
+
+.. note::
+
+   The builtin tasks manager is not exclusive of any other tasks
+   manager you want to use. Dask, Airflow or other such tools are fine
+   in and by themselves and can certainly be used along with the
+   Refinery if their workflows are more compelling for your specific
+   use cases.
+
+
+Basics: operations, domains, inputs, tasks
+..........................................
+
+Let's review the most important concepts.
+
+A `task` is the execution of an `operation`. An `operation` is a
+Python function that will run as a task. Here's an example:
+
+.. code:: python
+
+   from rework.api import task
+
+   @task
+   def hello(task):
+       with.task.capturelogs(std=True):
+           print('Hello')
+
+Let's examine what's there:
+
+* the operation is marked by the `task` decorator
+
+* it must be a one parameter function, whose parameter is a `task`
+  object.
+
+* the `task` object provides a number of methods, such as
+  `capturelogs`
+
+* the `capturelogs` method accepts an `std` parameter, which when True
+  turns the output of the print function into logs; `capturelogs`
+  records the logs from any logger within its context
+
+Such a task will also run in the "default" `domain`. A domain is
+basically a label allowing to group operations. It certainly makes
+sense to e.g. have separate domains such as `models` and
+`scrapers`. The Web UI permits filtering based on domains.
+
+.. code:: python
+
+   from datetime import timedelta
+   from rework.api import task
+   import rework.io as rio
+   from tshistory.api import timeseries
+
+   from eflower.models import run_co2_forecast
+
+   @task(domain='models',
+         inputs=(
+             rio.string('zone', required=True),
+             rio.moment('fromdate', default='(today)'),
+             rio.number('startoffset')
+         ),
+         timeout=timedelta(hours=2)
+   )
+   def co2_model(task):
+       inputs = task.input
+       tsa = timeseries()
+       with task.capturelogs(std=True):
+           run_co2_forecast(
+               tsa,
+               zone=inputs['zone'],
+               fromdate=inputs['fromdate'],
+               start_offset=inputs.get('start_offset', 0)
+           )
+
+In this example, we define an operation to run a model, in a dedicated
+`models` domain, with typed inputs. Here we see that the `task`
+decorator accepts:
+
+* a `domain` parameter (string),
+
+* an `inputs` parameter (tuple of rework.io entities), to specify
+  inputs with Web UI support (in the `Launchers` tab)
+
+As can be seen in the code, the inputs come as an attribute of the
+`task` object, and is a dictionary.
+
 Tasks: dealing with failing tasks, tasks logs, the vacuumer
 -----------------------------------------------------------
