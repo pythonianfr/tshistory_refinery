@@ -731,6 +731,42 @@ Let's unpack this:
 A good organisation
 ...................
 
+The notion of `domains` permits to group operations together. There
+can be a semantic aspect to the grouping (let's not mix models and
+scrapers) and performance aspects, since each domain will be
+associated with a monitor, which has its own settings (configuration
+of the workers pool and tasks retention duration).
+
+Out of the box, the Refinery uses two domains: `timeseries` and
+`scrapers`.
+
+* `timeseries` is used to run the formula cache operations,
+
+* `scrapers` is used to run the scraping operations.
+
+You of course are encouraged to have your own domains. Reasonnable
+proposals seen in the field are:
+
+* `models` to run your models,
+
+* `high-frequency` to run operations that really want to run often,
+  like e.g. every minute (hence they will clog the tasks list and you
+  want to be able to easily filter them out)
+
+Don't forget to run at least one monitor for each domain !
+
+.. note::
+
+   It is possible to run several monitors for one given domain.
+   Hypothetical scenario: your computing units are too small to run
+   all operations of a given domain in paralell, so you build several
+   ones, using a Python environment with the same dependency versions
+   on several machines.
+
+Last point: if you have e.g. models but with incompatible requirements
+(typically in terms of versions), you can put them in different
+domains, managed by monitors living in different Python environments.
+
 
 Tasks: dealing with failing tasks, tasks logs, the vacuumer
 -----------------------------------------------------------
