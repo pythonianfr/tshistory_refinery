@@ -679,5 +679,58 @@ decorator accepts:
 As can be seen in the code, the inputs come as an attribute of the
 `task` object, and is a dictionary.
 
+
+Registering and running tasks
+.............................
+
+Operations defined in a Python module are not magically known from the
+system: an explicit single registration step has to be performed.
+
+Let's see the command line way, assuming you have all your operations
+definitions in a `tasks.py` module:
+
+.. code:: bash
+
+   $ rework register-operations my_refinery myproject/tasks.py
+   registered 2 new operation (0 already known)
+
+The dual operation is available.
+
+.. code:: bash
+
+   $ rework unregister-operation refinery helloworld
+   preparing de-registration of:
+   delete helloworld default /home/aurelien/tasks.py 10.211.55.4
+   really remove those? [y/N]: y
+   delete helloworld default /home/aurelien/tasks.py 10.211.55.4
+
+To have a fully working system, the last step is running a monitor for
+the `models` domain. A monitor is a program that manages a pool of
+workers for a given domain.
+
+.. code:: bash
+
+   $ rework monitor my_refinery --maxruns 2 --maxworkers 4 --minworkers 1 --domain models --vacuum P4D
+
+Let's unpack this:
+
+* `minworkers` specifies the min amount of running workers in the pool,
+
+* `maxworkers` specifies the absolute maximum of workers,
+
+* `maxruns` indicates how many tasks a worker is allowed to run before
+  being shut down (and eventually replaced),
+
+* `domain` specifies the domain,
+
+* `vacuum` defines the retention duration of tasks in the `done`
+  state, using the `iso 8601
+  <https://en.wikipedia.org/wiki/ISO_8601>`_ durations notation.
+
+
+A good organisation
+...................
+
+
 Tasks: dealing with failing tasks, tasks logs, the vacuumer
 -----------------------------------------------------------
