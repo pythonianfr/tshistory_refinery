@@ -14,6 +14,8 @@ We will address:
 * how to efficiently organize the acquisition of a vast referential of
   raw series
 
+* good data architecture
+
 
 Doing your own app using the Refinery
 -------------------------------------
@@ -860,3 +862,102 @@ The final "Services" tab lists all the operations, notably with their
 host and file system path.
 
 .. image:: services.png
+
+
+Data architecture at scale: putting the Data Mesh to work
+---------------------------------------------------------
+
+For a number of reasons, it may be a good idea to run not just one
+instance of the Refinery, but several interconnected in a `data mesh
+<https://www.datamesh-architecture.com>`_, and also have some of them
+interconnected. Let's see some of the reasons:
+
+* team/topics diversity
+
+* data architecture choice
+
+
+Making teams work together
+..........................
+
+Energy commodity companies sometimes have significant trading desks
+with a sizeable amount of analysts, data scientists and IT quant
+people working together. These people have different specialties,
+scopes and requirements. One useful way to address their specific
+needs is to provide a number of Refineries, each dedicated to a
+specific group.
+
+Let's imagine an hypothetical department where you have analysts
+working on oil, coal, power and gas. The "power" people are interested
+into renewables, nuclear, hydro and fossil fuel plants, and "gas"
+people are interested in piped and lng gas, also in storages and
+terminals. You get the idea. All these people work on production and
+demand models, which entails having access to meteorological data
+(forecasts).
+
+Putting everyone's data into one big data lake, I mean a big Refinery
+instance would quickly turn it into a data swamp, I mean a terrible
+mess. What we can propose is that each theme gets its own Refinery
+instance. You would have power, gas, oil, meteo, etc. refineries.
+
+But then, the power and gas people (for instance) would need access to
+the meteo data, for their forecasting models need meteo forecasts as
+inputs.
+
+Also the management would like to have a trans-commodity view of their
+position and get something consolidated: we can give them a Refinery
+connected to all others (and very little, if any, data of its own).
+
+In this setup, each team can focus on its own needs, and delegate what
+they don't master to other teams. The important power team (of several
+analysts and data scientists) would rely on the meteo team to provide
+them with the relevant solar and wind forecasts. The gas people
+modelling the demand would also ask the meteorologists about
+temperature forecasts in some places of interest.
+
+So each teams gets its own Refinery, which means a local "data
+governance", naming convention, workflows, models, etc. and at the
+same time data is easily shared cross-teams.
+
+
+The Medallion Architecture
+..........................
+
+This architecture was invented to address the needs of Data Lake users
+and avoid the Data Swamp syndrome which can afflict them. In the
+`medallion architecture
+<https://medium.com/@junshan0/medallion-architecture-what-why-and-how-ce07421ef06f>`_,
+we have layers of data. Each layer corresponds to a data state
+("bronze" for raw data, "silver" holds the pre-processed raw data and
+"gold" contains completely curated data fit for consumption by
+everyone).
+
+This layered approach can be an inspiration for the organization of
+Refineries, with:
+
+* a "bronze" Refinery holding data as scraped from the upstream
+  providers (in versioned time series form of course), including
+  missing data, outliers, changing granularities discontinuities and
+  other warts,
+
+* a "silver" Refinery holding mostly formulas based on the "bronze"
+  level, where we do proper resampling, basic outliers elimination,
+  bogus data overrides, basic aggregations and data assemblies (using
+  e.g. the `add` and `priority` formula operators) - this layer knows
+  "bronze" which its use as a secondary, read-only source
+
+* a "gold" Refinery used as inputs for the models and also storing
+  their outputs, providing data for dashboard and any other decision
+  support tools - this layer uses the "silver" curated time series
+
+.. note::
+
+   In a Data Lake, we have a hodge-podge of raw (json, xml) data, non
+   relational and relational (with normalized and dernormalized
+   relations) data bases, and so on; this complexity cries for the
+   application of a doctrine such as the Medallion Architecture. On
+   the other hand, Refineries are light-weight and provide structure
+   from the start, but still the layering idea has some merit and
+   could be put to work for instances with either a lot of time series
+   at each levels, or a lot of stake holders at each level, to provide
+   more overall clarity and better data governance.
