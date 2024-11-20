@@ -768,5 +768,95 @@ Last point: if you have e.g. models but with incompatible requirements
 domains, managed by monitors living in different Python environments.
 
 
-Tasks: dealing with failing tasks, tasks logs, the vacuumer
------------------------------------------------------------
+Tasks: using the Web UI
+.......................
+
+The task manager provides a convenient Web UI to provide the users a
+dependable view of the state of the system. The UI provides a number
+of tabbed views and a couple of direct views. Let's walk through them.
+
+.. image:: taskslist.png
+
+The tasks list is the first thing to be seen when we land on the tasks
+manager views. It provides a direct access to the tasks (status,
+inputs, domain, logs) and a few actions, in inverse chronological
+order (most recent at the top).
+
+By default, the complete list is not loaded. By scrolling downwards,
+one gets new lazily loaded items.
+
+The actions available on tasks are:
+
+* relaunch (can be useful when a task has been aborted for some
+  reason)
+
+* delete (to unclutter the list)
+
+* abort (available only on running tasks)
+
+.. note::
+
+   For the filters (on the service, inputs and status columns) to work
+   appropriately, having everything loaded at once is more
+   convenient. The "Tasks" tab provides an action to force load all
+   known tasks in the list.
+
+.. image:: forceload.png
+   :width: 300
+
+Clicking on the curved arrow symbol will force load all tasks.
+
+By clicking on a task item (blue link on the operation name), one
+jumps to the task log (available if it is running or done).
+
+.. image:: tasklog.png
+
+For failed tasks, clicking on the `traceback` link in red opens the
+task back trace.
+
+.. image:: taskerror.png
+
+These two last views are important tools to understand what is going
+on with your tasks.
+
+The next tab shows the monitors status. As we have seen, monitors
+provides workers for a given domain. We can see their state (their
+status is updated using a dead-man switch scheme) and their active
+workers.
+
+.. image:: monitors.png
+
+It is possible to ask for a shutdown (the worker will disappear after
+finishing its current task), or a kill (the worker is stopped and
+removed immediately).
+
+The "Launchers" tab provides a zone to manually launch a task, either
+through a "launch now" action (when there are no inputs) or through an
+"open form" dialog to allow inputing the relevant operations
+parameters before launching.
+
+.. image:: launchers.png
+
+.. note::
+
+   For the tasks to be directly launchable from the Lunchers tab,
+   their declaration **must** contain an `inputs` declaration (even
+   with an empty tuple if you need none). Only with this formalism can
+   the UI know it can present actions, and which ones, to the
+   end-user.
+
+The "Schedulers" tab lists all pre-scheduled tasks with their inputs
+and schedule rule, also allowing to do an immediate launch if needed.
+
+.. image:: schedulers.png
+
+The "Plan" tab shows what tasks (amongst those that are pre-scheduled)
+are going to fire, and at which moment, with their inputs, in the next
+few hours.
+
+.. image:: plan.png
+
+The final "Services" tab lists all the operations, notably with their
+host and file system path.
+
+.. image:: services.png
