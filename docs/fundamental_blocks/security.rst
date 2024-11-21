@@ -1,3 +1,5 @@
+.. _security
+
 Securing the Refinery
 =====================
 

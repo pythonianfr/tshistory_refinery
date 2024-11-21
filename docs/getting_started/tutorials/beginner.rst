@@ -1,19 +1,31 @@
 Basics
-========
+======
 
 General setup reminder
 -----------------------
 
-**Setup your machine**
+Setup your machine
+..................
 
-Let's pip-install the client:
+In this chapter, we assume you have setup a Refinery instance on some
+server.
+
+Let's install the client on you local machine:
 
 .. code:: bash
 
    $ pip install tshistory_refinery
 
-And save the config file ``tshistory.cfg`` in the home
-directory, containing:
+And save the config file ``tshistory.cfg`` in the home directory,
+containing:
+
+.. code:: ini
+
+   [dburi]
+   refinery = https://refinery.<myrefinery>.pythonian.fr/api
+
+If the instance is behind some security protection, you have to fill
+the `[auth]` section.
 
 .. code:: ini
 
@@ -22,8 +34,12 @@ directory, containing:
    refinery.login = <username>
    refinery.password = <password>
 
+That's for http basic auth. For a more complicated security setup, see
+the security chapter.
 
-**The naming convention : a pillar for your refinery**
+
+The naming convention : an essential step
+.........................................
 
 First and foremost, users of the refinery need to gather and define
 together the naming convention. This is an important aspect of the
@@ -65,8 +81,11 @@ example :
    Some of these aspects probably belong to the **metadata** of the
    series. However a good name goes a long way when it comes to making
    a data referential easily usable for everyone. So encoding some
+   metadata both in metadata proper and in the title definitely makes
+   sense.
 
-**Initialize timeseries client**
+Initialize the timeseries client
+.................................
 
 .. code:: python
 
@@ -77,7 +96,8 @@ example :
 How to create / update / read "primary" time series
 ---------------------------------------------------
 
-**Create a series**
+Create a series
+...............
 
 .. code:: python
 
@@ -91,7 +111,8 @@ How to create / update / read "primary" time series
 
     tsa.update(seriesname, ts, author="fruit@lover")
 
-**Get your series**
+Get your series
+...............
 
 .. code:: python
 
@@ -102,7 +123,8 @@ How to create / update / read "primary" time series
     2024-11-03    3.0
     Name: fruit.banana.buy.misterfield.superfrenchshop.civ.fr.eur/t.d, dtype: float64
 
-**Update your series**
+Update your series
+..................
 
 Overwrite existing values and add one for the 4th of November:
 
@@ -140,6 +162,7 @@ Get the new version of the timeseries:
     - points with nan values will erase existing points
     - if there is no difference between the inserted points and the ones in base, no revision is created
     - it returns a series of the points that have been either added, update or erased
+    - if the series doesn't already exist, it is created
 
 
 How to Exists / Rename / Delete time series
@@ -160,7 +183,7 @@ How to Exists / Rename / Delete time series
 Going further: playing with revisions
 -------------------------------------
 
-Now let's assume that we work with a forecast
+Now let's assume that we work with a forecast:
 
 .. code:: python
 
@@ -170,21 +193,20 @@ Now let's assume that we work with a forecast
         end=pd.Timestamp('2024-11-04T09:00+00:00'),
         freq='D'
     )
-    i=0
-    for insertion_date in insertion_dates:
-        ts = pd.Series(
-            [1, 2, 3],
-            index = pd.date_range(start=insertion_date.date(), periods=3, freq='D')
-        )
+    ts = pd.Series(
+        [1, 2, 3],
+        index = pd.date_range(start=insertion_date.date(), periods=3, freq='D')
+    )
+    for idx, insertion_date in enumerate(insertion_dates):
         tsa.update(
             'my_morning_forecast',
-            ts+i,
+            ts+idx,
             'sensei',
             insertion_date=insertion_date
         )
-        i=+1
 
-Let's use the get operator. It will give us the last version of each timestamp.
+Let's use the get operator. It will give us the last version of each
+timestamp.
 
 .. code:: python
 
@@ -231,7 +253,7 @@ Now, let's investigate our forecast versions.
             Name: my_morning_forecast, dtype: float64
     }
 
-If we want to see only the differential :
+If we want to see only what changed from one version to the next:
 
 .. code:: python
 
@@ -257,7 +279,8 @@ If we want to see only the differential :
             Name: my_morning_forecast, dtype: float64
     }
 
-Let's assume we want the forecast of the 3rd of Nov at 12am, after the morning run :
+Let's assume we want the forecast of the 3rd of Nov at 12am, after the
+morning run:
 
 .. code:: python
 
@@ -296,17 +319,23 @@ Adding and fetching metadata
     }
 
 .. note::
-    Metadata is a very important tool to structure the time series referential.
-    We insisted on the naming convention in the beginning and indeed good names should be good keys and embed a number of metadata aspects of the series.
-    But it is not always enough.
 
-    Metadata, at the Python API level, will be managed with flat Python dictionaries.
+   Metadata is a very important tool to structure the time
+   series referential.  We insisted on the naming convention in the
+   beginning and indeed good names should be good keys and embed a
+   number of metadata aspects of the series.  But it is not always
+   enough.
+
+   Metadata, at the Python API level, will be managed with flat Python
+   dictionaries.
 
 
 Using formulas : create a formula
 ---------------------------------
 
-A low code formula system has been implemented into the Refinery to transform your raw data into enriched indicators. Time travel capabilities are enabled in all levels of aggregation.
+A low code formula system has been implemented into the Refinery to
+transform your raw data into enriched indicators. Time travel
+capabilities are enabled in all levels of aggregation.
 
 .. code:: python
 
@@ -315,9 +344,10 @@ A low code formula system has been implemented into the Refinery to transform yo
         '(resample (series "my_morning_forecast") "h" #:method "interpolate" )'
     )
 
-With this formula, we resample our daily series "my_morning_forecast" to an hourly series.
+With this formula, we resample our daily series "my_morning_forecast"
+to an hourly series.
 
-To get the result of this formula, you can use the get method :
+To get the result of this formula, you can use the `get` method:
 
 .. code:: python
 
@@ -348,7 +378,9 @@ Let's add other series to create more complex formulas:
     tsa.update(seriesname, ts, author="fruit@lover")
 
 Now, let's create a formula with the priority operator.
-We can see that a formula can work with primary and/or formulas in a transparent way.
+
+We can see that a formula can work with primary and/or formulas in a
+transparent way.
 
 .. code:: python
 
@@ -420,7 +452,9 @@ Another way to identify the type of a series is to look at the internal metadata
         'supervision_status': 'unsupervised'
     }
 
-The major difference between primaries and formulas is the impossibility to call the update method on formulas.
+The major difference between primaries and formulas is the
+impossibility to call the update method on formulas.
+
 Indeed, it is not possible to overwrite a formula value manually.
 
 The other API methods are working on a transparent way :
@@ -434,13 +468,16 @@ The other API methods are working on a transparent way :
     * source
 
 .. note::
-    See a description of these methods in the :ref:`API documentation`.
+
+   You will find a complete description of these methods in the
+   :ref:`API documentation`.
 
 
 Using the formula editor
 ------------------------
 
-The formula editor is accessible from the menu, section `Formulas`, item `Create` :
+The formula editor is accessible from the menu, section `Formulas`,
+item `Create`:
 
 .. image:: ../../_static/formula_editor.png
 
@@ -460,7 +497,8 @@ The steps are :
 Seeing all the formulas
 -----------------------
 
-The list of all formulas is available from the menu, section `Formula`, item `List` :
+The list of all formulas is available from the menu, section
+`Formula`, item `List`:
 
 .. image:: ../../_static/all_formulas.png
 
