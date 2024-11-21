@@ -1,10 +1,10 @@
-Formulas
-==============================================
+Formulas (computed series)
+==========================
 
 Purpose
 -------
 
-This `tshistory <https://hg.sr.ht/~pythonian/tshistory>`__ component
+This `tshistory <https://hg.sr.ht/~pythonian/tshistory>`_ component
 provides a formula (time series domain specific) language to build
 computed time series.
 
@@ -65,7 +65,7 @@ operators.
 
 
 Declaring a new operator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 One just needs to decorate a python function with the ``func`` decorator:
 
@@ -90,7 +90,7 @@ pre-existing series are more complicated.
 
 
 Autotrophic series operator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We start with an example, a ``proxy`` operator that gets a series from
 an existing time series silo (on the fly) to be served as it came from
@@ -224,7 +224,7 @@ We also have to map the `metadata`, `insertion_dates` and the
 
 
 Pre-defined operators
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: tshistory_formula.funcs
     :noindex:
