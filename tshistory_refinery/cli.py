@@ -7,7 +7,7 @@ from sqlhelp import sqlfile
 from rework.helper import host
 from rework import api
 from tshistory.api import timeseries
-from tshistory.util import find_dburi
+from tshistory.config import configuration
 from tshistory_refinery.schema import refinery_schema
 from tshistory_refinery import cache
 
@@ -23,7 +23,7 @@ def webstart(port=500):
 @click.argument('db-uri')
 def setup_tasks(db_uri):
     from tshistory_refinery import tasks  # make them available at freeze time  # noqa: F401
-    dburi = find_dburi(db_uri)
+    dburi = configuration().find_dburi(db_uri)
     engine = create_engine(dburi)
 
     with cache.suspended_policies(engine):
@@ -41,7 +41,7 @@ def setup_tasks(db_uri):
 @click.argument('policy-name')
 @click.option('--initial', default=False, is_flag=True)
 def refresh_cache(db_uri, policy_name, initial=False):
-    dburi = find_dburi(db_uri)
+    dburi = configuration().find_dburi(db_uri)
     engine = create_engine(dburi)
     t = api.schedule(
         engine,
@@ -61,7 +61,7 @@ def refresh_cache(db_uri, policy_name, initial=False):
 @click.option('--kill', default=False, is_flag=True,
               help='remove the locks')
 def list_series_locks(db_uri, policy_name=None, kill=False):
-    dburi = find_dburi(db_uri)
+    dburi = configuration().find_dburi(db_uri)
     engine = create_engine(dburi)
 
     tsa = timeseries()
@@ -91,7 +91,7 @@ def list_series_locks(db_uri, policy_name=None, kill=False):
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')
 def migrate_to_cache(db_uri, namespace='tsh'):
-    dburi = find_dburi(db_uri)
+    dburi = configuration().find_dburi(db_uri)
     engine = create_engine(dburi)
 
     exists = engine.execute(
@@ -113,7 +113,7 @@ def migrate_to_cache(db_uri, namespace='tsh'):
 @click.argument('db-uri')
 @click.option('--no-dry-run', is_flag=True, default=False)
 def initdb(db_uri, no_dry_run=False):
-    dburi = find_dburi(db_uri)
+    dburi = configuration().find_dburi(db_uri)
     if not no_dry_run:
         print('this would reset and init the db at {}'.format(dburi))
         return
