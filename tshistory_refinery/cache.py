@@ -18,6 +18,8 @@ from sqlhelp import (
     update
 )
 
+from tshistory.util import hash64
+
 from tshistory_formula import registry
 from tshistory_refinery import helper
 from tshistory_refinery import tsio
@@ -322,7 +324,7 @@ def series_policy(cn, series_name, namespace='tsh'):
 @contextmanager
 def series_refresh_lock(engine, name, namespace):
     with engine.begin() as cn:
-        xactkey = helper.hash64(name)
+        xactkey = hash64(name)
         cn.execute(
             f'select pg_advisory_xact_lock({xactkey})'
         )

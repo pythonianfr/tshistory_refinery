@@ -1,4 +1,3 @@
-import hashlib
 import warnings
 
 from inireader import reader
@@ -34,14 +33,6 @@ def apimaker(config):
         handler=tshclass,
         sources=sources
     )
-
-
-# hasher from text to 64 bits ints
-
-def hash64(text: str) -> int:
-    seed = text.encode('utf-8')
-    hash_digest = hashlib.shake_128(seed).digest(8)
-    return int.from_bytes(hash_digest, byteorder='big', signed=True)
 
 
 # topological sort of formulas
