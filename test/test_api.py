@@ -13,6 +13,7 @@ from tshistory.testutil import (
     assert_hist,
     make_tsx,
     read_request_bridge,
+    tempconfig,
     utcdt,
     write_request_bridge
 )
@@ -53,13 +54,18 @@ def tsa(engine):
 
 @pytest.fixture(scope='session')
 def tsa1(engine):
-    tsa = make_api(
-        engine,
-        'test-api',
-        {'remote': (str(engine.url), 'test-remote')}
-    )
+    config = (
+        f'[dburi]\n'
+        f'test = {str(engine.url)}\n'
+    ).encode()
+    with tempconfig(config):
+        tsa = make_api(
+            engine,
+            'test-api',
+            {'remote': (str(engine.url), 'test-remote')}
+        )
 
-    return tsa
+        yield tsa
 
 
 class with_http_bridge(basebridge):
