@@ -19,6 +19,13 @@ class Migrator(_Migrator):
         fix_user_metadata(self.engine, f'{self.namespace}-cache', self.interactive)
 
 
+@version('tshistory-refinery', '0.10.0')
+def do_migrate_intervals(engine, namespace, interactive):
+    from tshistory.migrate import migrate_intervals
+
+    migrate_intervals(engine, f'{namespace}-cache', interactive)
+
+
 @version('tshistory-refinery', '0.9.1')
 def migrate_drop_ready(engine, namespace, interactive):
     sql = (
