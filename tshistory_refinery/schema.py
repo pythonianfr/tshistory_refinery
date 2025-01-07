@@ -2,7 +2,6 @@ from pathlib import Path
 
 from sqlhelp import sqlfile
 
-from dbcache import schema as stores_schema
 from rework.schema import init as rework_init
 from rework_ui.schema import init as rework_ui_init
 from tshistory.schema import tsschema
@@ -21,9 +20,6 @@ class refinery_schema(supervision_schema, formula_schema):
         if rework:
             rework_init(engine, drop=reset)
             rework_ui_init(engine)
-
-        for store_ns in ('dashboards', 'balances'):
-            stores_schema.init(engine, ns=store_ns, drop=reset)
 
         with engine.begin() as cn:
             cn.execute(sqlfile(CACHE_POLICY, ns=self.namespace))
