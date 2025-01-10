@@ -3,7 +3,7 @@ from flask import Flask
 from sqlalchemy import create_engine
 
 from dbcache.http import kvstore_httpapi
-from dbcache.api import kvstore
+from dbcache.api import kvstore, vkvstore
 from tsview.blueprint import tsview
 from rework_ui.blueprint import reworkui
 
@@ -83,7 +83,9 @@ class AppMaker:
                     'dashboards': kvstore(self.dburi, 'dashboards'),
                     'balances': kvstore(self.dburi, 'balances')
                  },
-                {}  # no vkvstore yet
+                {
+                    'models': vkvstore(self.dburi, 'models')
+                }
             ).bp,
             url_prefix='/api'
         )
