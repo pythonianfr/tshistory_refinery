@@ -43,7 +43,6 @@ setup(name='tshistory_refinery',
           'tshistory.subcommands': [
               'webstart=tshistory_refinery.cli:webstart',
               'init-db=tshistory_refinery.cli:initdb',
-              'migrate-to-cache=tshistory_refinery.cli:migrate_to_cache',
               'setup-tasks=tshistory_refinery.cli:setup_tasks',
           ],
           'tshistory.migrate.Migrator': [
