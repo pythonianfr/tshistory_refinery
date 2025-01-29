@@ -19,6 +19,15 @@ class Migrator(_Migrator):
         fix_user_metadata(self.engine, f'{self.namespace}-cache', self.interactive)
 
 
+
+
+@version('tshistory-refinery', '0.10.0')
+def migrate_rework_schema(engine, namespace, interactive):
+    engine.execute(
+        'alter table rework.operation add column if not exists vacuum interval'
+    )
+
+
 @version('tshistory-refinery', '0.10.0')
 def do_migrate_intervals(engine, namespace, interactive):
     from tshistory.migrate import migrate_intervals
