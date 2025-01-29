@@ -7,6 +7,7 @@ from rework_ui.schema import init as rework_ui_init
 from tshistory.schema import kvapi, tsschema
 from tshistory_supervision.schema import supervision_schema
 from tshistory_formula.schema import formula_schema
+from tsview.schema import tsview_schema
 
 from tshistory_refinery import __version__
 
@@ -14,7 +15,7 @@ from tshistory_refinery import __version__
 CACHE_POLICY = Path(__file__).parent / 'schema.sql'
 
 
-class refinery_schema(supervision_schema, formula_schema):
+class refinery_schema(tsview_schema, supervision_schema, formula_schema):
 
     def create(self, engine, reset=False, rework=False):
         super().create(engine, reset=reset)
