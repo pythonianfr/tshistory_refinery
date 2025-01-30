@@ -28,7 +28,7 @@ def _initschema(engine, ns='tsh'):
 
 @pytest.fixture(scope='session')
 def engine(request):
-    port = 5433
+    port = 5434
     db.setup_local_pg_cluster(request, DATADIR, port)
     uri = 'postgresql://localhost:{}/postgres'.format(port)
     e = create_engine(uri)
