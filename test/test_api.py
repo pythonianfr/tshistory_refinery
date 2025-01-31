@@ -30,7 +30,7 @@ from tshistory_refinery import (
 
 
 def _initschema(engine, ns='tsh'):
-    schema.refinery_schema(ns).create(engine, reset=True)
+    schema.refinery_schema(ns).create(engine)
     rapi.freeze_operations(engine)
 
 

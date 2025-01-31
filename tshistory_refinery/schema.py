@@ -17,16 +17,16 @@ CACHE_POLICY = Path(__file__).parent / 'schema.sql'
 
 class refinery_schema(tsview_schema, supervision_schema, formula_schema):
 
-    def create(self, engine, reset=False, rework=False):
-        super().create(engine, reset=reset)
+    def create(self, engine):
+        super().create(engine)
 
-        if rework:
-            rework_init(engine, drop=reset)
-            rework_ui_init(engine)
+        rework_init(engine)
+        rework_ui_init(engine)
 
         with engine.begin() as cn:
             cn.execute(sqlfile(CACHE_POLICY, ns=self.namespace))
 
         tsschema(f'{self.namespace}-cache').create(engine)
+
         kvstore = kvapi.kvstore(str(engine.url), namespace=f'{self.namespace}-kvstore')
         kvstore.set('tshistory-refinery-version', __version__)

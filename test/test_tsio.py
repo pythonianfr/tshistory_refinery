@@ -8,6 +8,7 @@ import numpy as np
 from tshistory.testutil import (
     assert_df,
     genserie,
+    tables,
     utcdt
 )
 from tshistory_formula.interpreter import jsontypes
@@ -27,6 +28,80 @@ def ingest_formulas(tsh, engine, formula_file):
                 row.name,
                 row.text
             )
+
+
+def test_tables(engine, pure):
+    assert tables(engine) == [
+        ('pure', 'basket'),
+        ('pure', 'cache_policy'),
+        ('pure', 'cache_policy_sched'),
+        ('pure', 'cache_policy_series'),
+        ('pure', 'dependent'),
+        ('pure', 'group_registry'),
+        ('pure', 'groupmap'),
+        ('pure', 'registry'),
+        ('pure', 'revision_metadata'),
+        ('pure-cache', 'basket'),
+        ('pure-cache', 'group_registry'),
+        ('pure-cache', 'groupmap'),
+        ('pure-cache', 'registry'),
+        ('pure-cache', 'revision_metadata'),
+        ('pure-cache-kvstore', 'kvstore'),
+        ('pure-cache-kvstore', 'things'),
+        ('pure-cache-kvstore', 'version'),
+        ('pure-cache-kvstore', 'vkvstore'),
+        ('pure-cache.group', 'basket'),
+        ('pure-cache.group', 'registry'),
+        ('pure-cache.group', 'revision_metadata'),
+        ('pure-cache.group-kvstore', 'kvstore'),
+        ('pure-cache.group-kvstore', 'things'),
+        ('pure-cache.group-kvstore', 'version'),
+        ('pure-cache.group-kvstore', 'vkvstore'),
+        ('pure-formula-patch', 'basket'),
+        ('pure-formula-patch', 'group_registry'),
+        ('pure-formula-patch', 'groupmap'),
+        ('pure-formula-patch', 'registry'),
+        ('pure-formula-patch', 'revision_metadata'),
+        ('pure-formula-patch-kvstore', 'kvstore'),
+        ('pure-formula-patch-kvstore', 'things'),
+        ('pure-formula-patch-kvstore', 'version'),
+        ('pure-formula-patch-kvstore', 'vkvstore'),
+        ('pure-formula-patch.group', 'basket'),
+        ('pure-formula-patch.group', 'registry'),
+        ('pure-formula-patch.group', 'revision_metadata'),
+        ('pure-formula-patch.group-kvstore', 'kvstore'),
+        ('pure-formula-patch.group-kvstore', 'things'),
+        ('pure-formula-patch.group-kvstore', 'version'),
+        ('pure-formula-patch.group-kvstore', 'vkvstore'),
+        ('pure-kvstore', 'kvstore'),
+        ('pure-kvstore', 'things'),
+        ('pure-kvstore', 'version'),
+        ('pure-kvstore', 'vkvstore'),
+        ('pure-upstream', 'basket'),
+        ('pure-upstream', 'group_registry'),
+        ('pure-upstream', 'groupmap'),
+        ('pure-upstream', 'registry'),
+        ('pure-upstream', 'revision_metadata'),
+        ('pure-upstream-kvstore', 'kvstore'),
+        ('pure-upstream-kvstore', 'things'),
+        ('pure-upstream-kvstore', 'version'),
+        ('pure-upstream-kvstore', 'vkvstore'),
+        ('pure-upstream.group', 'basket'),
+        ('pure-upstream.group', 'registry'),
+        ('pure-upstream.group', 'revision_metadata'),
+        ('pure-upstream.group-kvstore', 'kvstore'),
+        ('pure-upstream.group-kvstore', 'things'),
+        ('pure-upstream.group-kvstore', 'version'),
+        ('pure-upstream.group-kvstore', 'vkvstore'),
+        ('pure.group', 'basket'),
+        ('pure.group', 'registry'),
+        ('pure.group', 'revision_metadata'),
+        ('pure.group-kvstore', 'kvstore'),
+        ('pure.group-kvstore', 'things'),
+        ('pure.group-kvstore', 'version'),
+        ('pure.group-kvstore', 'vkvstore')
+    ]
+
 
 
 def test_rename(engine, tsh):

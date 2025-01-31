@@ -22,7 +22,7 @@ DATADIR = Path(__file__).parent / 'test' / 'data'
 
 
 def _initschema(engine, ns='tsh'):
-    schema.refinery_schema(ns).create(engine, reset=True, rework=True)
+    schema.refinery_schema(ns).create(engine)
     rapi.freeze_operations(engine)
 
 
@@ -40,6 +40,12 @@ def engine(request):
 @pytest.fixture(scope='session')
 def tsh(engine):
     return tsio.timeseries()
+
+
+@pytest.fixture(scope='session')
+def pure(engine):
+    schema.refinery_schema('pure').create(engine)
+    yield tsio.timeseries('pure')
 
 
 @pytest.fixture(scope='session', params=['tsh', 'fancy-ns'])
@@ -78,6 +84,7 @@ class NonSuckingWebTester(webtest.TestApp):
 
 @pytest.fixture(scope='session')
 def client(engine):
+    rapi.freeze_operations(engine)
     return NonSuckingWebTester(
         nosecurity(
             webapp.AppMaker(
