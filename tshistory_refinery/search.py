@@ -34,10 +34,14 @@ class hascachepolicy(query):
         }
 
 
+class CachePolicy(str):
+    pass
+
+
 class cachepolicy(query):
     __slots__ = ('query',)
 
-    def __init__(self, query: str):
+    def __init__(self, query: CachePolicy):
         self.query = query
 
     def __expr__(self):
@@ -65,7 +69,7 @@ class cachepolicy(query):
     @staticmethod
     def __sig__():
         return {
-            'query': 'str',
+            'query': 'CachePolicy',
             'return': 'query'
         }
 
