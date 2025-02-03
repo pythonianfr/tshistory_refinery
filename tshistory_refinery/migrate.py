@@ -27,6 +27,44 @@ def migrate_rework_schema(engine, namespace, interactive):
         'alter table rework.operation add column if not exists vacuum interval'
     )
 
+    with engine.begin() as cn:
+        cn.execute(
+            f'drop table if exists "{namespace}.group".basket'
+        )
+
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch".basket'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch".groupmap'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch".group_registry'
+        )
+
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch.group".basket'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch.group".registry'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch.group".revision_metadata'
+        )
+
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch.group-kvstore".kvstore'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch.group-kvstore".things'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch.group-kvstore".version'
+        )
+        cn.execute(
+            f'drop table if exists "{namespace}-formula-patch.group-kvstore".vkvstore'
+        )
+
 
 @version('tshistory-refinery', '0.10.0')
 def do_migrate_intervals(engine, namespace, interactive):

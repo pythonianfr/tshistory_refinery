@@ -15,7 +15,7 @@ from tshistory_refinery import __version__
 CACHE_POLICY = Path(__file__).parent / 'schema.sql'
 
 
-class refinery_schema(tsview_schema, supervision_schema, formula_schema):
+class refinery_schema(supervision_schema, formula_schema):
 
     def create(self, engine):
         super().create(engine)
@@ -30,3 +30,5 @@ class refinery_schema(tsview_schema, supervision_schema, formula_schema):
 
         kvstore = kvapi.kvstore(str(engine.url), namespace=f'{self.namespace}-kvstore')
         kvstore.set('tshistory-refinery-version', __version__)
+
+        tsview_schema(self.namespace).create(engine)
