@@ -22,11 +22,13 @@ class Migrator(_Migrator):
 
 
 @version('tshistory-refinery', '0.10.0')
-def migrate_rework_schema(engine, namespace, interactive):
+def migrate_rework_schema_interval(engine, namespace, interactive):
+    # rework schema
     engine.execute(
         'alter table rework.operation add column if not exists vacuum interval'
     )
 
+    # remove useless tables
     with engine.begin() as cn:
         cn.execute(
             f'drop table if exists "{namespace}.group".basket'
@@ -65,11 +67,8 @@ def migrate_rework_schema(engine, namespace, interactive):
             f'drop table if exists "{namespace}-formula-patch.group-kvstore".vkvstore'
         )
 
-
-@version('tshistory-refinery', '0.10.0')
-def do_migrate_intervals(engine, namespace, interactive):
+    # intervals
     from tshistory.migrate import migrate_intervals
-
     migrate_intervals(engine, f'{namespace}-cache', interactive)
 
 
