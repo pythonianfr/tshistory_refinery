@@ -21,7 +21,7 @@ class Migrator(_Migrator):
 
 
 
-@version('tshistory-refinery', '0.10.0')
+@version('tshistory-refinery', '0.9.2')
 def migrate_rework_schema_interval(engine, namespace, interactive):
     # rework schema
     engine.execute(
