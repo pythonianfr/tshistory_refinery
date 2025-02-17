@@ -218,6 +218,23 @@ Lastly:
 $ pip install -r requirements.txt
 ```
 
+The `refinery.cfg` configuration file is now deprecated and you should
+make sure you have a properly formed `tshistory.cfg` file instead.
+
+For instance, if you had a `refinery.cfg` with the following:
+
+```ini
+[db]
+uri = postgresql:///myrefinery
+```
+
+You will want this `tshistory.cfg`:
+
+```
+[dburi]
+refinery = postgresql:///myrefinery
+```
+
 For `0.9.0` to `0.9.1`:
 
 ```
