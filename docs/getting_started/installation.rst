@@ -8,9 +8,9 @@ The different ways to install (pypi, docker)
 The installation can be realised by two means:
 
 * directly from pypi (the public one, where one finds a stable - if
-  old - version of the refinery, or the private one at
-  `pypi.pythonian.fr`, where we make the latest fixes and major
-  versions available to subscribers)
+  old - version of the refinery, or the private ones at
+  `pypi.pythonian.fr` or `pypi-pro.pythonian.fr`, where we make the
+  latest fixes and major versions available to subscribers)
 
 * from docker images (available to subscribers)
 
@@ -83,7 +83,7 @@ refinery.
 
    The `tsh webstart` command is suitable for a local development
    environement. For production purposes you probably want to use a
-   wsgi container such as `gunicorn`.
+   wsgi container such as `gunicorn` or `waitress`.
 
    The `app` object used by wsgi containers can be found at
    `tshistory_refinery.wsgi:app`.
@@ -149,3 +149,98 @@ It can run like this:
    environment, with a fresh production database dump, to make sure it
    will work smoothly. The migrations are intensely tested before
    shipping but one is never too careful.
+
+
+Installing older versions, migrating from older versions
+--------------------------------------------------------
+
+We will herein document installation and migration starting from the
+`0.8.3` release, which has been available on PyPi since
+september 2023.
+
+If one wants to install this old release today (this is written in
+february 2025), this will fail unless:
+
+* the Python version is 3.9 (pandas 1.5 is still available in binary
+  form for this version, for later versions, a compilation from source
+  will happen, which often ends badly)
+
+* some dependencies, direct and indirect, must be corrected (as they
+  have evolved to newer, incompatible versions)
+
+You probably want to create a `requirements.txt` file and put this
+inside:
+
+```
+numpy==1.26.4
+werkzeug==2.3.8
+tshistory_refinery==0.8.3
+tshistory==0.19.4
+```
+
+You then need to do:
+
+```shell
+$ pip install -r requirements.txt
+```
+
+Let's assume you want to upgrade from this to newer versions. We will
+describe the steps to go from 0.8.3 to 0.9.0, then 0.9.1, then 0.9.2,
+and lastly to the "pro" version.
+
+.. warning::
+
+   It is possible in theory to jump several versions at once. However
+   due to bugs in the earlier versions of the migration system (up to
+   0.9.1) it is advised to perform it step-wise.
+
+So to go from `0.8.3` to `0.9.0` one should:
+
+* adjust the `pip install` stanza with a `-i
+  https://<login>:<passwd>@pypi.pythonian.fr/simple`
+
+* also populate a requirements.txt with the following:
+
+```
+tshistory_refinery==0.9.0
+tshistory==0.20.0
+tsview==0.19.0
+tshistory_supervision==0.13.0
+tshistory_formula==0.16.1
+tshistory_xl==0.8.0
+rework==0.17.0
+rework_ui==0.16.0
+```
+
+Lastly:
+
+```shell
+$ pip install -r requirements.txt
+```
+
+For `0.9.0` to `0.9.1`:
+
+```
+tshistory_refinery==0.9.1
+tshistory==0.20.1
+tsview==0.20.1
+tshistory_supervision==0.13.1
+tshistory_formula==0.16.2
+tshistory_xl==0.8.0
+rework==0.17.2
+rework_ui==0.16.0
+```
+
+For `0.9.1` to `0.9.2`:
+
+```shell
+$ pip install tshistory_refinery==0.9.2 --upgrade
+```
+
+To get the `Pro` version, from `0.9.2`:
+
+```shell
+$ pip install refinery_pro==0.2.0
+$ tswatch init-db
+$ tsh migrate <refinery-name> --no-interactive
+```
