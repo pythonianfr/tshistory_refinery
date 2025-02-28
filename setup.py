@@ -29,10 +29,10 @@ setup(name='tshistory_refinery',
       ],
       extras_require={
           'doc': [
-            'sphinx == 4.5.0',
-            'sphinx-rtd-theme',
-            'sphinx-autoapi',
-            'pydata-sphinx-theme'
+            'sphinx == 8.2.1',
+            'sphinx-rtd-theme == 3.0.2',
+            'sphinx-autoapi == 3.6.0',
+            'pydata-sphinx-theme == 0.16.1'
         ]},
       package_data={'tshistory_refinery': [
           'refinery_static/*',
