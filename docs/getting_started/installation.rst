@@ -265,6 +265,5 @@ To get the `Pro` version, from `0.9.2`:
 .. code:: bash
 
    $ pip install refinery_pro==0.2.0
-   $ tswatch init-db
+   $ dashboard init-db
    $ tsh migrate <refinery-name> --no-interactive
-
