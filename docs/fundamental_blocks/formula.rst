@@ -4,9 +4,10 @@ Formulas (computed series)
 Purpose
 -------
 
-This `tshistory <https://hg.sr.ht/~pythonian/tshistory>`_ component
-provides a formula (time series domain specific) language to build
-computed time series.
+This `tshistory
+<https://heptapod.host/pythonian/timeseries-refinery/tshistory>`_
+component provides a formula (time series domain specific) language to
+build computed time series.
 
 Formulas are read-only series (you can’t ``update`` or ``replace``
 them).

@@ -4,8 +4,8 @@ Supervision
 Purpose
 -------
 
-This component provides a supervision mechanism over
-`tshistory <https://hg.sr.ht/~pythonian/tshistory>`__.
+This component provides a supervision mechanism over `tshistory
+<https://heptapod.host/pythonian/timeseries-refinery/tshistory>`__.
 
 The central use case is as follows:
 
@@ -23,8 +23,9 @@ The central use case is as follows:
 Usage
 -----
 
-The basic `tshistory <https://hg.sr.ht/~pythonian/tshistory>`__ usage is
-described on its own documentation.
+The basic `tshistory
+<https://heptapod.host/pythonian/timeseries-refinery/tshistory>`__
+usage is described on its own documentation.
 
 An override is made as follows:
 

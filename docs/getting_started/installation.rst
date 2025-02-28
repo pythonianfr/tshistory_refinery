@@ -171,18 +171,18 @@ february 2025), this will fail unless:
 You probably want to create a `requirements.txt` file and put this
 inside:
 
-```
-numpy==1.26.4
-werkzeug==2.3.8
-tshistory_refinery==0.8.3
-tshistory==0.19.4
-```
+.. code:: bash
+
+   numpy==1.26.4
+   werkzeug==2.3.8
+   tshistory_refinery==0.8.3
+   tshistory==0.19.4
 
 You then need to do:
 
-```shell
-$ pip install -r requirements.txt
-```
+.. code:: bash
+
+   $ pip install -r requirements.txt
 
 Let's assume you want to upgrade from this to newer versions. We will
 describe the steps to go from 0.8.3 to 0.9.0, then 0.9.1, then 0.9.2,
@@ -201,63 +201,70 @@ So to go from `0.8.3` to `0.9.0` one should:
 
 * also populate a requirements.txt with the following:
 
-```
-tshistory_refinery==0.9.0
-tshistory==0.20.0
-tsview==0.19.0
-tshistory_supervision==0.13.0
-tshistory_formula==0.16.1
-tshistory_xl==0.8.0
-rework==0.17.0
-rework_ui==0.16.0
-```
+.. code:: bash
+
+   tshistory_refinery==0.9.0
+   tshistory==0.20.0
+   tsview==0.19.0
+   tshistory_supervision==0.13.0
+   tshistory_formula==0.16.1
+   tshistory_xl==0.8.0
+   rework==0.17.0
+   rework_ui==0.16.0
+
 
 Lastly:
 
-```shell
-$ pip install -r requirements.txt
-```
+.. code:: bash
+
+   $ pip install -r requirements.txt
+
 
 The `refinery.cfg` configuration file is now deprecated and you should
 make sure you have a properly formed `tshistory.cfg` file instead.
 
 For instance, if you had a `refinery.cfg` with the following:
 
-```ini
-[db]
-uri = postgresql:///myrefinery
-```
+.. code:: ini
+
+   [db]
+   uri = postgresql:///myrefinery
+
 
 You will want this `tshistory.cfg`:
 
-```
-[dburi]
-refinery = postgresql:///myrefinery
-```
+.. code:: bash
+
+   [dburi]
+   refinery = postgresql:///myrefinery
+
 
 For `0.9.0` to `0.9.1`:
 
-```
-tshistory_refinery==0.9.1
-tshistory==0.20.1
-tsview==0.20.1
-tshistory_supervision==0.13.1
-tshistory_formula==0.16.2
-tshistory_xl==0.8.0
-rework==0.17.2
-rework_ui==0.16.0
-```
+.. code:: bash
+
+   tshistory_refinery==0.9.1
+   tshistory==0.20.1
+   tsview==0.20.1
+   tshistory_supervision==0.13.1
+   tshistory_formula==0.16.2
+   tshistory_xl==0.8.0
+   rework==0.17.2
+   rework_ui==0.16.0
+
 
 For `0.9.1` to `0.9.2`:
 
-```shell
-$ pip install tshistory_refinery==0.9.2 --upgrade
-```
+.. code:: bash
+
+   $ pip install tshistory_refinery==0.9.2 --upgrade
+
 
 To get the `Pro` version, from `0.9.2`:
 
-```shell
-$ pip install refinery_pro==0.2.0
-$ tswatch init-db
-$ tsh migrate <refinery-name> --no-interactive
-```
+.. code:: bash
+
+   $ pip install refinery_pro==0.2.0
+   $ tswatch init-db
+   $ tsh migrate <refinery-name> --no-interactive
+

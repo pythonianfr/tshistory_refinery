@@ -309,10 +309,10 @@ Notes on resampling
 
 -  The resampled data won't be pushed
 
--  If such resampling is reoccuring, we strongly advise to define a new
-   resampled series, *server side*, with the
-   `formula <https://hg.sr.ht/~pythonian/tshistory_formula>`__ system of
-   tshistory
+- If such resampling is reoccuring, we strongly advise to define a new
+   resampled series, *server side*, with the `formula
+   <https://heptapod.host/pythonian/timeseries-refinery/tshistory_formula>`__
+   system of tshistory
 
 Common pitfalls
 ~~~~~~~~~~~~~~~
@@ -331,10 +331,11 @@ Common pitfalls
 -  It is quite easy to push some data in the database, it is also very
    simple to prevent it (use the ``rc_`` prefix)
 
--  If one change the value of series inserted by a different process,
-   the rule of updating such data might surprise you at first look. More
-   information
-   `here <https://hg.sr.ht/~pythonian/tshistory_supervision>`__
+- If one change the value of series inserted by a different process,
+   the rule of updating such data might surprise you at first
+   look. More information `here
+   <https://heptapod.host/pythonian/timeseries-refinery/tshistory_supervision>`__
+
 
 Testing
 =======
