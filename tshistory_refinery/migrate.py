@@ -48,10 +48,10 @@ def migrate_rework_schema_interval(engine, namespace, interactive):
             f'drop table if exists "{namespace}-formula-patch.group".basket'
         )
         cn.execute(
-            f'drop table if exists "{namespace}-formula-patch.group".registry'
+            f'drop table if exists "{namespace}-formula-patch.group".revision_metadata'
         )
         cn.execute(
-            f'drop table if exists "{namespace}-formula-patch.group".revision_metadata'
+            f'drop table if exists "{namespace}-formula-patch.group".registry'
         )
 
         cn.execute(
