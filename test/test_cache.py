@@ -49,94 +49,99 @@ def test_good_cache(engine):
         cn.execute('delete from tsh.cache_policy')
 
     api.freeze_operations(engine)
-    assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 0
-    assert engine.execute('select count(*) from rework.sched').scalar() == 0
+    with engine.begin() as cn:
+        assert cn.execute('select count(*) from tsh.cache_policy').scalar() == 0
+        assert cn.execute('select count(*) from rework.sched').scalar() == 0
 
-    cache.new_policy(
-        engine,
-        'my-policy',
-        initial_revdate='(date "2020-1-1")',
-        look_before='(shifted (today) #:days 15)',
-        look_after='(shifted (today) #:days -10)',
-        revdate_rule='0 1 * * *',
-        schedule_rule='0 8-18 * * *',
-    )
-
-    p = cache.policy_by_name(engine, 'my-policy')
-    assert p == {
-        'initial_revdate': '(date "2020-1-1")',
-        'revdate_rule': '0 1 * * *',
-        'schedule_rule': '0 8-18 * * *'
-    }
-
-    names = cache.policy_series(engine, 'my-policy')
-    assert len(names) == 0
-
-    assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 1
-    assert engine.execute('select count(*) from rework.sched').scalar() == 0
-
-    assert not cache.scheduled_policy(engine, 'my-policy')
-    t = cache.schedule_policy(engine, 'my-policy')
-    assert t.status == 'queued'
-
-    t2 = cache.active_task(engine, 'my-policy')
-    assert t.tid == t2.tid
-
-    assert engine.execute('select count(*) from rework.sched').scalar() == 1
-    assert cache.scheduled_policy(engine, 'my-policy')
-    assert engine.execute('select count(*) from rework.task').scalar() == 1
-
-    with cache.suspended_policies(engine):
-        assert engine.execute('select count(*) from rework.sched').scalar() == 0
-        assert not cache.scheduled_policy(engine, 'my-policy')
-
-        cache.edit_policy(
-            engine,
+        cache.new_policy(
+            cn,
             'my-policy',
-            initial_revdate='(date "2022-1-1")',
-            look_before='(shifted (today) #:days -15)',
-            look_after='(shifted (today) #:days 10)',
+            initial_revdate='(date "2020-1-1")',
+            look_before='(shifted (today) #:days 15)',
+            look_after='(shifted (today) #:days -10)',
             revdate_rule='0 1 * * *',
             schedule_rule='0 8-18 * * *',
         )
-        p = cache.policy_by_name(engine, 'my-policy')
+
+        p = cache.policy_by_name(cn, 'my-policy')
         assert p == {
-            'initial_revdate': '(date "2022-1-1")',
+            'initial_revdate': '(date "2020-1-1")',
             'revdate_rule': '0 1 * * *',
             'schedule_rule': '0 8-18 * * *'
         }
 
-        assert not cache.scheduled_policy(engine, 'my-policy')
-    assert cache.scheduled_policy(engine, 'my-policy')
+        names = cache.policy_series(cn, 'my-policy')
+        assert len(names) == 0
 
-    cache.delete_policy(engine, 'my-policy')
-    assert not cache.scheduled_policy(engine, 'my-policy')
+        assert cn.execute('select count(*) from tsh.cache_policy').scalar() == 1
+        assert cn.execute('select count(*) from rework.sched').scalar() == 0
 
-    assert engine.execute('select count(*) from tsh.cache_policy').scalar() == 0
-    assert engine.execute('select count(*) from rework.sched').scalar() == 0
+        assert not cache.scheduled_policy(cn, 'my-policy')
+        t = cache.schedule_policy(cn, 'my-policy')
+        assert t.status == 'queued'
+
+        t2 = cache.active_task(cn, 'my-policy')
+        assert t.tid == t2.tid
+
+        assert cn.execute('select count(*) from rework.sched').scalar() == 1
+        assert cache.scheduled_policy(cn, 'my-policy')
+        assert cn.execute('select count(*) from rework.task').scalar() == 1
+
+    with cache.suspended_policies(engine):
+        with engine.begin() as cn:
+            assert cn.execute('select count(*) from rework.sched').scalar() == 0
+            assert not cache.scheduled_policy(cn, 'my-policy')
+
+            cache.edit_policy(
+                cn,
+                'my-policy',
+                initial_revdate='(date "2022-1-1")',
+                look_before='(shifted (today) #:days -15)',
+                look_after='(shifted (today) #:days 10)',
+                revdate_rule='0 1 * * *',
+                schedule_rule='0 8-18 * * *',
+            )
+            p = cache.policy_by_name(cn, 'my-policy')
+            assert p == {
+                'initial_revdate': '(date "2022-1-1")',
+                'revdate_rule': '0 1 * * *',
+                'schedule_rule': '0 8-18 * * *'
+            }
+
+            assert not cache.scheduled_policy(cn, 'my-policy')
+    with engine.begin() as cn:
+        assert cache.scheduled_policy(cn, 'my-policy')
+
+        cache.delete_policy(cn, 'my-policy')
+        assert not cache.scheduled_policy(cn, 'my-policy')
+
+        assert cn.execute('select count(*) from tsh.cache_policy').scalar() == 0
+        assert cn.execute('select count(*) from rework.sched').scalar() == 0
 
 
 def test_policy_by_name(engine):
-    cache.new_policy(
-        engine,
-        'my-policy-1',
-        initial_revdate='(date "2022-1-1")',
-        look_before='(shifted (today) #:days 15)',
-        look_after='(shifted (today) #:days -10)',
-        revdate_rule='0 1 * * *',
-        schedule_rule='0 8-18 * * *',
-    )
-    cache.new_policy(
-        engine,
-        'my-policy-2',
-        initial_revdate='(date "2023-1-1")',
-        look_before='(shifted (today) #:days 15)',
-        look_after='(shifted (today) #:days -10)',
-        revdate_rule='0 1 * * *',
-        schedule_rule='0 8-18 * * *',
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'my-policy-1',
+            initial_revdate='(date "2022-1-1")',
+            look_before='(shifted (today) #:days 15)',
+            look_after='(shifted (today) #:days -10)',
+            revdate_rule='0 1 * * *',
+            schedule_rule='0 8-18 * * *',
+        )
+        cache.new_policy(
+            cn,
+            'my-policy-2',
+            initial_revdate='(date "2023-1-1")',
+            look_before='(shifted (today) #:days 15)',
+            look_after='(shifted (today) #:days -10)',
+            revdate_rule='0 1 * * *',
+            schedule_rule='0 8-18 * * *',
+        )
 
-    p = cache.policy_by_name(engine, 'my-policy-2')
+        p = cache.policy_by_name(cn, 'my-policy-2')
+
     assert p == {
         'initial_revdate': '(date "2023-1-1")',
         'revdate_rule': '0 1 * * *',
@@ -168,44 +173,46 @@ def test_cache_a_series(engine, tsa):
         '(series "ground-0")'
     )
 
-    cache.new_policy(
-        engine,
-        'a-policy',
-        '(date "2022-1-1")',
-        '(shifted now #:days -10)',
-        '(shifted now #:days 10)',
-        '0 1 * * *',
-        '0 8-18 * * *',
-        namespace=tsh.namespace
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'a-policy',
+            '(date "2022-1-1")',
+            '(shifted now #:days -10)',
+            '(shifted now #:days 10)',
+            '0 1 * * *',
+            '0 8-18 * * *',
+            namespace=tsh.namespace
+        )
 
-    cache.set_policy(
-        engine,
-        'a-policy',
-        'over-ground-0',
-        namespace=tsh.namespace
-    )
+        cache.set_policy(
+            cn,
+            'a-policy',
+            'over-ground-0',
+            namespace=tsh.namespace
+        )
 
-    p = cache.series_policy(
-        engine,
-        'over-ground-0',
-        namespace=tsh.namespace
-    )
-    assert p == {
-        'name': 'a-policy',
-        'initial_revdate': '(date "2022-1-1")',
-        'look_after': '(shifted now #:days 10)',
-        'look_before': '(shifted now #:days -10)',
-        'revdate_rule': '0 1 * * *',
+        p = cache.series_policy(
+            cn,
+            'over-ground-0',
+            namespace=tsh.namespace
+        )
+
+        assert p == {
+            'name': 'a-policy',
+            'initial_revdate': '(date "2022-1-1")',
+            'look_after': '(shifted now #:days 10)',
+            'look_before': '(shifted now #:days -10)',
+            'revdate_rule': '0 1 * * *',
         'schedule_rule': '0 8-18 * * *'
-    }
+        }
 
-    cache.refresh_series(
-        engine,
-        tsa,
-        'over-ground-0',
-        final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
-    )
+        cache.refresh_series(
+            cn,
+            tsa,
+            'over-ground-0',
+            final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
+        )
 
     assert_df("""
 2022-01-01    1.0
@@ -214,7 +221,8 @@ def test_cache_a_series(engine, tsa):
 """, tsh.get(engine, 'over-ground-0'))
 
     # series per policy
-    names = cache.policy_series(engine, 'a-policy', namespace=tsh.namespace)
+    with engine.begin() as cn:
+        names = cache.policy_series(cn, 'a-policy', namespace=tsh.namespace)
     assert len(names) == 1
 
     tsh.register_formula(
@@ -222,37 +230,39 @@ def test_cache_a_series(engine, tsa):
         'over-ground-0-b',
         '(+ 1 (series "ground-0"))'
     )
-    cache.set_policy(
-        engine,
-        'a-policy',
-        'over-ground-0-b',
-        namespace=tsh.namespace
-    )
-    names = cache.policy_series(engine, 'a-policy', namespace=tsh.namespace)
-    assert len(names) == 2
+    with engine.begin() as cn:
+        cache.set_policy(
+            cn,
+            'a-policy',
+            'over-ground-0-b',
+            namespace=tsh.namespace
+        )
+        names = cache.policy_series(cn, 'a-policy', namespace=tsh.namespace)
+        assert len(names) == 2
 
-    tsh.unset_cache_policy(
-        engine,
-        'over-ground-0'
-    )
-    names = cache.policy_series(engine, 'a-policy', namespace=tsh.namespace)
-    assert len(names) == 1
+        tsh.unset_cache_policy(
+            cn,
+            'over-ground-0'
+        )
+        names = cache.policy_series(cn, 'a-policy', namespace=tsh.namespace)
+        assert len(names) == 1
 
 
 def test_cache_refresh(engine, tsa):
     tsa.delete('over-ground-1')
     tsh = tsa.tsh
 
-    cache.new_policy(
-        engine,
-        'another-policy',
-        initial_revdate='(date "2022-1-1")',
-        look_before='(shifted now #:days -10)',
-        look_after='(shifted now #:days 10)',
-        revdate_rule='0 0 * * *',
-        schedule_rule='0 8-18 * * *',
-        namespace=tsh.namespace
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'another-policy',
+            initial_revdate='(date "2022-1-1")',
+            look_before='(shifted now #:days -10)',
+            look_after='(shifted now #:days 10)',
+            revdate_rule='0 0 * * *',
+            schedule_rule='0 8-18 * * *',
+            namespace=tsh.namespace
+        )
     # let's prepare a 3 points series with 5 revisions
     for idx, idate in enumerate(
             pd.date_range(
@@ -311,22 +321,23 @@ insertion_date             value_date
         '(series "ground-1")'
     )
 
-    cache.set_policy(
-        engine,
-        'another-policy',
-        'over-ground-1',
-        namespace=tsh.namespace
-    )
-    assert cache.series_policy(engine, 'over-ground-1', namespace=tsh.namespace)
+    with engine.begin() as cn:
+        cache.set_policy(
+            cn,
+            'another-policy',
+            'over-ground-1',
+            namespace=tsh.namespace
+        )
+        assert cache.series_policy(cn, 'over-ground-1', namespace=tsh.namespace)
 
-    # we only refresh up to the first 3 revisions
-    cache.refresh_series(
-        engine,
-        tsa,
-        'over-ground-1',
-        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
-    )
-    assert cache.series_policy(engine, 'over-ground-1', namespace=tsh.namespace)
+        # we only refresh up to the first 3 revisions
+        cache.refresh_series(
+            cn,
+            tsa,
+            'over-ground-1',
+            final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
+        )
+        assert cache.series_policy(cn, 'over-ground-1', namespace=tsh.namespace)
 
     # a formula over the formula (to check second order effects of the
     # api options like `live` and `nocache`)
@@ -499,12 +510,13 @@ insertion_date             value_date
     assert len(tsa.history('over-over-ground-1', nocache=True)) == 5
 
     # let's pretend two new revisions showed up
-    cache.refresh_series(
-        engine,
-        tsa,
-        'over-ground-1',
-        final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'over-ground-1',
+            final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
+        )
 
     hist = tsh.cache.history(engine, 'over-ground-1')
     assert_hist("""
@@ -547,12 +559,13 @@ insertion_date             value_date
     assert tsa.get('over-ground-1').equals(tsa.get('over-ground-1', nocache=True))
 
     # we only refresh up to the first 3 revisions
-    cache.refresh_series(
-        engine,
-        tsa,
-        'over-ground-1',
-        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'over-ground-1',
+            final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
+        )
     assert len(tsa.insertion_dates('over-ground-1')) == 3
 
     # the formula that refers to the series
@@ -564,12 +577,13 @@ insertion_date             value_date
     assert len(tsa.insertion_dates('over-ground-1')) == 5
 
     # we only refresh up to the first 3 revisions
-    cache.refresh_series(
-        engine,
-        tsa,
-        'over-ground-1',
-        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'over-ground-1',
+            final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
+        )
 
     now = pd.Timestamp('2022-1-3', tz='utc')
     with patch('tshistory_refinery.tsio.utcnow', return_value=now):
@@ -609,12 +623,13 @@ insertion_date             value_date
         )
 
     # we refresh up to rev 5
-    cache.refresh_series(
-        engine,
-        tsa,
-        'over-ground-1',
-        final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'over-ground-1',
+            final_revdate=pd.Timestamp('2022-1-5', tz='UTC')
+        )
 
     # at this point we have a weird mix in the cache
     # but hey, that's life
@@ -656,16 +671,17 @@ def test_rename_delete(engine, tsa):
     with engine.begin() as cn:
         cn.execute(f'delete from "{tsh.namespace}".cache_policy')
 
-    cache.new_policy(
-        engine,
-        'policy-3',
-        initial_revdate='(date "2022-1-1")',
-        look_before='(shifted now #:days -10)',
-        look_after='(shifted now #:days 10)',
-        revdate_rule='0 0 * * *',
-        schedule_rule='0 8-18 * * *',
-        namespace=tsh.namespace
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'policy-3',
+            initial_revdate='(date "2022-1-1")',
+            look_before='(shifted now #:days -10)',
+            look_after='(shifted now #:days 10)',
+            revdate_rule='0 0 * * *',
+            schedule_rule='0 8-18 * * *',
+            namespace=tsh.namespace
+        )
 
     ts = pd.Series(
         [1, 2, 3],
@@ -688,20 +704,22 @@ def test_rename_delete(engine, tsa):
         '(series "ground-2")'
     )
 
-    cache.set_policy(
-        engine,
-        'policy-3',
-        'over-ground-2',
-        namespace=tsh.namespace
-    )
+    with engine.begin() as cn:
+        cache.set_policy(
+            cn,
+            'policy-3',
+            'over-ground-2',
+            namespace=tsh.namespace
+        )
     assert not tsh.cache.exists(engine, 'over-ground-2')
 
-    cache.refresh_series(
-        engine,
-        tsa,
-        'over-ground-2',
-        final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'over-ground-2',
+            final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
+        )
 
     assert tsh.cache.exists(engine, 'over-ground-2')
     tsa.rename('over-ground-2', 'a-fancy-name')
@@ -743,37 +761,40 @@ def test_cache_coherency(engine, tsa):
         '(series "ground-formula")'
     )
 
-    cache.new_policy(
-        engine,
-        'policy-4',
-        initial_revdate='(date "2022-1-1")',
-        look_before='(shifted now #:days -1)',
-        look_after='(shifted now #:days 2)',
-        revdate_rule='0 0 * * *',
-        schedule_rule='0 8-18 * * *',
-        namespace=tsh.namespace
-    )
-    cache.set_policy(
-        engine,
-        'policy-4',
-        'invalidate-me',
-        namespace=tsh.namespace
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'policy-4',
+            initial_revdate='(date "2022-1-1")',
+            look_before='(shifted now #:days -1)',
+            look_after='(shifted now #:days 2)',
+            revdate_rule='0 0 * * *',
+            schedule_rule='0 8-18 * * *',
+            namespace=tsh.namespace
+        )
+        cache.set_policy(
+            cn,
+            'policy-4',
+            'invalidate-me',
+            namespace=tsh.namespace
+        )
     assert not tsh.cache.exists(engine, 'invalidate-me')
 
-    names = cache.policy_series(
-        engine,
-        'policy-4',
-        namespace=tsh.namespace
-    )
+    with engine.begin() as cn:
+        names = cache.policy_series(
+            cn,
+            'policy-4',
+            namespace=tsh.namespace
+        )
     assert names == ['invalidate-me']
 
-    cache.refresh_series(
-        engine,
-        tsa,
-        'invalidate-me',
-        final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'invalidate-me',
+            final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
+        )
     assert tsh.cache.exists(engine, 'invalidate-me')
 
     assert_df("""
@@ -839,30 +860,32 @@ def test_federation_cache_coherency(engine, federated, remote):
         '(series "remote-formula")'
     )
 
-    cache.new_policy(
-        engine,
-        'policy-5',
-        initial_revdate='(date "2022-1-1")',
-        look_before='(shifted now #:days -1)',
-        look_after='(shifted now #:days 1)',
-        revdate_rule='0 0 * * *',
-        schedule_rule='0 8-18 * * *',
-        namespace=tsh.namespace
-    )
-    cache.set_policy(
-        engine,
-        'policy-5',
-        'invalidate-me',
-        namespace=tsh.namespace
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'policy-5',
+            initial_revdate='(date "2022-1-1")',
+            look_before='(shifted now #:days -1)',
+            look_after='(shifted now #:days 1)',
+            revdate_rule='0 0 * * *',
+            schedule_rule='0 8-18 * * *',
+            namespace=tsh.namespace
+        )
+        cache.set_policy(
+            cn,
+            'policy-5',
+            'invalidate-me',
+            namespace=tsh.namespace
+        )
     assert not tsh.cache.exists(engine, 'invalidate-me')
 
-    cache.refresh_series(
-        engine,
-        federated,
-        'invalidate-me',
-        final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            federated,
+            'invalidate-me',
+            final_revdate=pd.Timestamp('2022-1-2', tz='UTC')
+        )
     assert tsh.cache.exists(engine, 'invalidate-me')
 
     assert_df("""
@@ -1099,19 +1122,21 @@ def test_cache_refresh_series_now(engine, tsa):
     )
 
     assert not tsh.cache.exists(engine, 'refresh-now')
-    cache.refresh_now(
-        engine,
-        tsa,
-        'refresh-now'
-    )
+    with engine.begin() as cn:
+        cache.refresh_now(
+            cn,
+            tsa,
+            'refresh-now'
+        )
     # because it does not work on an empty cache
     assert not tsh.cache.exists(engine, 'refresh-now')
 
-    cache.refresh_series(
-        engine,
-        tsa,
-        'refresh-now'
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'refresh-now'
+        )
     assert tsh.cache.exists(engine, 'refresh-now')
 
     assert_df("""
@@ -1133,11 +1158,12 @@ def test_cache_refresh_series_now(engine, tsa):
         'Babar',
         insertion_date=pd.Timestamp('2022-1-2', tz='UTC')
     )
-    cache.refresh_now(
-        engine,
-        tsa,
-        'refresh-now'
-    )
+    with engine.begin() as cn:
+        cache.refresh_now(
+            cn,
+            tsa,
+            'refresh-now'
+        )
 
     assert_df("""
 2022-01-01    0.0
@@ -1230,12 +1256,13 @@ def test_always_live_in_the_deep_past(engine, tsa):
         ['f-deep-fried']
     )
 
-    cache.refresh_series(
-        engine,
-        tsa,
-        'f-deep-fried',
-        final_revdate=pd.Timestamp('2022-3-2', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'f-deep-fried',
+            final_revdate=pd.Timestamp('2022-3-2', tz='UTC')
+        )
 
     idates = tsa.insertion_dates('f-deep-fried')
     assert idates == [
@@ -1406,12 +1433,13 @@ def test_values_marker_origin_and_cache(engine, tsa):
         ['formula-many']
     )
 
-    cache.refresh_series(
-        engine,
-        tsa,
-        'formula-many',
-        final_revdate = pd.Timestamp('2022-1-2', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'formula-many',
+            final_revdate = pd.Timestamp('2022-1-2', tz='UTC')
+        )
     assert tsh.cache.exists(engine, 'formula-many')
 
     # we refresh the underlying data, but not the cache
@@ -1655,28 +1683,29 @@ def test_refresh_using_middle_cache(engine, tsa):
         '(series "2-revs")'
     )
 
-    cache.new_policy(
-        engine,
-        'middle-policy',
-        initial_revdate='(date "2022-1-1")',
-        look_before='(shifted now #:days -1)',
-        look_after='(shifted now #:days 0)',
-        revdate_rule='0 0 * * *',
-        schedule_rule='0 8-18 * * *',
-        namespace=tsa.tsh.namespace
-    )
-    cache.set_policy(
-        engine,
-        'middle-policy',
-        'cache-1rev-middle',
-        namespace=tsa.tsh.namespace
-    )
-    cache.refresh_series(
-        engine,
-        tsa,
-        'cache-1rev-middle',
-        final_revdate=pd.Timestamp('2022-1-1 00:00:01', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'middle-policy',
+            initial_revdate='(date "2022-1-1")',
+            look_before='(shifted now #:days -1)',
+            look_after='(shifted now #:days 0)',
+            revdate_rule='0 0 * * *',
+            schedule_rule='0 8-18 * * *',
+            namespace=tsa.tsh.namespace
+        )
+        cache.set_policy(
+            cn,
+            'middle-policy',
+            'cache-1rev-middle',
+            namespace=tsa.tsh.namespace
+        )
+        cache.refresh_series(
+            cn,
+            tsa,
+            'cache-1rev-middle',
+            final_revdate=pd.Timestamp('2022-1-1 00:00:01', tz='UTC')
+        )
 
     assert len(tsa.get('cache-1rev-middle')) == 1
 
@@ -1684,28 +1713,29 @@ def test_refresh_using_middle_cache(engine, tsa):
         'cache-top',
         '(series "cache-1rev-middle")'
     )
-    cache.new_policy(
-        engine,
-        'top-policy',
-        initial_revdate='(date "2022-1-1")',
-        look_before='(shifted now #:days -1)',
-        look_after='(shifted now #:days 0)',
-        revdate_rule='0 0 * * *',
-        schedule_rule='0 8-18 * * *',
-        namespace=tsa.tsh.namespace
-    )
-    cache.set_policy(
-        engine,
-        'top-policy',
-        'cache-top',
-        namespace=tsa.tsh.namespace
-    )
-    cache.refresh_series(
-        engine,
-        tsa,
-        'cache-top'
-        # NOTE: no final-rev there
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'top-policy',
+            initial_revdate='(date "2022-1-1")',
+            look_before='(shifted now #:days -1)',
+            look_after='(shifted now #:days 0)',
+            revdate_rule='0 0 * * *',
+            schedule_rule='0 8-18 * * *',
+            namespace=tsa.tsh.namespace
+        )
+        cache.set_policy(
+            cn,
+            'top-policy',
+            'cache-top',
+            namespace=tsa.tsh.namespace
+        )
+        cache.refresh_series(
+            cn,
+            tsa,
+            'cache-top'
+            # NOTE: no final-rev there
+        )
 
     # and here we show that while being based on a cached series
     # we now use the "middle" cache
@@ -1897,44 +1927,46 @@ def test_autotrophic_series_in_cache(engine, tsa):
     )
 
     # 4. set a new cache policy
-    cache.new_policy(
-        engine,
-        'a-policy',
-        '(date "2022-1-1")',
-        '(shifted now #:days -10)',
-        '(shifted now #:days 10)',
-        '0 1 * * *',
-        '0 8-18 * * *',
-        namespace=tsh.namespace
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'a-policy',
+            '(date "2022-1-1")',
+            '(shifted now #:days -10)',
+            '(shifted now #:days 10)',
+            '0 1 * * *',
+            '0 8-18 * * *',
+            namespace=tsh.namespace
+        )
 
-    cache.set_policy(
-        engine,
-        'a-policy',
-        'autotrophic_series',
-        namespace=tsh.namespace
-    )
+        cache.set_policy(
+            cn,
+            'a-policy',
+            'autotrophic_series',
+            namespace=tsh.namespace
+        )
 
-    p = cache.series_policy(
-        engine,
-        'autotrophic_series',
-        namespace=tsh.namespace
-    )
-    assert p == {
-        'name': 'a-policy',
-        'initial_revdate': '(date "2022-1-1")',
-        'look_after': '(shifted now #:days 10)',
-        'look_before': '(shifted now #:days -10)',
-        'revdate_rule': '0 1 * * *',
-        'schedule_rule': '0 8-18 * * *'
-    }
+        p = cache.series_policy(
+            cn,
+            'autotrophic_series',
+            namespace=tsh.namespace
+        )
+        assert p == {
+            'name': 'a-policy',
+            'initial_revdate': '(date "2022-1-1")',
+            'look_after': '(shifted now #:days 10)',
+            'look_before': '(shifted now #:days -10)',
+            'revdate_rule': '0 1 * * *',
+            'schedule_rule': '0 8-18 * * *'
+        }
 
     # 5. initial cache load with our autotrophic_series series
-    cache.refresh_series(
-        engine,
-        tsa,
-        'autotrophic_series',
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'autotrophic_series',
+        )
 
     #  6. check that cached series and non cached series are the same
     result_from_cache = tsh.get(
@@ -1972,11 +2004,12 @@ def test_autotrophic_series_in_cache(engine, tsa):
     assert str(result_without_cache) != str(result_from_cache)
 
     # 9. refresh series in cache
-    cache.refresh_series(
-        engine,
-        tsa,
-        'autotrophic_series'
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'autotrophic_series'
+        )
     assert tsa.has_cache('autotrophic_series')
 
     # 10 check that now, the series is updated
@@ -2023,18 +2056,19 @@ def test_cache_resample(tsa):
         f'(resample (series "{series_name}") "D" "sum")',
     )
     engine = tsa.engine
-    cache.new_policy(
-        engine,
-        'resample-policy',
-        '(date "2020-01-01")',
-        '(shifted now #:days -2)',
-        '(shifted now #:days 2)',
-        '0 * * * *',
-        '0 8-23 * * *',
-        namespace=tsa.tsh.namespace
-    )
-    cache.set_policy(engine, 'resample-policy', formula_name, namespace=tsa.tsh.namespace)
-    cache.refresh_series(engine, tsa, formula_name)
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'resample-policy',
+            '(date "2020-01-01")',
+            '(shifted now #:days -2)',
+            '(shifted now #:days 2)',
+            '0 * * * *',
+            '0 8-23 * * *',
+            namespace=tsa.tsh.namespace
+        )
+        cache.set_policy(cn, 'resample-policy', formula_name, namespace=tsa.tsh.namespace)
+        cache.refresh_series(cn, tsa, formula_name)
 
     assert tsa.has_cache(formula_name)
     # series = tsa.get(formula_name)
@@ -2065,24 +2099,25 @@ def test_cache_slice(tsa):
     )
     # Define cache policy
     policy_name = 'daily-cached'
-    tsa.new_cache_policy(
-        policy_name,
-        initial_revdate='(date "2023-01-05")',
-        look_before='(shifted now #:days -2)',
-        look_after='(shifted now #:days 10)',
-        revdate_rule='0 12 * * *',
-        schedule_rule='0 12 * * *',
-    )
-    tsa.set_cache_policy(
-        policy_name,
-        [formula_name]
-    )
-    cache.refresh_series(
-        tsa.engine,
-        tsa,
-        formula_name,
-        final_revdate=pd.Timestamp('2023-1-10', tz='UTC')
-    )
+    with tsa.engine.begin() as cn:
+        tsa.new_cache_policy(
+            policy_name,
+            initial_revdate='(date "2023-01-05")',
+            look_before='(shifted now #:days -2)',
+            look_after='(shifted now #:days 10)',
+            revdate_rule='0 12 * * *',
+            schedule_rule='0 12 * * *',
+        )
+        tsa.set_cache_policy(
+            policy_name,
+            [formula_name]
+        )
+        cache.refresh_series(
+            cn,
+            tsa,
+            formula_name,
+            final_revdate=pd.Timestamp('2023-1-10', tz='UTC')
+        )
 
     # Check: good !
     pd.testing.assert_series_equal(

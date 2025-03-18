@@ -58,7 +58,7 @@ def validate_policy(
 
 
 def new_policy(
-        engine,
+        cn,
         name,
         initial_revdate,
         look_before,
@@ -80,22 +80,21 @@ def new_policy(
             f'Bad inputs for the cache policy: {badinputs}'
         )
 
-    with engine.begin() as cn:
-        q = insert(
-            f'"{namespace}".cache_policy'
-        ).values(
-            name=name,
-            initial_revdate=initial_revdate,
-            look_before=look_before,
-            look_after=look_after,
-            revdate_rule=revdate_rule,
-            schedule_rule=schedule_rule
-        )
-        q.do(cn).scalar()
+    q = insert(
+        f'"{namespace}".cache_policy'
+    ).values(
+        name=name,
+        initial_revdate=initial_revdate,
+        look_before=look_before,
+        look_after=look_after,
+        revdate_rule=revdate_rule,
+        schedule_rule=schedule_rule
+    )
+    q.do(cn).scalar()
 
 
 def edit_policy(
-        engine,
+        cn,
         name,
         initial_revdate,
         look_before,
@@ -117,46 +116,44 @@ def edit_policy(
             f'Bad inputs for the cache policy: {badinputs}'
         )
 
-    with engine.begin() as cn:
-        q = update(
-            f'"{namespace}".cache_policy'
-        ).where(name=name
-        ).values(
-            initial_revdate=initial_revdate,
-            look_before=look_before,
-            look_after=look_after,
-            revdate_rule=revdate_rule,
-            schedule_rule=schedule_rule
-        )
-        q.do(cn)
+    q = update(
+        f'"{namespace}".cache_policy'
+    ).where(name=name
+    ).values(
+        initial_revdate=initial_revdate,
+        look_before=look_before,
+        look_after=look_after,
+        revdate_rule=revdate_rule,
+        schedule_rule=schedule_rule
+    )
+    q.do(cn)
 
 
-def schedule_policy(engine, name, namespace='tsh'):
-    with engine.begin() as cn:
-        cid, schedule_rule = cn.execute(
-            f'select id, schedule_rule from "{namespace}".cache_policy '
-            f'where name = %(name)s',
-            name=name
-        ).fetchone()
-        sid = rapi.prepare(
-            engine,
-            'refresh_formula_cache',
-            domain='timeseries',
-            rule='0 ' + schedule_rule,
-            inputdata={
-                'policy': name
-            },
-        )
-        cn.execute(
-            f'insert into "{namespace}".cache_policy_sched '
-            f'(cache_policy_id, prepared_task_id) '
-            f'values (%(policy_id)s, %(sched_id)s)',
-            policy_id=cid,
-            sched_id=sid
-        )
+def schedule_policy(cn, name, namespace='tsh'):
+    cid, schedule_rule = cn.execute(
+        f'select id, schedule_rule from "{namespace}".cache_policy '
+        f'where name = %(name)s',
+        name=name
+    ).fetchone()
+    sid = rapi.prepare(
+        cn.engine,
+        'refresh_formula_cache',
+        domain='timeseries',
+        rule='0 ' + schedule_rule,
+        inputdata={
+            'policy': name
+        },
+    )
+    cn.execute(
+        f'insert into "{namespace}".cache_policy_sched '
+        f'(cache_policy_id, prepared_task_id) '
+        f'values (%(policy_id)s, %(sched_id)s)',
+        policy_id=cid,
+        sched_id=sid
+    )
     # immediately schedule the initial import
     return rapi.schedule(
-        engine,
+        cn.engine,
         'refresh_formula_cache',
         domain='timeseries',
         inputdata={
@@ -165,18 +162,17 @@ def schedule_policy(engine, name, namespace='tsh'):
     )
 
 
-def scheduled_policy(engine, name, namespace='tsh'):
-    with engine.begin() as cn:
-        return bool(
-            cn.execute(
-                f'select cps.prepared_task_id '
-                f'from "{namespace}".cache_policy_sched as cps, '
-                f'     "{namespace}".cache_policy as cp '
-                f'where cp.name = %(name)s and '
-                f'      cps.cache_policy_id = cp.id',
-                name=name
-            ).scalar()
-        )
+def scheduled_policy(cn, name, namespace='tsh'):
+    return bool(
+        cn.execute(
+            f'select cps.prepared_task_id '
+            f'from "{namespace}".cache_policy_sched as cps, '
+            f'     "{namespace}".cache_policy as cp '
+            f'where cp.name = %(name)s and '
+            f'      cps.cache_policy_id = cp.id',
+            name=name
+        ).scalar()
+    )
 
 
 def _remove_scheduled_tasks(cn, name, namespace):
@@ -191,20 +187,19 @@ def _remove_scheduled_tasks(cn, name, namespace):
     )
 
 
-def unschedule_policy(engine, name, namespace='tsh'):
-    with engine.begin() as cn:
-        _remove_scheduled_tasks(cn, name, namespace)
-        cn.execute(
-            f'delete from "{namespace}".cache_policy_sched as cps '
-            f'using "{namespace}".cache_policy as cp '
-            f'where cps.cache_policy_id = cp.id and '
-            f'      cp.name = %(name)s',
-            name=name
-        )
+def unschedule_policy(cn, name, namespace='tsh'):
+    _remove_scheduled_tasks(cn, name, namespace)
+    cn.execute(
+        f'delete from "{namespace}".cache_policy_sched as cps '
+        f'using "{namespace}".cache_policy as cp '
+        f'where cps.cache_policy_id = cp.id and '
+        f'      cp.name = %(name)s',
+        name=name
+    )
 
 
-def active_task(engine, policy_name, namespace='tsh'):
-    r = engine.execute(
+def active_task(cn, policy_name, namespace='tsh'):
+    r = cn.execute(
         'select t.id '
         'from rework.task as t, '
         '     rework.operation as o '
@@ -212,38 +207,36 @@ def active_task(engine, policy_name, namespace='tsh'):
         '      o.name = \'refresh_formula_cache\''
     )
     for tid, in r.fetchall():
-        task = rtask.Task.byid(engine, tid)
+        task = rtask.Task.byid(cn.engine, tid)
         if task.input['policy'] == policy_name:
             if task.status != 'done':
                 return task
 
 
-def delete_policy(engine, policy_name, namespace='tsh'):
-    with engine.begin() as cn:
-        _remove_scheduled_tasks(cn, policy_name, namespace)
+def delete_policy(cn, policy_name, namespace='tsh'):
+    _remove_scheduled_tasks(cn, policy_name, namespace)
 
-        tsh = tsio.timeseries(namespace=namespace)
-        for name in policy_series(cn, policy_name, namespace=namespace):
-            tsh.cache.delete(cn, name)
+    tsh = tsio.timeseries(namespace=namespace)
+    for name in policy_series(cn, policy_name, namespace=namespace):
+        tsh.cache.delete(cn, name)
 
-        cn.execute(
-            f'delete from "{namespace}".cache_policy '
-            f'where name = %(name)s',
-            name=policy_name
-        )
+    cn.execute(
+        f'delete from "{namespace}".cache_policy '
+        f'where name = %(name)s',
+        name=policy_name
+    )
 
 
-def policy_by_name(engine, name, namespace='tsh'):
+def policy_by_name(cn, name, namespace='tsh'):
     """ Return a cache policy by name, as a dict """
-    with engine.begin() as cn:
-        p = cn.execute(
-            f'select initial_revdate, '
-            f'       revdate_rule, schedule_rule '
-            f'from "{namespace}".cache_policy '
-            f'where name = %(name)s',
-            name=name
-        ).fetchone()
-    return dict(p)
+    p = cn.execute(
+        f'select initial_revdate, '
+        f'       revdate_rule, schedule_rule '
+        f'from "{namespace}".cache_policy '
+        f'where name = %(name)s',
+        name=name
+    ).fetchone()
+    return p.as_dict()
 
 
 def policy_series(cn, policy_name, namespace='tsh'):
@@ -318,21 +311,20 @@ def series_policy(cn, series_name, namespace='tsh'):
     ).fetchone()
     if p is None:
         return
-    return dict(p)
+    return p.as_dict()
 
 
 @contextmanager
-def series_refresh_lock(engine, name, namespace):
-    with engine.begin() as cn:
-        xactkey = hash64(name)
-        cn.execute(
-            f'select pg_advisory_xact_lock({xactkey})'
-        )
-        try:
-            yield
-        except:
-            traceback.print_exc()
-            raise
+def series_refresh_lock(cn, name, namespace):
+    xactkey = hash64(name)
+    cn.execute(
+        f'select pg_advisory_xact_lock({xactkey})'
+    )
+    try:
+        yield
+    except:
+        traceback.print_exc()
+        raise
 
 
 def _insertion_dates(tsa,
@@ -345,11 +337,12 @@ def _insertion_dates(tsa,
     """
     tsh, engine = tsa.tsh, tsa.engine
     formula = tsa.formula(name)
-    tree = tsh._expanded_formula(
-        engine,
-        formula,
-        qargs={}  # we want the stopnames mecanism to work for us
-    )
+    with engine.begin() as cn:
+        tree = tsh._expanded_formula(
+            cn,
+            formula,
+            qargs={}  # we want the stopnames mecanism to work for us
+        )
     idates = []
 
     with engine.begin() as cn:
@@ -417,18 +410,18 @@ def has_today(formula):
     return _findtoday(tree)
 
 
-def refresh_series(engine, tsa, name, final_revdate=None):
+def refresh_series(cn, tsa, name, final_revdate=None):
     """ Refresh a series cache """
     tsh = tsa.tsh
-    policy = series_policy(engine, name, tsh.namespace)
+    policy = series_policy(cn, name, tsh.namespace)
 
     # now, prepare the formula
     formula = tsa.formula(name)
 
-    with series_refresh_lock(engine, name, tsh.namespace):
-        exists = tsh.cache.exists(engine, name)
+    with series_refresh_lock(cn, name, tsh.namespace):
+        exists = tsh.cache.exists(cn, name)
         if exists:
-            cache_idates = tsh.cache.insertion_dates(engine, name)
+            cache_idates = tsh.cache.insertion_dates(cn, name)
             cached_last_idate = cache_idates[-1]
             policy_initial_revdate = pd.Timestamp(
                 eval_moment(policy['initial_revdate']),
@@ -451,7 +444,7 @@ def refresh_series(engine, tsa, name, final_revdate=None):
             print(f'{initial_revdate} -> {len(ts)} points (initial full horizon import)')
             if len(ts):
                 tsh.cache.update(
-                    engine,
+                    cn,
                     ts,
                     name,
                     'formula-cacher',
@@ -521,7 +514,7 @@ def refresh_series(engine, tsa, name, final_revdate=None):
             print(f'{revdate} -> {len(ts)} points')
             if len(ts):
                 tsh.cache.update(
-                    engine,
+                    cn,
                     ts,
                     name,
                     'formula-cacher',
@@ -529,21 +522,21 @@ def refresh_series(engine, tsa, name, final_revdate=None):
                 )
 
 
-def refresh_now(engine, tsa, name):
+def refresh_now(cn, tsa, name):
     """ Refresh a series cache on the spot (do not follow revdate_rule) """
     tsh = tsa.tsh
-    policy = series_policy(engine, name, tsh.namespace)
+    policy = series_policy(cn, name, tsh.namespace)
 
-    exists = tsh.cache.exists(engine, name)
+    exists = tsh.cache.exists(cn, name)
     if not exists:
         print(f'refresh_now only works on an established cache (series {name}).')
         return
 
     now = pd.Timestamp.utcnow()
     formula = tsa.formula(name)
-    with series_refresh_lock(engine, name, tsh.namespace):
-        known_min_date = tsh.cache.interval(engine, name).left
-        tzaware = tsh.cache.tzaware(engine, name)
+    with series_refresh_lock(cn, name, tsh.namespace):
+        known_min_date = tsh.cache.interval(cn, name).left
+        tzaware = tsh.cache.tzaware(cn, name)
 
         before = eval_moment(
             policy['look_before'],
@@ -572,7 +565,7 @@ def refresh_now(engine, tsa, name):
         print(f'{now} -> {len(ts)} points')
         if len(ts):
             tsh.cache.update(
-                engine,
+                cn,
                 ts,
                 name,
                 'formula-cacher'
@@ -581,19 +574,19 @@ def refresh_now(engine, tsa, name):
 
 def refresh_policy(tsa, policy, final_revdate=None):
     tsh = tsa.tsh
-    names = policy_series(
-        tsa.engine,
-        policy,
-        namespace=tsh.namespace
-    )
+    engine = tsa.engine
+    with engine.begin() as cn:
+        names = policy_series(
+            cn,
+            policy,
+            namespace=tsh.namespace
+        )
 
     print(
         f'Refreshing cache policy `{policy}` (ns={tsh.namespace})'
     )
     # sort series by dependency order
     # we want the leafs to be computed
-    engine = tsa.engine
-
     unames = set()
     # put the uncached serie at the end
     for name in names:
@@ -624,12 +617,13 @@ def refresh_policy(tsa, policy, final_revdate=None):
                 tsh.invalidate_cache(cn, name)
 
         try:
-            refresh_series(
-                engine,
-                tsa,
-                name,
-                final_revdate=final_revdate
-            )
+            with engine.begin() as cn:
+                refresh_series(
+                    cn,
+                    tsa,
+                    name,
+                    final_revdate=final_revdate
+                )
         except Exception as err:
             failed.append(name)
             traceback.print_exc()
@@ -640,12 +634,13 @@ def refresh_policy(tsa, policy, final_revdate=None):
     for name in unames:
         print('refresh ->', name)
         try:
-            refresh_series(
-                engine,
-                tsa,
-                name,
-                final_revdate=final_revdate
-            )
+            with engine.begin() as cn:
+                refresh_series(
+                    cn,
+                    tsa,
+                    name,
+                    final_revdate=final_revdate
+                )
         except Exception as err:
             failed.append(name)
             traceback.print_exc()
@@ -662,11 +657,13 @@ def refresh_policy(tsa, policy, final_revdate=None):
 def refresh_policy_now(tsa, policy):
     tsh = tsa.tsh
     engine = tsa.engine
-    names = policy_series(
-        tsa.engine,
-        policy,
-        namespace=tsh.namespace
-    )
+
+    with engine.begin() as cn:
+        names = policy_series(
+            cn,
+            policy,
+            namespace=tsh.namespace
+        )
 
     print(
         f'Spot refresh of cache policy `{policy}` '
@@ -693,11 +690,12 @@ def refresh_policy_now(tsa, policy):
     print(f'updating ({len(names)} series)')
     for name in names:
         print('refresh ->', name)
-        refresh_now(
-            engine,
-            tsa,
-            name,
-        )
+        with engine.begin() as cn:
+            refresh_now(
+                cn,
+                tsa,
+                name,
+            )
 
     if len(unames):
         print(f'second batch (full cache construction) ({len(unames)} series)')
@@ -710,22 +708,24 @@ def suspended_policies(engine, namespace='tsh'):
     Will be useful when playing (re-setting for instance) the
     rework tasks and schedule rules in a ... brutal way.
     """
-    polnames = {
-        name for name, in
-        engine.execute(
-            f'select name from "{namespace}".cache_policy'
-        ).fetchall()
-    }
+    with engine.begin() as cn:
+        polnames = {
+            name for name, in
+            cn.execute(
+                f'select name from "{namespace}".cache_policy'
+            ).fetchall()
+        }
 
-    active = {
-        name for name in polnames
-        if scheduled_policy(engine, name, namespace)
-    }
-    for name in active:
-        unschedule_policy(engine, name, namespace)
+        active = {
+            name for name in polnames
+            if scheduled_policy(cn, name, namespace)
+        }
+        for name in active:
+            unschedule_policy(cn, name, namespace)
 
     try:
         yield
     finally:
-        for name in active:
-            schedule_policy(engine, name, namespace)
+        with engine.begin() as cn:
+            for name in active:
+                schedule_policy(cn, name, namespace)

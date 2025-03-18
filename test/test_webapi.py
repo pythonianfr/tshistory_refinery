@@ -189,15 +189,16 @@ def test_get_policies(client, engine):
     res = client.get('/policies')
     assert res.json == []
 
-    cache.new_policy(
-        engine,
-        'pol-1',
-        initial_revdate='(date "2020-1-1")',
-        look_before='(shifted (today) #:days 15)',
-        look_after='(shifted (today) #:days -10)',
-        revdate_rule='0 1 * * *',
-        schedule_rule='0 8-18 * * *',
-    )
+    with engine.begin() as cn:
+        cache.new_policy(
+            cn,
+            'pol-1',
+            initial_revdate='(date "2020-1-1")',
+            look_before='(shifted (today) #:days 15)',
+            look_after='(shifted (today) #:days -10)',
+            revdate_rule='0 1 * * *',
+            schedule_rule='0 8-18 * * *',
+        )
 
     res = client.get('/policies')
     assert res.json == [
@@ -229,26 +230,28 @@ def test_get_policies(client, engine):
         '(series "for-pol-1-ground")'
     )
 
-    cache.set_policy(
-        engine,
-        'pol-1',
-        'for-pol-1',
-        namespace=tsh.namespace
-    )
+    with engine.begin() as cn:
+        cache.set_policy(
+            cn,
+            'pol-1',
+            'for-pol-1',
+            namespace=tsh.namespace
+        )
 
-    assert engine.execute(
-        'select count(*) from tsh.cache_policy_series'
-    ).scalar() == 1
+        assert cn.execute(
+            'select count(*) from tsh.cache_policy_series'
+        ).scalar() == 1
 
     resp = client.delete('/delete-policy/pol-1')
     assert resp.status_code == 204
 
-    assert engine.execute(
-        'select count(*) from tsh.cache_policy_series'
-    ).scalar() == 0
-    assert engine.execute(
-        'select count(*) from tsh.cache_policy'
-    ).scalar() == 0
+    with engine.begin() as cn:
+        assert cn.execute(
+            'select count(*) from tsh.cache_policy_series'
+        ).scalar() == 0
+        assert cn.execute(
+            'select count(*) from tsh.cache_policy'
+        ).scalar() == 0
 
 
 def test_create_policies(client, engine):

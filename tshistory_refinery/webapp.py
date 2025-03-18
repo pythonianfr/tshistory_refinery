@@ -1,6 +1,6 @@
 from flask import Flask
 
-from sqlalchemy import create_engine
+from sqlhelp.pgapi import pgdb as create_engine
 
 from dbcache.http import kvstore_httpapi
 from dbcache.api import kvstore, vkvstore

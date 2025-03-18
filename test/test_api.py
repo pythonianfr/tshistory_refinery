@@ -871,12 +871,13 @@ insertion_date             value_date
     }
 
     # we only refresh up to the first 3 revisions
-    cache.refresh_series(
-        engine,
-        tsa3,
-        'over-ground-1',
-        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
-    )
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa3,
+            'over-ground-1',
+            final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
+        )
 
     now = pd.Timestamp('2022-1-3', tz='utc')
     with patch('tshistory_refinery.tsio.utcnow', return_value=now):
@@ -968,12 +969,14 @@ insertion_date             value_date
     assert tsx.has_cache('over-ground-1')
     tsx.delete_cache('over-ground-1')
     assert not tsx.has_cache('over-ground-1')
-    cache.refresh_series(
-        engine,
-        tsa3,
-        'over-ground-1',
-        final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
-    )
+
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa3,
+            'over-ground-1',
+            final_revdate=pd.Timestamp('2022-1-3', tz='UTC')
+        )
 
     # `live` + to_value_date
     # the output is not very good ...

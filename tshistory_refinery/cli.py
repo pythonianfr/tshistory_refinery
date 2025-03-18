@@ -1,5 +1,5 @@
 import click
-from sqlalchemy import create_engine
+from sqlhelp.pgapi import pgdb as create_engine
 
 from rework.helper import host
 from rework import api

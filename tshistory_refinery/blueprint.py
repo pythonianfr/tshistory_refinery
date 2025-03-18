@@ -115,21 +115,20 @@ def refinery_bp(tsa, more_sections=None):
             'revdate_rule', 'schedule_rule'
         ).table('tsh.cache_policy')
 
-        out = [
-            dict(item)
-            for item in sorted(
-                    q.do(engine).fetchall(),
-                    key=itemgetter('name')
-            )
-        ]
-        for item in out:
-            item['active'] = cache.scheduled_policy(engine, item['name'])
+        with engine.begin() as cn:
+            out = [
+                row.as_dict()
+                for row in q.do(cn).fetchall()
+            ]
+            for item in sorted(out, key=itemgetter('name')):
+                item['active'] = cache.scheduled_policy(cn, item['name'])
 
         return jsonify(out)
 
     @bp.route('/delete-policy/<name>', methods=['DELETE'])
     def delete_policy(name):
-        cache.delete_policy(engine, name)
+        with engine.begin() as cn:
+            cache.delete_policy(cn, name)
         return make_response('', 204)
 
     class policy_args(_args):
@@ -153,7 +152,8 @@ def refinery_bp(tsa, more_sections=None):
     def create_policy():
         args = policy_args(request.json)
         try:
-            cache.new_policy(engine, **args)
+            with engine.begin() as cn:
+                cache.new_policy(cn, **args)
         except ValueError as err:
             return make_response(str(err), 400)
         except TypeError:
@@ -165,7 +165,8 @@ def refinery_bp(tsa, more_sections=None):
     def edit_policy():
         args = policy_args(request.json)
         try:
-            cache.edit_policy(engine, **args)
+            with engine.begin() as cn:
+                cache.edit_policy(cn, **args)
         except ValueError as err:
             return make_response(str(err), 400)
         except TypeError:
@@ -176,26 +177,29 @@ def refinery_bp(tsa, more_sections=None):
     @bp.route('/schedule-policy', methods=['PUT'])
     def schedule_policy():
         args = policy_args(request.json)
-        if cache.scheduled_policy(engine, args.name):
-            return make_response('nothing changed', 200)
+        with engine.begin() as cn:
+            if cache.scheduled_policy(cn, args.name):
+                return make_response('nothing changed', 200)
 
-        cache.schedule_policy(engine, args.name)
+            cache.schedule_policy(cn, args.name)
         return make_response('', 201)
 
     @bp.route('/scheduled-policy')
     def scheduled_policy():
         args = policy_args(request.args)
-        return jsonify(
-            cache.scheduled_policy(engine, args.name)
-        )
+        with engine.begin() as cn:
+            return jsonify(
+                cache.scheduled_policy(cn, args.name)
+            )
 
     @bp.route('/unschedule-policy', methods=['PUT'])
     def unschedule_policy():
         args = policy_args(request.json)
-        if not cache.scheduled_policy(engine, args.name):
-            return make_response('nothing changed', 200)
+        with engine.begin() as cn:
+            if not cache.scheduled_policy(cn, args.name):
+                return make_response('nothing changed', 200)
 
-        cache.unschedule_policy(engine, args.name)
+            cache.unschedule_policy(cn, args.name)
         return make_response('', 201)
 
     @bp.route('/cacheable-formulas')
@@ -211,11 +215,12 @@ def refinery_bp(tsa, more_sections=None):
 
     @bp.route('/policy-series/<name>')
     def policy_series(name):
-        return jsonify(
-            sorted(
-                cache.policy_series(engine, name)
+        with engine.begin() as cn:
+            return jsonify(
+                sorted(
+                    cache.policy_series(cn, name)
+                )
             )
-        )
 
     class set_policy_args(_args):
         types = {
