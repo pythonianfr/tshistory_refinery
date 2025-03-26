@@ -82,9 +82,8 @@ class timeseries(xlts):
         # -> if they are regular and we are missing at least two revisions
         # we do a live query ...
 
-        # asking all cache idates is not a too expensive operation at
-        # this point
-        cacheidates = self.cache.insertion_dates(cn, name)
+        # what is the best limit value ?
+        cacheidates = self.cache.insertion_dates(cn, name, limit=25)
         if len(cacheidates) > 1:
             freq, _ = infer_freq(cacheidates)
             now = utcnow()
@@ -151,6 +150,7 @@ class timeseries(xlts):
                         to_insertion_date=None,
                         from_value_date=None,
                         to_value_date=None,
+                        limit=None,
                         nocache=False,
                         **kw):
         if self.type(cn, name) != 'formula':
@@ -160,6 +160,7 @@ class timeseries(xlts):
                 to_insertion_date=to_insertion_date,
                 from_value_date=from_value_date,
                 to_value_date=to_value_date,
+                limit=limit,
                 **kw
             )
 
@@ -170,6 +171,7 @@ class timeseries(xlts):
                 to_insertion_date=to_insertion_date,
                 from_value_date=from_value_date,
                 to_value_date=to_value_date,
+                limit=limit,
                 **kw
             )
             # some casuistry to complete idates to the left
@@ -182,6 +184,7 @@ class timeseries(xlts):
                     to_insertion_date=to_insertion_date,
                     from_value_date=from_value_date,
                     to_value_date=to_value_date,
+                    limit=limit,
                     nocache=True,
                     **kw
                 )
@@ -197,6 +200,7 @@ class timeseries(xlts):
                 to_insertion_date=idates[0],
                 from_value_date=from_value_date,
                 to_value_date=to_value_date,
+                limit=limit,
                 nocache=True,
                 **kw
             )
@@ -216,6 +220,7 @@ class timeseries(xlts):
             to_insertion_date=to_insertion_date,
             from_value_date=from_value_date,
             to_value_date=to_value_date,
+            limit=limit,
             # explained in the above comment
             nocache=nocache,
             **kw
