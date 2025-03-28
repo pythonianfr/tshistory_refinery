@@ -857,6 +857,13 @@ insertion_date             value_date
         'another-policy',
         ['over-ground-1', 'over-ground-2']
     )
+    # let's retry the same thing
+    with pytest.raises(Exception):
+        tsx.set_cache_policy(
+            'another-policy',
+            ['over-ground-1', 'over-ground-2']
+        )
+
     assert tsx.cache_policy_series('another-policy') == [
         'over-ground-1',
         'over-ground-2'
