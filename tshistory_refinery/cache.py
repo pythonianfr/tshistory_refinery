@@ -270,6 +270,7 @@ def set_policy(cn, policy_name, series_name, namespace='tsh'):
         f'  from "{namespace}".registry '
         f'  where name = %(seriesname)s) '
         f')'
+        f'on conflict do nothing'
     )
     cn.execute(
         q,
