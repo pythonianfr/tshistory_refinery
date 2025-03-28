@@ -80,13 +80,16 @@ def new_policy(
             f'Bad inputs for the cache policy: {badinputs}'
         )
 
+    def normalize(expr):
+        return lisp.serialize(lisp.parse(expr))
+
     q = insert(
         f'"{namespace}".cache_policy'
     ).values(
         name=name,
         initial_revdate=initial_revdate,
-        look_before=look_before,
-        look_after=look_after,
+        look_before=normalize(look_before),
+        look_after=normalize(look_after),
         revdate_rule=revdate_rule,
         schedule_rule=schedule_rule
     )
@@ -116,13 +119,16 @@ def edit_policy(
             f'Bad inputs for the cache policy: {badinputs}'
         )
 
+    def normalize(expr):
+        return lisp.serialize(lisp.parse(expr))
+
     q = update(
         f'"{namespace}".cache_policy'
     ).where(name=name
     ).values(
         initial_revdate=initial_revdate,
-        look_before=look_before,
-        look_after=look_after,
+        look_before=normalize(look_before),
+        look_after=normalize(look_after),
         revdate_rule=revdate_rule,
         schedule_rule=schedule_rule
     )
