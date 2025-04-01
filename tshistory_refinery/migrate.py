@@ -24,9 +24,10 @@ class Migrator(_Migrator):
 @version('tshistory-refinery', '0.9.2')
 def migrate_rework_schema_interval(engine, namespace, interactive):
     # rework schema
-    engine.execute(
-        'alter table rework.operation add column if not exists vacuum interval'
-    )
+    with engine.begin() as cn:
+        cn.execute(
+            'alter table rework.operation add column if not exists vacuum interval'
+        )
 
     # remove useless tables
     with engine.begin() as cn:
