@@ -209,6 +209,17 @@ is how it goes:
    eflower_dev.client_id = eflower-dev-public
    eflower_dev.domain = id.cloudcrane.tech.scaleway.cloudcrane.io/realms/pythonian
 
+Lastly, the server side has to be also configured:
+
+.. code:: ini
+
+   [server-auth]
+   client_id = eflower-dev-public
+   client_secret = <secret>
+   domain = id.cloudcrane.tech.scaleway.cloudcrane.io/realms/pythonian
+   authorize_uri = https://refinery.eflower-dev.pythonian.fr/authorize
+   audience = https://refinery.eflower-dev.pythonian.fr/api
+
 
 Associating roles to users
 --------------------------
