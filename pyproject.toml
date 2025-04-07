@@ -2,7 +2,7 @@
 inputs = ['tshistory_refinery']
 
 [build-system]
-requires = ["setuptools ~= 70.0.0"]
+requires = ["setuptools ~= 78.1.0"]
 
 [tool.ruff]
 lint.ignore = ["E501", "E702", "E722", "E731"]
