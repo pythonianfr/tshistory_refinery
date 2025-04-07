@@ -30,7 +30,7 @@ def ingest_formulas(tsh, engine, formula_file):
             )
 
 
-def _test_tables(engine, pure):
+def test_tables(engine, pure):
     with engine.begin() as cn:
         assert tables(cn) == [
             ('pure', 'basket'),
@@ -38,17 +38,22 @@ def _test_tables(engine, pure):
             ('pure', 'cache_policy_sched'),
             ('pure', 'cache_policy_series'),
             ('pure', 'dependent'),
+            ('pure', 'form_history'),
+            ('pure', 'gr_oldmeta'),
             ('pure', 'group_binding'),
             ('pure', 'group_registry'),
             ('pure', 'group_series_map'),
             ('pure', 'groupmap'),
             ('pure', 'registry'),
             ('pure', 'revision_metadata'),
+            ('pure', 'ts_oldmeta'),
             ('pure-cache', 'basket'),
+            ('pure-cache', 'gr_oldmeta'),
             ('pure-cache', 'group_registry'),
             ('pure-cache', 'groupmap'),
             ('pure-cache', 'registry'),
             ('pure-cache', 'revision_metadata'),
+            ('pure-cache', 'ts_oldmeta'),
             ('pure-cache-kvstore', 'kvstore'),
             ('pure-cache-kvstore', 'things'),
             ('pure-cache-kvstore', 'version'),
