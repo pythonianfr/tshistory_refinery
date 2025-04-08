@@ -93,7 +93,7 @@ This being done, we can start writing our first task:
 .. code-block:: python
 
    from rework import api
-   from sqlalchemy import create_engine
+   from sqlhelp.pagpi import pgdb as create_engine
 
    @api.task
    def my_first_task(task):
