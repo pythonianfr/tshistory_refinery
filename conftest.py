@@ -2,9 +2,8 @@ from pathlib import Path
 
 import pytest
 from sqlhelp.pgapi import pgdb as create_engine
+from sqlhelp.testutil import setup_local_pg_cluster
 import webtest
-
-from pytest_sa_pg import db
 
 from rework import api as rapi
 
@@ -29,7 +28,7 @@ def _initschema(engine, ns='tsh'):
 @pytest.fixture(scope='session')
 def engine(request):
     port = 5434
-    db.setup_local_pg_cluster(request, DATADIR, port)
+    setup_local_pg_cluster(request, DATADIR, port)
     uri = 'postgresql://localhost:{}/postgres'.format(port)
     e = create_engine(uri)
     _initschema(e)
