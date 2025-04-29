@@ -1014,6 +1014,17 @@ insertion_date             value_date
 2022-01-14 00:00:00+00:00    7.0
 """, tsx.get('over-ground-1', to_value_date=pd.Timestamp('2022-1-15'), live=True))
 
+    info = tsx.info()
+    assert 'local' in info
+    linfo = info['local']
+    assert 'bound_groups' in linfo
+    assert 'cache_policies' in linfo
+    assert 'formula_groups' in linfo
+    assert 'formula_series' in linfo
+    assert 'primary_groups' in linfo
+    assert 'formula_groups' in linfo
+    assert 'bound_groups' in linfo
+
     # unset
     tsx.unset_cache_policy(
         ['over-ground-1', 'over-ground-2']

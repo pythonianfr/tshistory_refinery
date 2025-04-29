@@ -69,6 +69,21 @@ class timeseries(xlts):
         )
 
     @tx
+    def info(self, cn):
+        info = super().info(cn)
+        info.update(
+            {
+                'series_caches': cn.execute(
+                    f'select count(id) from "{self.namespace}-cache".registry'
+                ).scalar(),
+                'cache_policies': cn.execute(
+                    f'select count(id) from "{self.namespace}".cache_policy'
+                ).scalar()
+            }
+        )
+        return info
+
+    @tx
     def get(self, cn, name, nocache=False, live=False, **kw):
         if self.type(cn, name) != 'formula':
             return super().get(cn, name, **kw)
