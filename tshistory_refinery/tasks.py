@@ -4,7 +4,11 @@ from rework.api import task
 import rework.io as rio
 
 from tshistory.api import timeseries
-from tshistory.util import objects, replicate_series
+from tshistory.util import (
+    objects,
+    replicate_series,
+    replicate_basket,
+)
 from tshistory_refinery import (
     cache,
     scrap
@@ -58,6 +62,29 @@ def replicate_series_from_refinery(task):
             inputs['seriesname_origin'],
             inputs['seriesname_target']
         )
+
+
+@task(inputs=(
+    rio.string('url_refinery_origin'),
+    rio.string('basket_name'),
+    rio.string('prefix'),
+    rio.string('suffix'),
+)
+)
+def replicate_from_basket(task):
+    tsa = timeseries()
+    with task.capturelogs(std=True):
+        inputs = task.input
+        tsa_origin = timeseries(inputs['url_refinery_origin'])
+        replicate_basket(
+            tsa_origin=tsa_origin,
+            tsa_target=tsa,
+            basket_name=inputs['basket_name'],
+            from_insertion_date=None,
+            prefix=inputs['prefix'],
+            suffix=inputs['suffix'],
+        )
+
 
 # scrap
 
