@@ -24,7 +24,7 @@ class refinery_schema(supervision_schema, formula_schema):
         rework_ui_init(engine)
 
         with engine.begin() as cn:
-            cn.execute(sqlfile(CACHE_POLICY, ns=self.namespace), binary=False)
+            cn.execute(sqlfile(CACHE_POLICY, ns=self.namespace), _binary=False)
 
         tsschema(f'{self.namespace}-cache').create(engine)
 
