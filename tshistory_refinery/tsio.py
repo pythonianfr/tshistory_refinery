@@ -288,11 +288,12 @@ class timeseries(xlts):
         ]
 
     @tx
-    def register_formula(self, cn, name, formula, reject_unknown=True):
+    def register_formula(self, cn, name, formula, reject_unknown=True, user='no-user'):
         prevch = self.content_hash(cn, name)
         super().register_formula(
             cn, name, formula,
-            reject_unknown=reject_unknown
+            reject_unknown=reject_unknown,
+            user=user
         )
         if prevch != self.content_hash(cn, name):
             self.invalidate_cache(cn, name)
