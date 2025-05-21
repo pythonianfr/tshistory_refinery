@@ -49,6 +49,8 @@ def refresh_formula_cache_now(task):
     rio.string('url_refinery_origin'),
     rio.string('seriesname_origin'),
     rio.string('seriesname_target'),
+    rio.moment('from_insertion_date'),
+    rio.string('insertion_freq_offset')
     )
 )
 def replicate_series_from_refinery(task):
@@ -60,7 +62,9 @@ def replicate_series_from_refinery(task):
             tsa_origin,
             tsa,
             inputs['seriesname_origin'],
-            inputs['seriesname_target']
+            inputs.get('seriesname_target', None),
+            from_insertion_date=inputs.get('from_insertion_date', None),
+            insertion_freq_offset=inputs.get('insertion_freq_offset', None),
         )
 
 
@@ -69,6 +73,8 @@ def replicate_series_from_refinery(task):
     rio.string('basket_name'),
     rio.string('prefix'),
     rio.string('suffix'),
+    rio.moment('from_insertion_date'),
+    rio.string('insertion_freq_offset')
 )
 )
 def replicate_from_basket(task):
@@ -80,9 +86,10 @@ def replicate_from_basket(task):
             tsa_origin=tsa_origin,
             tsa_target=tsa,
             basket_name=inputs['basket_name'],
-            from_insertion_date=None,
-            prefix=inputs['prefix'],
-            suffix=inputs['suffix'],
+            from_insertion_date=inputs.get('from_insertion_date', None),
+            insertion_freq_offset=inputs.get('insertion_freq_offset', None),
+            prefix=inputs.get('prefix', ''),
+            suffix=inputs.get('suffix', ''),
         )
 
 
