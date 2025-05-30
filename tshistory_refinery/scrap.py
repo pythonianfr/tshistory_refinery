@@ -79,7 +79,12 @@ class Scrap:
         We dispatch the process depending on that.
         """
         if isinstance(self.names, str):
-            diff = tsa.update(self.names, data.dropna(), author='scraper')
+            diff = tsa.update(
+                self.names,
+                data['ts'].dropna(),
+                author='scraper',
+                metadata=data['metadata']
+            )
             if len(diff) > 0:
                 return {self.names: 'updated'}
             else:
@@ -87,15 +92,20 @@ class Scrap:
 
         status = {}
         for name in self.names:
-            if self.names[name] in data.columns:
-                ts = data[self.names[name]]
-                diff = tsa.update(name, ts.dropna(), author='scraper')
+            if self.names[name] in data['ts'].columns:
+                ts = data['ts'][self.names[name]]
+                diff = tsa.update(
+                    name,
+                    ts.dropna(),
+                    author='scraper',
+                    metadata=data['metadata']
+                )
                 status[name] = 'updated' if len(diff) else 'unchanged'
             else:
                 print(
                     f'{self.names[name]} not in scraper response. '
                     f'Please check for a possible name change. '
-                    f'Available data is :{data.columns}'
+                    f'Available data is :{data['ts'].columns}'
                 )
                 status[name] = 'unavailable'
         return status

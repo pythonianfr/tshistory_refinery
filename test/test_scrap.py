@@ -26,7 +26,8 @@ def get_timeseries_from_website1(parameter1, fromdate, todate):
         end=pd.to_datetime(todate),
         periods=len(ts.values)
     )
-    return ts, {'hello': 'world'}
+    data = {'ts': ts, 'metadata':{'from':'2022-07-01'}}
+    return data, {'hello': 'world'}
 
 
 def get_dataframe_from_website2():
@@ -41,7 +42,8 @@ def get_dataframe_from_website2():
             end=pd.to_datetime('2022-07-03')
         )
     )
-    return df, {'col1': {'hello': 'world'}}
+    data = {'ts': df, 'metadata':{'from':'2022-07-01'}}
+    return data, {'col1': {'hello': 'world'}}
 
 
 SCRAPERS_test = Scrapers(
