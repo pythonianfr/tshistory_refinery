@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 
 from rework.api import task
@@ -101,7 +102,8 @@ def replicate_from_basket(task):
           rio.string('identifier'),
           rio.string('initialdate', required=True),
           rio.number('reset', required=True)
-      )
+      ),
+      vacuum=timedelta(days=7)
 )
 def fetch_history(task):
     tsa = timeseries()
