@@ -1,4 +1,6 @@
+from datetime import datetime
 import json
+from typing import Optional
 
 from flask_restx import (
     inputs,
@@ -283,12 +285,12 @@ class refinery_httpclient(xl_httpclient):
     @unwraperror
     def new_cache_policy(
             self,
-            name,
-            initial_revdate,
-            look_before,
-            look_after,
-            revdate_rule,
-            schedule_rule):
+            name: str,
+            initial_revdate: str,
+            look_before: str,
+            look_after: str,
+            revdate_rule: str,
+            schedule_rule: str):
 
         res = self.session.put(f'{self.uri}/cache/policy', data={
             'name': name,
@@ -310,12 +312,12 @@ class refinery_httpclient(xl_httpclient):
     @unwraperror
     def edit_cache_policy(
             self,
-            name,
-            initial_revdate,
-            look_before,
-            look_after,
-            revdate_rule,
-            schedule_rule):
+            name: str,
+            initial_revdate: str,
+            look_before: str,
+            look_after: str,
+            revdate_rule: str,
+            schedule_rule: str):
 
         res = self.session.patch(f'{self.uri}/cache/policy', data={
             'name': name,
@@ -335,7 +337,7 @@ class refinery_httpclient(xl_httpclient):
         return res
 
     @unwraperror
-    def delete_cache_policy(self, name):
+    def delete_cache_policy(self, name: str):
         res = self.session.delete(f'{self.uri}/cache/policy', data={
             'name': name,
         })
@@ -346,7 +348,7 @@ class refinery_httpclient(xl_httpclient):
         return res
 
     @unwraperror
-    def set_cache_policy(self, policyname, seriesnames):
+    def set_cache_policy(self, policyname: str, seriesnames: list[str]):
         res = self.session.put(f'{self.uri}/cache/mapping', data={
             'name': policyname,
             'seriesnames': json.dumps(seriesnames)
@@ -357,7 +359,7 @@ class refinery_httpclient(xl_httpclient):
         return res
 
     @unwraperror
-    def unset_cache_policy(self, seriesnames):
+    def unset_cache_policy(self, seriesnames: list[str]):
         res = self.session.delete(f'{self.uri}/cache/mapping', data={
             'seriesnames': json.dumps(seriesnames)
         })
@@ -367,7 +369,7 @@ class refinery_httpclient(xl_httpclient):
         return res
 
     @unwraperror
-    def cache_free_series(self, allsources=True):
+    def cache_free_series(self, allsources: bool=True):
         res = self.session.get(f'{self.uri}/cache/cacheable', params={
             'allsources': allsources
         })
@@ -385,7 +387,7 @@ class refinery_httpclient(xl_httpclient):
         return res
 
     @unwraperror
-    def cache_policy_series(self, policyname):
+    def cache_policy_series(self, policyname: str):
         res = self.session.get(f'{self.uri}/cache/policy-series', params={
             'name': policyname
         })
@@ -395,7 +397,7 @@ class refinery_httpclient(xl_httpclient):
         return res
 
     @unwraperror
-    def cache_series_policy(self, seriesname):
+    def cache_series_policy(self, seriesname: str):
         res = self.session.get(f'{self.uri}/cache/series-policy', params={
             'name': seriesname
         })
@@ -405,7 +407,7 @@ class refinery_httpclient(xl_httpclient):
         return res
 
     @unwraperror
-    def has_cache(self, seriesname):
+    def has_cache(self, seriesname: str):
         res = self.session.get(f'{self.uri}/cache/series-has-cache', params={
             'name': seriesname
         })
@@ -415,7 +417,7 @@ class refinery_httpclient(xl_httpclient):
         return res
 
     @unwraperror
-    def delete_cache(self, seriesname):
+    def delete_cache(self, seriesname: str):
         res = self.session.delete(f'{self.uri}/cache/series-has-cache', params={
             'name': seriesname
         })
@@ -425,7 +427,7 @@ class refinery_httpclient(xl_httpclient):
         return res
 
     @unwraperror
-    def refresh_series_policy_now(self, policyname):
+    def refresh_series_policy_now(self, policyname: str):
         res = self.session.put(f'{self.uri}/cache/refresh-policy-now', params={
             'name': policyname
         })
