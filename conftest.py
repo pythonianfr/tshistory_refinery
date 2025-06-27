@@ -102,7 +102,7 @@ def remote(engine):
         str(engine.url),
         namespace='remote',
         handler=tsio.timeseries,
-        sources={'remote': (str(engine.url), 'remote')}
+        sources={}
     )
 
 
@@ -114,6 +114,6 @@ def local(engine):
         str(engine.url),
         namespace='remote',
         handler=tsio.timeseries,
-        sources={'remote': (str(engine.url), 'remote')}
+        sources={}
     )
 
