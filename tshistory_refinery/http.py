@@ -130,6 +130,10 @@ class refinery_httpapi(xl_httpapi):
         @nsc.route('/policy')
         class cache_policy(Resource):
 
+            @api.doc(
+                responses={204: 'Success', 409: 'Error'},
+                description='Create a new cache policy'
+            )
             @api.expect(newcp)
             @onerror
             @required_roles('admin', 'rw')
@@ -150,6 +154,10 @@ class refinery_httpapi(xl_httpapi):
                 return '', 204
 
 
+            @api.doc(
+                responses={204: 'Success', 409: 'Error'},
+                description='Edit an existing cache policy'
+            )
             @api.expect(newcp)
             @onerror
             @required_roles('admin', 'rw')
@@ -169,6 +177,10 @@ class refinery_httpapi(xl_httpapi):
 
                 return '', 204
 
+            @api.doc(
+                responses={204: 'Success'},
+                description='Delete a cache policy'
+            )
             @api.expect(deletecp)
             @onerror
             @required_roles('admin', 'rw')
@@ -183,6 +195,10 @@ class refinery_httpapi(xl_httpapi):
         @nsc.route('/mapping')
         class policy_mapping(Resource):
 
+            @api.doc(
+                responses={204: 'Success'},
+                description='Associate series to a cache policy'
+            )
             @api.expect(mapcp)
             @onerror
             @required_roles('admin', 'rw')
@@ -195,6 +211,10 @@ class refinery_httpapi(xl_httpapi):
 
                 return '', 204
 
+            @api.doc(
+                responses={204: 'Success'},
+                description='De-associate series from a cache policy'
+            )
             @api.expect(unmapcp)
             @onerror
             @required_roles('admin', 'rw')
@@ -209,6 +229,10 @@ class refinery_httpapi(xl_httpapi):
         @nsc.route('/cacheable')
         class cacheable_series(Resource):
 
+            @api.doc(
+                responses={200: 'Got content'},
+                description='Return list of series that can be cached but are not cached yet'
+            )
             @api.expect(cacheable)
             @onerror
             @required_roles('admin', 'rw', 'ro')
@@ -219,6 +243,10 @@ class refinery_httpapi(xl_httpapi):
         @nsc.route('/policies')
         class cache_policies(Resource):
 
+            @api.doc(
+                responses={200: 'Got content'},
+                description='Return list of all cache policies'
+            )
             @onerror
             @required_roles('admin', 'rw', 'ro')
             def get(self):
@@ -227,6 +255,10 @@ class refinery_httpapi(xl_httpapi):
         @nsc.route('/policy-series')
         class cache_policy_series(Resource):
 
+            @api.doc(
+                responses={200: 'Got content'},
+                description='Return list of series mapped to a specific cache policy'
+            )
             @api.expect(cp)
             @onerror
             @required_roles('admin', 'rw', 'ro')
@@ -237,6 +269,10 @@ class refinery_httpapi(xl_httpapi):
         @nsc.route('/series-policy')
         class cache_series_policy(Resource):
 
+            @api.doc(
+                responses={200: 'Got content'},
+                description='Return the cache policy name for a specific series'
+            )
             @api.expect(series_policy)
             @onerror
             @required_roles('admin', 'rw', 'ro')
@@ -247,6 +283,10 @@ class refinery_httpapi(xl_httpapi):
         @nsc.route('/series-has-cache')
         class series_has_cache(Resource):
 
+            @api.doc(
+                responses={200: 'Got content'},
+                description='Check if a series has a cache'
+            )
             @api.expect(shc)
             @onerror
             @required_roles('admin', 'rw', 'ro')
@@ -254,6 +294,10 @@ class refinery_httpapi(xl_httpapi):
                 args = shc.parse_args()
                 return tsa.has_cache(args.name)
 
+            @api.doc(
+                responses={204: 'Success'},
+                description='Delete the cache for a series'
+            )
             @api.expect(delete_cache)
             @onerror
             @required_roles('admin', 'rw')
@@ -265,6 +309,10 @@ class refinery_httpapi(xl_httpapi):
         @nsc.route('/refresh-policy-now')
         class refresh_policy_now(Resource):
 
+            @api.doc(
+                responses={200: 'Got content'},
+                description='Refresh all series associated with a cache policy now and return task id'
+            )
             @api.expect(cp)
             @onerror
             @required_roles('admin', 'rw')
