@@ -195,7 +195,7 @@ Now let's assume that we work with a forecast:
     )
     ts = pd.Series(
         [1, 2, 3],
-        index = pd.date_range(start=insertion_date.date(), periods=3, freq='D')
+        index = pd.date_range(start='2024-11-01', periods=3, freq='D')
     )
     for idx, insertion_date in enumerate(insertion_dates):
         tsa.update(
@@ -303,7 +303,7 @@ Adding and fetching metadata
         {
             'fruit': 'orange',
             'buyer': 'superfrenchshop',
-            'seasonal': 0
+            'seasonal': 0,
             'calibration': '2024-10-01'
         }
     )

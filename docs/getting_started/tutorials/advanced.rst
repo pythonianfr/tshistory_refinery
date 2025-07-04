@@ -398,6 +398,8 @@ possible to set up a regularly refreshed materialized view, or
 manageable again. This aspect is addressed in the next chapter.
 
 
+.. _Formulas: when to use a cache/materialized view:
+
 Formulas: when to use a cache/materialized view
 ------------------------------------------------
 
@@ -580,6 +582,8 @@ gets there by clicking the policy name in the list.
 .. image:: policy-series.png
 
 
+
+.. _Tasks system: how to organize and schedule tasks:
 
 Tasks system: how to organize and schedule tasks
 ------------------------------------------------

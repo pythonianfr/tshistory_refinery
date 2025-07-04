@@ -1,3 +1,5 @@
+.. _Formulas:
+
 Formulas (computed series)
 ==========================
 
