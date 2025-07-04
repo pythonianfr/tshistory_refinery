@@ -25,4 +25,5 @@ The Timeseries Refinery is a tool that :
    api
    best_practices
    configuration_reference
+   troubleshooting
 
