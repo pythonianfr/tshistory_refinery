@@ -24,4 +24,5 @@ The Timeseries Refinery is a tool that :
    fundamental_blocks/index
    api
    best_practices
+   configuration_reference
 
