@@ -171,8 +171,8 @@ First we'll want to know about the existing tasks:
 .. code-block:: bash
 
    $ rework list-tasks postgres://babar:password@localhost/jobstore
-   1 my_first_task done [2018-11-28 16:07:51.672672+01] → [2018-11-28 16:08:27.974392+01] → [2018-11-28 16:08:27.985432+01] 
-   2 my_first_task done [2018-11-28 16:07:51.676981+01] → [2018-11-28 16:08:27.974642+01] → [2018-11-28 16:08:27.985502+01] 
+   1 my_first_task done [2018-11-28 16:07:51.672672+01] → [2018-11-28 16:08:27.974392+01] → [2018-11-28 16:08:27.985432+01]
+   2 my_first_task done [2018-11-28 16:07:51.676981+01] → [2018-11-28 16:08:27.974642+01] → [2018-11-28 16:08:27.985502+01]
 
 It is possible to monitor the output of a given task:
 
@@ -196,8 +196,8 @@ Lastly, `list-workers` will show the currently running workers:
 .. code-block:: bash
 
    $ rework list-workers postgres://babar:password@localhost/jobstore
-   1 4124@10.211.55.3 43 Mb [running (idle)] [2018-11-28 16:08:27.438491+01] → [2018-11-28 15:08:27.967432+01] 
-   2 4125@10.211.55.3 43 Mb [running (idle)] [2018-11-28 16:08:27.442869+01] → [2018-11-28 15:08:27.967397+01] 
+   1 4124@10.211.55.3 43 Mb [running (idle)] [2018-11-28 16:08:27.438491+01] → [2018-11-28 15:08:27.967432+01]
+   2 4125@10.211.55.3 43 Mb [running (idle)] [2018-11-28 16:08:27.442869+01] → [2018-11-28 15:08:27.967397+01]
 
 It is now possible to stop the `monitor` on its separate console, with
 a plain `ctrl-c`.
@@ -206,7 +206,7 @@ After this, `list-workers` will provide an updated status:
 
 .. code-block:: bash
 
-   $ rework list-workers postgres://aurelien:aurelien@localhost/rework 
-   1 4124@10.211.55.3 43 Mb [dead] [2018-11-28 16:08:27.438491+01] → [2018-11-28 15:08:27.967432+01] → [2018-11-28 16:11:09.668587+01] monitor exit 
-   2 4125@10.211.55.3 43 Mb [dead] [2018-11-28 16:08:27.442869+01] → [2018-11-28 15:08:27.967397+01] → [2018-11-28 16:11:09.668587+01] monitor exit 
+   $ rework list-workers postgres://aurelien:aurelien@localhost/rework
+   1 4124@10.211.55.3 43 Mb [dead] [2018-11-28 16:08:27.438491+01] → [2018-11-28 15:08:27.967432+01] → [2018-11-28 16:11:09.668587+01] monitor exit
+   2 4125@10.211.55.3 43 Mb [dead] [2018-11-28 16:08:27.442869+01] → [2018-11-28 15:08:27.967397+01] → [2018-11-28 16:11:09.668587+01] monitor exit
 

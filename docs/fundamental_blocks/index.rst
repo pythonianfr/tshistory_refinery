@@ -9,5 +9,7 @@ Fundamental blocks
    supervision
    formula
    rework
+   tswatch
    exceladdin
    security
+   dashboard
