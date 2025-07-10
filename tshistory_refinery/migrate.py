@@ -1,4 +1,5 @@
 from tshistory.migrate import (
+    do_enforce_series_metadata_integrity,
     fix_user_metadata,
     migrate_metadata,
     Migrator as _Migrator,
@@ -22,6 +23,10 @@ class Migrator(_Migrator):
 
 
 @version('tshistory-refinery', '0.10.0')
+def migrate_0100(engine, namespace, interactive):
+    migrate_rework_events_to_task_events(engine, namespace, interactive)
+    migrate_metadata_integrity(engine, namespace, interactive)
+
 def migrate_rework_events_to_task_events(engine, namespace, interactive):
     with engine.begin() as cn:
         # check if already migrated
@@ -51,6 +56,10 @@ def migrate_rework_events_to_task_events(engine, namespace, interactive):
 
         sql = sqlfile(SCHEMAFILE, ns='rework')
         cn.execute(sql, binary=False)
+
+def migrate_metadata_integrity(engine, namespace, interactive):
+    # Apply metadata integrity migration to cache namespace (series only)
+    do_enforce_series_metadata_integrity(engine, f'{namespace}-cache', interactive)
 
 
 @version('tshistory-refinery', '0.9.2')
