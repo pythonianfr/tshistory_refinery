@@ -6,6 +6,7 @@ Fundamental blocks
    :caption: Contents:
 
    usage
+   groups
    supervision
    formula
    rework
