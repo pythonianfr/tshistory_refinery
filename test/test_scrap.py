@@ -26,7 +26,7 @@ def get_timeseries_from_website1(parameter1, fromdate, todate):
         end=pd.to_datetime(todate),
         periods=len(ts.values)
     )
-    data = {'ts': ts, 'metadata':{'from':'2022-07-01'}}
+    data = {'ts': ts, 'metadata': {'from':'2022-07-01'}}
     return data, {'hello': 'world'}
 
 
@@ -44,6 +44,18 @@ def get_dataframe_from_website2():
     )
     data = {'ts': df, 'metadata':{'from':'2022-07-01'}}
     return data, {'col1': {'hello': 'world'}}
+
+
+def get_timeseries_old_format(parameter, fromdate=None, todate=None):
+    ts = pd.Series(
+        [10, 20, 30],
+        index=pd.date_range(
+            start=pd.Timestamp(fromdate or '2022-01-01'),
+            end=pd.Timestamp(todate or '2022-01-03')
+        )
+    )
+    # old format: return Series/DataFrame directly as first element
+    return ts, {'legacy': 'scraper'}
 
 
 SCRAPERS_test = Scrapers(
@@ -111,3 +123,26 @@ def test_update_dataframe(engine, tsa):
 2022-07-02    5.0
 2022-07-03    6.0
 """, tsa.get('series.3.from.website2'))
+
+
+def test_backward_compatibility_old_scraper_format(engine, tsa):
+    old_scraper = Scrap(
+        names='series.old.format',
+        func=partial(get_timeseries_old_format, 'test-param'),
+        schedrule='0 0 * * * *',
+        fromdate='(date "2022-1-1")',
+        todate='(date "2022-1-3")'
+    )
+
+    status = old_scraper.update(tsa)
+    assert status == {'series.old.format': 'updated'}
+
+    assert_df("""
+2022-01-01    10.0
+2022-01-02    20.0
+2022-01-03    30.0
+""", tsa.get('series.old.format'))
+
+    meta = tsa.metadata('series.old.format')
+    assert meta['legacy'] == 'scraper'
+    assert meta['func'] == "get_timeseries_old_format('test-param',)"

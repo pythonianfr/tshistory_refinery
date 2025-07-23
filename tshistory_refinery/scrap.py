@@ -112,6 +112,12 @@ class Scrap:
 
     def update(self, tsa):
         data, metadata = self.scrap_data()
+
+        # handle old format where data is a DataFrame/Series directly
+        if isinstance(data, (pd.DataFrame, pd.Series)):
+            # old format: convert to new format
+            data = {'ts': data, 'metadata': None}
+
         status = self.update_data(tsa, data)
         self.update_metadata(tsa, metadata)
         return status
