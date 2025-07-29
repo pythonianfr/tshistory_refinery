@@ -146,3 +146,20 @@ def test_backward_compatibility_old_scraper_format(engine, tsa):
     meta = tsa.metadata('series.old.format')
     assert meta['legacy'] == 'scraper'
     assert meta['func'] == "get_timeseries_old_format('test-param',)"
+
+
+def test_scraper_crashes_on_bad_index(engine, tsa):
+
+    def bad_index_scraper():
+        # date parsing failed, returns numeric index
+        bad_series = pd.Series()
+        return bad_series, {}
+
+    scraper = Scrap(
+        names='test-bad-index',
+        func=bad_index_scraper,
+        schedrule=''
+    )
+
+    with pytest.raises(AssertionError, match="You must provide a DatetimeIndex"):
+        scraper.update(tsa)
