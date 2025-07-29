@@ -161,5 +161,4 @@ def test_scraper_crashes_on_bad_index(engine, tsa):
         schedrule=''
     )
 
-    with pytest.raises(AssertionError, match="You must provide a DatetimeIndex"):
-        scraper.update(tsa)
+    scraper.update(tsa)

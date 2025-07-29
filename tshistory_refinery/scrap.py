@@ -78,10 +78,15 @@ class Scrap:
         Data can be a timeseries or a dataframe of timeseries.
         We dispatch the process depending on that.
         """
+
         if isinstance(self.names, str):
+            ts = data['ts'].dropna()
+            if not len(ts):
+                return {self.names: 'unchanged'}
+
             diff = tsa.update(
                 self.names,
-                data['ts'].dropna(),
+                ts,
                 author='scraper',
                 metadata=data['metadata']
             )
@@ -93,10 +98,14 @@ class Scrap:
         status = {}
         for name in self.names:
             if self.names[name] in data['ts'].columns:
-                ts = data['ts'][self.names[name]]
+                ts = data['ts'][self.names[name]].dropna()
+                if not len(ts):
+                    status[name] = 'unchanged'
+                    continue
+
                 diff = tsa.update(
                     name,
-                    ts.dropna(),
+                    ts,
                     author='scraper',
                     metadata=data['metadata']
                 )
