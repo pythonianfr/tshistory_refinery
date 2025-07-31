@@ -1,0 +1,329 @@
+# Changelog
+
+## [Unreleased]
+
+### Added
+- support for limit parameter in tsio/insertion_dates
+
+### Changed
+- replaced sqlalchemy with sqlhelp
+- switch off binary protocol for multi-statement schema initialization
+- normalize lisp expressions before storing in cache
+
+### Fixed
+- api/set_cache_policy no longer crashes when setting already set series
+- tables updated for tshistory_formula bound groups changes
+
+## [0.9.2] - 2025-03-05
+
+### Added
+- comprehensive documentation overhaul:
+  - installation and upgrade guides
+  - basic, medium, and advanced tutorials
+  - security documentation (basic auth and oidc setup)
+  - excel addin documentation
+  - scraping framework documentation
+  - data mesh section
+  - performance and caching guides
+  - tasks management documentation
+- models namespace for kvstore
+- cachepolicy for editor proposals
+- interval migration preparation
+- operation.vacuum column
+
+### Changed
+- moved stores schema initiation to refinery_pro
+- switched to new configuration object
+- use tempconfig in tests
+- moved hash64 to tshistory.util
+- integrated tsview schema
+- switched postgresql port to 5434 for server usage
+- updated copyright years
+- improved upgrade path documentation from 0.8.3
+
+### Fixed
+- schema init in init-db command
+- drop table order in migration
+- pytype compatibility (removed dead code)
+- merged duplicate migrations for same versions
+- documentation requirements
+
+### Removed
+- obsolete cli commands
+
+## [0.9.1] - 2024-10-25
+
+### Added
+- setuptools version specification in pyproject.toml
+
+### Changed
+- cache series_lock_ready implementation now uses postgresql advisory locks for robustness
+- ci moved to heptapod
+- bumped dependencies
+
+### Fixed
+- cache refresh lock vulnerability to hard crashes (now transactional)
+
+### Removed
+- ready attribute from schema (replaced by transactional locking)
+
+## [0.9.0] - 2024-08-01
+
+### Added
+- tswatch fully integrated into refinery
+- kvstores integration with three namespaces: tswatch, dashboards, balances
+- dbcache integration
+- favicon for webapp
+- infer_freq utility to compute frequency of timestamps
+- required roles on http routes for security
+- tshistory 0.20 migration available as task
+- propagate parameter to tsio/rename
+- __sig__ methods for search ui support
+
+### Changed
+- switched from refinery.cfg to tshistory.cfg (configuration consolidation)
+- webapp module renamed from webapi
+- cache system simplified (removed policy readiness status)
+- history implementation now driven from tshistory.tsio
+- editor reimplemented in elm (moved to tsview)
+- formula-batch page moved to tsview
+- wsgi now uses nosecurity middleware for permissions
+- today operator renamed to now (following tshistory_formula)
+- upgraded to python 3.11 and bookworm
+
+### Fixed
+- cache refresh_now better from_value_date computation
+- force liveness when cache idates declared stale
+- reduce_frequency no longer stops on empty stamps sequence
+- keepnans keyword now required for updates with nans
+- various deprecation warnings
+
+### Removed
+- refinery.cfg.template (replaced by tshistory.cfg)
+- editor_callback (folded into tsview)
+- separate historic view (integrated into tsview)
+- proxyfix from wsgi
+- permissions callback passing
+
+## [0.8.3] - 2023-09-25
+
+### Added
+- rework schema requirement in init-db command
+
+### Changed
+- updated dependencies
+- schema cleanup
+
+### Fixed
+- rework requirement in conftest for tests
+
+## [0.8.2] - 2023-09-11
+
+### Fixed
+- http client missing index value causing platform-dependent behavior
+
+## [0.8.1] - 2023-09-07
+
+### Changed
+- bumped dependency versions
+- forced minimum required package versions
+- documentation improvements with better chapter ordering
+
+### Fixed
+- readthedocs build section structure compatibility
+- api documentation errors
+- formula documentation fixes
+
+## [0.8.0] - 2023-08-11
+
+### Added
+- scraping framework infrastructure for writing scrapers declaratively
+- __version__ attribute in package root
+- pyproject.toml with pytype and ruff configurations
+- tox configuration
+- automatic migration system
+- search filters for cached series and series with specific cache policies
+- minimal docstrings to api methods
+- significant documentation updates for operators
+
+### Changed
+- removed rename view from cockpit
+- removed metadata column from formulas view (scalability)
+- adapted to tshistory source handling changes
+- adapted to tshistory_formula typing changes
+- specialized test machinery for refinery-specific routes
+- reorganized schema initialization using base object inheritance
+- downloadformulas now provides csv that can be re-ingested without transformation
+
+### Fixed
+- api.rst tshistory section in documentation
+- readthedocs python version requirement (3.9)
+- remote source schema initialization in tests
+- explicit source specification to avoid config file interference
+
+### Removed
+- xl section from documentation (not for normal usage)
+- deprecated apimaker helper function
+
+## [0.7.0] - 2023-02-24
+
+### Added
+- sphinx documentation with pydata theme
+- readthedocs configuration
+- tests for cache refresh of autotrophic series
+- tests for series with resample and slice operators
+- find method to api documentation
+
+### Changed
+- cache now produces more revisions for formulas with today operator
+- adapted to tshistory internal_metadata consolidation
+- adapted to tshistory_formula schema simplification
+- documentation reorganization and improvements
+
+### Fixed
+- insertion_dates handling for autotrophic operator
+- list-series-lock cli command
+- cache behavior with formulas containing today operator (infinite revisions)
+
+## [0.6.0] - 2022-12-26
+
+### Added
+- license file
+- missing pypi classifiers
+- refinery.cfg configuration template
+- suspended_policies context manager to temporarily suspend active cache policies
+
+### Changed
+- refresh_series renamed from refresh for clarity
+- cache refresh now uses underlying caches when refreshing (performance improvement)
+- better presentation of series batches during refresh
+- improved cache scope handling in refresh operations
+
+### Fixed
+- unnecessary formula calls for out-of-bounds value dates but in-bounds insertion dates
+- priority_origin now requires explicit request
+- cache no longer interferes with formula hijacking
+- insertion dates now properly use intermediate caches
+
+### Removed
+- tshistory_editor (absorbed by tsview)
+
+## [0.5.0] - 2022-10-11
+
+### Added
+- support for past uncached revisions in get, insertion_dates, and history
+- ability to read leftwards out-of-cache data
+- cache ui moved to tsview for common library sharing
+- ability to specify port in webstart cli command
+- not null constraint on cache schema
+
+### Changed
+- first cache entry now maximally populated for consistent series horizon
+- improved cache refresh error handling (logs failing series instead of stopping)
+- simplified live path extraction to separate method
+- better nocache parameter propagation through all api layers
+- use url_for for static resources in templates
+
+### Fixed
+- policy_by_name query returning wrong policy
+- set_policy_series validator usage
+- cache invalidation warning when deleting non-existent series cache
+- values_markers_origins cache compatibility
+- cache expansion on query-less requests
+- cache lock handling with finally statement
+
+## [0.4.1] - 2022-07-25
+
+### Added
+- basic readme documentation for setup
+
+### Changed
+- cache ui: policies list now displayed as html table for better column alignment
+- pinned minimal package versions for dependency resolution
+
+### Fixed
+- missing tshistory_xl dependency
+- missing schema.sql file in package
+- web interface no longer fails on missing nginx/segment config entry
+
+### Removed
+- unused import log from web interface
+
+## [0.4.0] - 2022-06-28
+
+### Added
+- comprehensive cache system for formula series:
+  - cache policies with horizon definitions and scheduling rules
+  - look_before/look_after attributes for smart horizon management
+  - cache refresh functionality with initial import vs regular refresh
+  - cache invalidation on formula changes
+  - support for nocache and live parameters
+  - automatic cache management for renamed/deleted formulas
+- cache ui (elm-based):
+  - policy management (create, edit, delete)
+  - series association/dis-association with policies
+  - schedule/unschedule policies
+  - force refresh functionality
+  - validation and error reporting
+  - filters for cached and free series lists
+- cache api endpoints:
+  - create/edit/delete policies
+  - associate/dis-associate series
+  - query cache status
+  - force refresh
+- cli commands:
+  - install cache schema
+  - setup tasks
+  - refresh cache manually
+- cockpit moved from tshistory to refinery
+
+### Changed
+- config file name aligned with tshistory.cfg
+- blueprint architecture for better template/static handling
+- cache refresh order optimized (dependency order)
+- smarter cache expansion to avoid unnecessary remote queries
+- separated initial cache import from regular refresh
+
+### Fixed
+- cache handling across namespaces
+- cache propagation for nocache and live parameters
+- federation boundary cache invalidation
+- concurrent cache refresh protection
+- timezone handling for revision dates
+
+### Removed
+- from_date policy parameter (simplified initial import)
+- prune parameter support (retired from tshistory_formula)
+
+## [0.3.0] - 2022-01-13
+
+### Added
+- complete api integration
+
+### Changed
+- excel parts moved to tshistory_xl (refinery now only does final assembly)
+- tshistory_rest and tshistory_client now integrated into tshistory core
+
+### Fixed
+- missing dependency
+- removed involuntary dependency on proprietary package
+
+## [0.2.0] - 2021-09-21
+
+### Added
+- tshistory_formula extended http handler integration
+
+### Changed
+- webapi now uses tshistory_formula http handler (previously in tshistory_rest)
+- updateformulas now handles utf-8 format for csv files (windows compatibility)
+
+### Fixed
+- compatibility with tshistory_rest changes
+
+## [0.1.0] - 2020-12-11
+
+### Added
+- initial release combining tshistory with components for full integration server side
+- formula upload with metadata handling
+- web api integration
+- basic test suite
