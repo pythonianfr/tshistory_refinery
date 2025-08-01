@@ -229,7 +229,5 @@ We also have to map the `metadata`, `insertion_dates` and the
 Pre-defined operators
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: tshistory_formula.funcs
-    :noindex:
-    :members:
-    :exclude-members: aggregate_by_doy, compute_bounds, doy_aggregation, doy_scope_shift_transform, get_boundaries, find_last_values, linear_insert_date, resample_adjust, resample_transform
+For a comprehensive reference of all available operators with examples and usage patterns,
+see :ref:`formula_language`.

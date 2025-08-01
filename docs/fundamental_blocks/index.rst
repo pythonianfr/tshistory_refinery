@@ -9,6 +9,7 @@ Fundamental blocks
    groups
    supervision
    formula
+   formula_language
    search_language
    rework
    tswatch
