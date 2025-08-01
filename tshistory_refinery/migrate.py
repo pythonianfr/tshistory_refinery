@@ -21,6 +21,38 @@ class Migrator(_Migrator):
 
 
 
+@version('tshistory-refinery', '0.10.0')
+def migrate_rework_events_to_task_events(engine, namespace, interactive):
+    with engine.begin() as cn:
+        # check if already migrated
+        task_events_exists = cn.execute(
+            """
+            select exists (
+                select 1 from information_schema.tables
+                where table_schema = 'rework'
+                and table_name = 'task_events'
+            )
+            """
+        ).scalar()
+
+        if task_events_exists:
+            return  # already migrated
+
+        print('migrating rework.events to rework.task_events')
+
+        # clean up old schema completely
+        cn.execute('drop trigger if exists trace_events on rework.task')
+        cn.execute('drop function if exists rework.trace_events() cascade')
+        cn.execute('drop table if exists rework.events cascade')
+
+        # recreate from rework_ui schema
+        from rework_ui.schema import SCHEMAFILE
+        from sqlhelp import sqlfile
+
+        sql = sqlfile(SCHEMAFILE, ns='rework')
+        cn.execute(sql, binary=False)
+
+
 @version('tshistory-refinery', '0.9.2')
 def migrate_rework_schema_interval(engine, namespace, interactive):
     # rework schema
