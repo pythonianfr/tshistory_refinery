@@ -9,6 +9,7 @@ Fundamental blocks
    groups
    supervision
    formula
+   search_language
    rework
    tswatch
    exceladdin
