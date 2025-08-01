@@ -10,6 +10,7 @@ Fundamental blocks
    supervision
    formula
    formula_language
+   formula_debugging
    search_language
    rework
    tswatch
