@@ -62,7 +62,7 @@ The `setup.py` should be minimal and may contain this:
 Data acquisition: a structured path
 ------------------------------------
 
-In the chapter :ref:`Pipelines : starting with injecting data` we
+In the chapter :ref:`getting_started/tutorials/medium:Pipelines : starting with injecting data` we
 described an effective yet rudimentary strategy to implement data
 acquisition. The Refinery provides a tool to enable a better
 organization of this.
@@ -90,8 +90,7 @@ scraping configuration for the application and of course use the
 scraping functions defined in the first one.
 
 Let's examine `scrap_collection.py`, restarting from the minimalistic
-scraper we wrote for the :ref:`Pipelines : starting with injecting
-data`.
+scraper we wrote for the :ref:`getting_started/tutorials/medium:Pipelines : starting with injecting data`.
 
 .. code:: python
 

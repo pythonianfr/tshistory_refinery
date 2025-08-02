@@ -58,14 +58,14 @@ time series:
 .. autoclass:: tshistory.api.mainsource
     :noindex:
     :member-order: bysource
-    :members: group_get, group_replace, group_delete, group_exists, group_type, group_source, group_insertion_dates, group_log, group_history, group_catalog, group_metadata, group_internal_metadata, group_update_metadata, group_replace_metadata, group_find
+    :members: group_get, group_replace, group_delete, group_exists, group_type, group_source, group_insertion_dates, group_log, group_history, group_catalog, group_metadata, group_internal_metadata, update_group_metadata, replace_group_metadata, group_find
 
 Best Practices
 ---------------
 
 1. **Plan Your Schema**: Design your group schema before creation, considering future needs
 2. **Use Descriptive Names**: Choose clear, descriptive names for both groups and columns
-4. **Version Control**: When schema changes are needed, use versioned group names (e.g., ``group_v1``, ``group_v2``)
+3. **Version Control**: When schema changes are needed, use versioned group names (e.g., ``group_v1``, ``group_v2``)
 
 Common Use Cases
 ----------------

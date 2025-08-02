@@ -26,6 +26,9 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 add_module_names = False
 
+# Prevent duplicate label warnings by prefixing with document name
+autosectionlabel_prefix_document = True
+
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

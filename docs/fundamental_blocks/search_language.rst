@@ -16,7 +16,6 @@ Table of Contents
 - `Basic Search Operators`_
 - `Logical Operators`_
 - `Formula-Specific Operators`_
-- `Practical Examples`_
 - `Advanced Patterns`_
 - `Best Practices`_
 
@@ -51,7 +50,7 @@ Query Syntax
 Structure
 ~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Basic structure
     '(operator "argument")'
@@ -72,7 +71,7 @@ Name-based Search: ``by.name``
 Searches for series whose names contain the specified substring
 (case-insensitive):
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Basic name search
     '(by.name "temperature")'  ;; Matches: "room_temperature", "temperature_sensor"
@@ -84,7 +83,7 @@ Metadata Key Search: ``by.metakey``
 Finds series that have a specific metadata key (regardless of the
 value):
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Basic metadata key search
     '(by.metakey "region")'    ;; All series that have a "region" metadata field
@@ -96,7 +95,7 @@ Finds series where a specific metadata key has a specific value. The
 point of examples here is also to illustrate use of the series
 matadata:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Basic metadata value search
     '(by.metaitem "region" "europe")'          ;; Series in Europe region
@@ -125,7 +124,7 @@ Finds series where a metadata value meets a numerical condition.
    (find / basket / findseries) and will guide you write correct
    filters.
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Pure search filters (for use with ``find``)
     '(> "temperature" 25)'          ;; Temperature metadata > 25
@@ -146,7 +145,7 @@ AND Operator: ``by.and``
 
 Combines multiple conditions where ALL must be true:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     '(by.and (by.name "temperature") (by.metaitem "region" "europe"))'
 
@@ -156,7 +155,7 @@ OR Operator: ``by.or``
 
 Combines multiple conditions where ANY can be true:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     '(by.or (by.metaitem "region" "europe") (by.metaitem "region" "asia"))'
 
@@ -171,7 +170,7 @@ NOT Operator: ``by.not``
 
 Excludes series matching the specified condition:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     '(by.not (by.metaitem "status" "deprecated"))' ;; Exclude deprecated series
     '(by.not (by.name "test"))'                    ;; Exclude test series
@@ -185,7 +184,7 @@ Formula Detection: ``by.formula``
 
 Finds all computed (formula) series:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Find all formula series
     '(by.formula)'
@@ -209,7 +208,7 @@ Formula Content Search: ``by.formulacontents``
 
 Searches within the actual formula expressions:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Find formulas using specific functions
     '(by.formulacontents "resample")'          ;; Formulas with resampling

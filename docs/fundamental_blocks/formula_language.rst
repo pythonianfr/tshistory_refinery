@@ -20,8 +20,6 @@ Table of Contents
 - `Data Processing and Filtering`_
 - `Date and Time Functions`_
 - `Advanced Series Discovery`_
-- `Practical Examples`_
-- `Best Practices`_
 
 Getting Started
 ---------------
@@ -54,7 +52,7 @@ Language Basics
 Data Types
 ~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Numbers (integers and floats)
     42
@@ -83,7 +81,7 @@ Series Access and Options
 Basic Series Access
 ~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Simple series reference
     (series "temperature")
@@ -96,7 +94,7 @@ Series Options
 
 Series options control how data is handled when combining with other series:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Fill missing values
     (series "incomplete_data" #:fill "ffill")     ;; Forward fill
@@ -117,7 +115,7 @@ Series options control how data is handled when combining with other series:
 Options Operator
 ~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Apply options to any series expression
     (options (series "raw_data") #:fill "ffill" #:weight 2)
@@ -131,7 +129,7 @@ Arithmetic and Mathematical Operations
 Scalar Operations
 ~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Add constant to series
     (+ 100 (series "base_value"))                 ;; Add 100 to each point
@@ -152,7 +150,7 @@ Scalar Operations
 Series-to-Series Operations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Addition (variable number of arguments)
     (add (series "q1") (series "q2") (series "q3") (series "q4"))
@@ -173,7 +171,7 @@ Series-to-Series Operations
 Mathematical Functions
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Absolute value
     (abs (series "temperature_diff"))                       ;; Remove negative signs
@@ -185,7 +183,7 @@ Mathematical Functions
 
 **min** / **max** - Scalar min/max functions
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     (min 5.5 2.1 8.9)                                       ;; Returns 2.1
     (max 10 20 30 40)                                       ;; Returns 40
@@ -197,7 +195,7 @@ Trigonometric Functions
 
 All trigonometric functions work with degrees (not radians):
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Basic trigonometric functions
     (trig.sin (series "angle_degrees"))                     ;; Sine
@@ -223,7 +221,7 @@ Resampling (Downsampling)
 
 Resampling reduces the frequency of data by aggregating values:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Basic resampling with different aggregation methods
     (resample (series "hourly_temperature") "D")                    ;; Daily mean (default)
@@ -243,7 +241,7 @@ Resampling reduces the frequency of data by aggregating values:
 
 **freq** and **nfreq** - Frequency builders
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     (freq "H")           ;; Hourly frequency
     (freq "D")           ;; Daily frequency
@@ -260,7 +258,7 @@ Upsampling (Increasing Frequency)
 
 Upsampling increases the frequency by interpolating or forward-filling:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Convert monthly data to daily
     (upsample (series "monthly_budget") #:freq "D" #:origin-freq "M")
@@ -274,7 +272,7 @@ Upsampling increases the frequency by interpolating or forward-filling:
 Time Shifting
 ~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Basic shifting
     (time-shifted (series "data") #:hours 6)     ;; Shift forward 6 hours
@@ -303,7 +301,7 @@ Rolling Operations
 
 Rolling operations compute statistics over a moving window:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Moving averages
     (rolling (series "stock_price") 20)                            ;; 20-period moving average (default: mean)
@@ -327,7 +325,7 @@ Rolling operations compute statistics over a moving window:
 Cumulative Operations
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Cumulative sum
     (cumsum (series "daily_sales"))                                ;; Running total of sales
@@ -342,7 +340,7 @@ Integration
 
 The integration operator combines a stock series with a flow series:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Basic integration
     (integration "stock-series-name" "flow-series-name")
@@ -363,7 +361,7 @@ Block Staircase (Future Slicing)
 The block-staircase operator extracts a consistent "slice of the future" from
 historical forecast revisions:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Extract 24-hour-ahead forecasts from daily runs
     (block-staircase "temperature-forecast"
@@ -393,7 +391,7 @@ Row-wise Operations
 
 These operations work across multiple series at each time point:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Row-wise mean (simple average)
     (row-mean (series "station_1") (series "station_2") (series "station_3"))
@@ -418,7 +416,7 @@ Day-of-Year Aggregation (Folded Series)
 The doy-agg operator creates statistical profiles by day-of-year, useful for
 "folded" visualizations where multiple years are overlaid on the same plot:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Create median profile from 5 years of data
     (doy-agg (series "daily_temperature") 5 #:method "median")
@@ -444,7 +442,7 @@ one value per day-of-year, perfect for:
 Practical Aggregation Examples
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Average temperature across weather stations
     (row-mean (series "station_north" #:weight 1)
@@ -467,7 +465,7 @@ Data Processing and Filtering
 Conditional and Comparison Operations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Comparison operators (return 0/1 series by default)
     (> (series "temperature") 25)                           ;; Greater than
@@ -487,7 +485,7 @@ Conditional and Comparison Operations
 Clipping and Bounds
 ~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Remove negative values
     (clip (series "temperature_anomaly") #:min 0)
@@ -513,7 +511,7 @@ Priority and Layering
 
 The priority operator combines series by taking the first available value:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Basic data fallback chain
     '(priority (series "real_time_data")
@@ -537,7 +535,7 @@ The priority operator combines series by taking the first available value:
 Date-based Slicing
 ~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Slice from specific date
     (slice (series "historical_data") #:fromdate (date "2020-01-01"))
@@ -559,7 +557,7 @@ Date-based Filtering with Cron Rules
 
 Filter data based on calendar patterns:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Business hours only (9 AM to 5 PM, weekdays)
     '(date-filter (series "office_temperature")
@@ -591,7 +589,7 @@ Revision Date Control
 
 The asof operator fetches a series at a specific revision date:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Get series as it was yesterday
     (asof (shifted (now) #:days -1) (series "volatile-series"))
@@ -609,7 +607,7 @@ Date and Time Functions
 Current Date and Time
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Current timestamp
     (now)                                   ;; Current UTC timestamp
@@ -624,7 +622,7 @@ Current Date and Time
 Date Creation
 ~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Create specific dates
     (date "2024-01-01")                     ;; January 1, 2024 UTC
@@ -641,7 +639,7 @@ Date Creation
 Date Arithmetic
 ~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Add/subtract time periods
     (shifted (date "2024-01-01") #:days 30)              ;; 30 days later
@@ -660,7 +658,7 @@ Date Arithmetic
 Month Boundary Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; First day of month
     (start-of-month (date "2024-05-15"))     ;; Returns 2024-05-01 00:00:00
@@ -676,7 +674,7 @@ Month Boundary Functions
 Timezone Operations
 ~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Convert naive series to timezone-aware
     (tzaware (series "local_temperatures") "Europe/Berlin")
@@ -697,7 +695,7 @@ Holiday Calendar Series
 Generate holiday indicator series (1.0 for holidays, 0.0 for regular days).
 Takes a 2-letter country code (ISO 3166-1 alpha-2):
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; French holidays (tzaware by default)
     (holidays "fr" (date "2025-01-01") (date "2025-12-31"))
@@ -713,7 +711,7 @@ Special Series Generation
 
 **constant** - Generate a constant-valued time series
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     (constant 42.5 (date "2020-01-01") (date "2025-12-31") "D" (today))
     ;; Creates daily series with value 42.5 from 2020 to 2025
@@ -733,7 +731,7 @@ Dynamic Series Selection
 
 Instead of hardcoding series names, you can dynamically find and load series:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Find and load all temperature series
     (findseries (by.metaitem "sensor_type" "temperature"))
@@ -755,7 +753,7 @@ Instead of hardcoding series names, you can dynamically find and load series:
 Basket-based Operations
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Use predefined baskets
     (findseries (by.basket "energy_meters"))

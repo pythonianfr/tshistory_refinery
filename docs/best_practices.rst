@@ -90,8 +90,8 @@ Data Governance
 **Implementation:**
 
 * Formula registration is automatically versioned: ``tsa.register_formula('name', 'new_formula')``
-* Use cache policies for performance - see :ref:`Formulas: when to use a cache/materialized view`
-* Leverage the rework task system for scheduled updates - see :ref:`Tasks system: how to organize and schedule tasks`
+* Use cache policies for performance - see :ref:`getting_started/tutorials/advanced:Formulas: when to use a cache/materialized view`
+* Leverage the rework task system for scheduled updates - see :ref:`getting_started/tutorials/advanced:Tasks system: how to organize and schedule tasks`
 * Use the mini scraping framework to link scrapers to tasks and series (see ``scrap.py`` and ``refresh`` task)
 
 **After Changes:**

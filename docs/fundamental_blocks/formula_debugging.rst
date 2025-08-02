@@ -41,9 +41,9 @@ Using the TSView Formula Editor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **The TSView formula editor is your primary tool for incremental
- formula construction and debugging.** It provides real-time
- validation, immediate visual feedback, and powerful debugging
- capabilities that make semantic issue detection much easier.
+formula construction and debugging.** It provides real-time
+validation, immediate visual feedback, and powerful debugging
+capabilities that make semantic issue detection much easier.
 
 **Key Capabilities:**
 
@@ -84,7 +84,7 @@ reference without modification risk.
 
 **Incremental Building Workflow in TSView:**
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Example: Building a complex financial indicator step by step
 
@@ -131,7 +131,7 @@ reference without modification risk.
 
 **Common Debugging Patterns in TSView:**
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Pattern 1: Data alignment debugging
     ;; Plot both series to check overlap and frequency
@@ -365,7 +365,7 @@ Different Date Ranges
 
 **Solution:**
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Use priority to create seamless time series
     ;; Old source first, then newer source patches/extends it
@@ -377,7 +377,7 @@ Date Range Slicing for Optimization
 
 Slicing can optimize data retrieval and avoid unnecessary overlap:
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Efficient source combination: use Reuters only after Bloomberg ends
     ;; This minimizes database queries by avoiding the 2022-2023 overlap
@@ -435,7 +435,7 @@ Understanding Holes and NaN Behavior
 
 **Solutions:**
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Use fill options strategically
     '(add (series "a" #:fill "ffill") (series "b" #:fill "ffill"))'
@@ -481,7 +481,7 @@ TZ-Aware vs TZ-Naive: A Fundamental Distinction
 
 **Solutions:**
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Solution 1: Convert sensor data to naive
     ;; This interprets "a day" according to local calendar
@@ -502,7 +502,7 @@ Time Shifting for Business Period Alignment
 
 **Problem**: Business periods often don't align with calendar boundaries.
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Example: Gas day runs 06:00 to 06:00
     ;; Hourly gas flow data needs alignment to calendar days
@@ -581,7 +581,7 @@ Use TSView's `/tsinfo` interface to navigate the dependency tree and spot where 
 **Performance Optimization**
 
 For formulas with performance issues, the Refinery provides a caching system that can materialize
-intermediate results. See :ref:`cache_system` for details on setting up cached series.
+intermediate results. See :ref:`getting_started/tutorials/advanced:Formulas: when to use a cache/materialized view` for details on setting up cached series.
 
 
 **Using TSView's TSInfo Interface for Formula Analysis**
@@ -676,7 +676,7 @@ The `(today)` operator returns:
 - Current date when called without `revision_date`
 - The `revision_date` when provided
 
-.. code-block:: lisp
+.. code-block:: scheme
 
     ;; Formula taking last 30 days
     (rolling (slice (series "data")

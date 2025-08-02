@@ -66,7 +66,7 @@ Performance Issues
 **Slow Formula Evaluation**
 
 * Enable caching for complex formulas: ``tsa.set_cache_policy('my_formula', 'standard')``
-* See :ref:`Formulas: when to use a cache/materialized view` for more details
+* See :ref:`getting_started/tutorials/advanced:Formulas: when to use a cache/materialized view` for more details
 * Check formula depth: ``tsa.formula_depth('my_formula')``
 * Consider breaking complex formulas into simpler components
 
@@ -93,8 +93,8 @@ Getting Help
 If you encounter issues not covered here:
 
 1. Check the server logs for detailed error messages
-3. Visit the project documentation at https://refinery.docs.pythonian.fr
-4. Contact support with:
+2. Visit the project documentation at https://refinery.docs.pythonian.fr
+3. Contact support with:
    * Error message details
    * System configuration
    * Steps to reproduce the issue
