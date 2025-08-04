@@ -21,9 +21,7 @@ The Timeseries Refinery is a tool that :
    :caption: Content
 
    getting_started/index
-   fundamental_blocks/index
+   core_components/index
+   operations/index
    api
-   best_practices
-   configuration_reference
-   troubleshooting
 

@@ -1,5 +1,5 @@
-Dashboard - Advanced Web-Based Visualization Platform
-======================================================
+Dashboards
+==========
 
 Tshistory Dashboard is a comprehensive web-based platform for creating
 sophisticated, interactive dashboards and visualizations from time

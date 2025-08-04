@@ -1,5 +1,5 @@
-Tswatch - Time Series Monitoring
-================================
+Time Series Monitoring
+======================
 
 Tswatch is a monitoring and alerting system for time series data that
 helps you track the health and update frequency of your most important

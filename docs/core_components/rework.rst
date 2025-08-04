@@ -1,5 +1,5 @@
-Rework
-======
+Task Manager Operations
+=======================
 
 `rework` is a distributed execution system for the execution of tasks
 that can belong to independant python environments and code bases,
