@@ -14,7 +14,7 @@ create table "{ns}".cache_policy (
   schedule_rule text not null
 );
 
-create index on "{ns}".cache_policy (name);
+create index "{ns}_cache_policy_name_idx" on "{ns}".cache_policy (name);
 
 
 create table "{ns}".cache_policy_sched (
@@ -22,8 +22,8 @@ create table "{ns}".cache_policy_sched (
   prepared_task_id int not null references "rework".sched on delete cascade
 );
 
-create index on "{ns}".cache_policy_sched (cache_policy_id);
-create index on "{ns}".cache_policy_sched (prepared_task_id);
+create index "{ns}_cache_policy_sched_cache_policy_id_idx" on "{ns}".cache_policy_sched (cache_policy_id);
+create index "{ns}_cache_policy_sched_prepared_task_id_idx" on "{ns}".cache_policy_sched (prepared_task_id);
 
 
 create table "{ns}".cache_policy_series (
@@ -33,5 +33,5 @@ create table "{ns}".cache_policy_series (
   unique (cache_policy_id, series_id)
 );
 
-create index on "{ns}".cache_policy_series (cache_policy_id);
-create index on "{ns}".cache_policy_series (series_id);
+create index "{ns}_cache_policy_series_cache_policy_id_idx" on "{ns}".cache_policy_series (cache_policy_id);
+create index "{ns}_cache_policy_series_series_id_idx" on "{ns}".cache_policy_series (series_id);

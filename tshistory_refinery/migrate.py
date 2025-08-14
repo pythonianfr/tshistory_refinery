@@ -26,6 +26,8 @@ class Migrator(_Migrator):
 def migrate_0100(engine, namespace, interactive):
     migrate_rework_events_to_task_events(engine, namespace, interactive)
     migrate_metadata_integrity(engine, namespace, interactive)
+    migrate_fix_refinery_indexes(engine, namespace, interactive)
+
 
 def migrate_rework_events_to_task_events(engine, namespace, interactive):
     with engine.begin() as cn:
@@ -61,6 +63,20 @@ def migrate_rework_events_to_task_events(engine, namespace, interactive):
 def migrate_metadata_integrity(engine, namespace, interactive):
     # Apply metadata integrity migration to cache namespace (series only)
     do_enforce_series_metadata_integrity(engine, f'{namespace}-cache', interactive)
+
+
+def migrate_fix_refinery_indexes(engine, namespace, interactive):
+    """Fix refinery-specific cache table indexes to use explicit names"""
+    from tshistory.migrate import do_fix_indexes
+    from tshistory_refinery.helper import EXPECTED_INDEXES
+
+    # Format index names with actual namespace
+    refinery_indexes = {
+        k: (v[0].format(ns=namespace), v[1])
+        for k, v in EXPECTED_INDEXES.items()
+    }
+
+    do_fix_indexes(engine, namespace, interactive, refinery_indexes)
 
 
 @version('tshistory-refinery', '0.9.2')
