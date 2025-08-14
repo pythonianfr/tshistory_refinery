@@ -55,7 +55,8 @@ def migrate_rework_events_to_task_events(engine, namespace, interactive):
         from sqlhelp import sqlfile
 
         sql = sqlfile(SCHEMAFILE, ns='rework')
-        cn.execute(sql, binary=False)
+        cn.execute(sql, _binary=False)
+
 
 def migrate_metadata_integrity(engine, namespace, interactive):
     # Apply metadata integrity migration to cache namespace (series only)
