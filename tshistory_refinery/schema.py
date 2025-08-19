@@ -26,7 +26,7 @@ class refinery_schema(supervision_schema, formula_schema):
         with engine.begin() as cn:
             cn.execute(sqlfile(CACHE_POLICY, ns=self.namespace), _binary=False)
 
-        tsschema(f'{self.namespace}-cache').create(engine)
+        tsschema(f'{self.namespace}-cache').create(engine, base=False, groups=False, stores=False)
 
         kvstore = kvapi.kvstore(str(engine.url), namespace=f'{self.namespace}-kvstore')
         kvstore.set('tshistory-refinery-version', __version__)

@@ -1,4 +1,5 @@
 from tshistory.migrate import (
+    do_cleanup_kvstore,
     do_enforce_series_metadata_integrity,
     fix_user_metadata,
     migrate_metadata,
@@ -25,6 +26,8 @@ class Migrator(_Migrator):
 @version('tshistory-refinery', '0.10.0')
 def migrate_0100(engine, namespace, interactive):
     migrate_rework_events_to_task_events(engine, namespace, interactive)
+    do_cleanup_kvstore(engine, f'{namespace}-cache', interactive)
+    cleanup_cache_group_artifacts(engine, namespace, interactive)
     migrate_metadata_integrity(engine, namespace, interactive)
     migrate_fix_refinery_indexes(engine, namespace, interactive)
 
@@ -63,6 +66,16 @@ def migrate_rework_events_to_task_events(engine, namespace, interactive):
 def migrate_metadata_integrity(engine, namespace, interactive):
     # Apply metadata integrity migration to cache namespace (series only)
     do_enforce_series_metadata_integrity(engine, f'{namespace}-cache', interactive)
+
+
+def cleanup_cache_group_artifacts(engine, namespace, interactive):
+    """Clean up group-related schemas and tables from cache namespace"""
+    with engine.begin() as cn:
+        for schema in (f'{namespace}-cache.group', f'{namespace}-cache.group-kvstore'):
+            cn.execute(f'drop schema if exists "{schema}" cascade')
+
+        for table in ('group_registry', 'groupmap', 'basket'):
+            cn.execute(f'drop table if exists "{namespace}-cache".{table} cascade')
 
 
 def migrate_fix_refinery_indexes(engine, namespace, interactive):
