@@ -1,10 +1,18 @@
+from pathlib import Path
+
 from tshistory.migrate import (
     do_cleanup_kvstore,
     do_enforce_series_metadata_integrity,
+    do_fix_indexes,
     fix_user_metadata,
     migrate_metadata,
     Migrator as _Migrator,
     version
+)
+from tshistory.sqlparser import (
+    parse_indexes,
+    TSHISTORY_PATH,
+    TSHISTORY_SQLFILES
 )
 
 from tshistory_refinery import __version__
@@ -80,16 +88,21 @@ def cleanup_cache_group_artifacts(engine, namespace, interactive):
 
 def migrate_fix_refinery_indexes(engine, namespace, interactive):
     """Fix refinery-specific cache table indexes to use explicit names"""
-    from tshistory.migrate import do_fix_indexes
-    from tshistory_refinery.helper import EXPECTED_INDEXES
+    refinery_path = Path(__file__).parent
 
-    # Format index names with actual namespace
-    refinery_indexes = {
-        k: (v[0].format(ns=namespace), v[1])
-        for k, v in EXPECTED_INDEXES.items()
-    }
-
+    # Fix indexes for refinery's cache_policy tables in main namespace
+    refinery_indexes = parse_indexes(
+        [refinery_path / 'schema.sql'],
+        namespace
+    )
     do_fix_indexes(engine, namespace, interactive, refinery_indexes)
+
+    # Cache namespace only needs registry.sql
+    cache_indexes = parse_indexes(
+        [TSHISTORY_PATH / 'registry.sql'],
+        f'{namespace}-cache'
+    )
+    do_fix_indexes(engine, f'{namespace}-cache', interactive, cache_indexes)
 
 
 @version('tshistory-refinery', '0.9.2')
