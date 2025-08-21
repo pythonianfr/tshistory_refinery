@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from tshistory.migrate import (
+    create_revision_metadata_for_ns,
     do_cleanup_kvstore,
     do_enforce_series_metadata_integrity,
     do_fix_indexes,
@@ -11,8 +12,7 @@ from tshistory.migrate import (
 )
 from tshistory.sqlparser import (
     parse_indexes,
-    TSHISTORY_PATH,
-    TSHISTORY_SQLFILES
+    TSHISTORY_PATH
 )
 
 from tshistory_refinery import __version__
@@ -90,14 +90,14 @@ def migrate_fix_refinery_indexes(engine, namespace, interactive):
     """Fix refinery-specific cache table indexes to use explicit names"""
     refinery_path = Path(__file__).parent
 
-    # Fix indexes for refinery's cache_policy tables in main namespace
+    create_revision_metadata_for_ns(engine, f'{namespace}-cache')
+
     refinery_indexes = parse_indexes(
         [refinery_path / 'schema.sql'],
         namespace
     )
     do_fix_indexes(engine, namespace, interactive, refinery_indexes)
 
-    # Cache namespace only needs registry.sql
     cache_indexes = parse_indexes(
         [TSHISTORY_PATH / 'registry.sql'],
         f'{namespace}-cache'
