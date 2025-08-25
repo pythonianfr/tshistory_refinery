@@ -112,6 +112,25 @@ def migrate_drop_ready_column(engine, namespace, interactive):
             f'alter table "{namespace}".cache_policy '
             f'drop column if exists ready'
         )
+        
+        # add missing foreign key constraint on cache_policy_sched.prepared_task_id
+        fk_exists = cn.execute("""
+            select exists (
+                select 1 from pg_constraint c
+                join pg_namespace n on n.oid = c.connamespace
+                join pg_class r on r.oid = c.conrelid
+                where n.nspname = %(ns)s
+                and r.relname = 'cache_policy_sched'
+                and c.conname = 'cache_policy_sched_prepared_task_id_fkey'
+            )
+        """, ns=namespace).scalar()
+        
+        if not fk_exists:
+            cn.execute(f"""
+                alter table "{namespace}".cache_policy_sched
+                add constraint cache_policy_sched_prepared_task_id_fkey
+                foreign key (prepared_task_id) references rework.sched(id) on delete cascade
+            """)
 
 
 @version('tshistory-refinery', '0.9.2')
