@@ -38,6 +38,7 @@ def migrate_0100(engine, namespace, interactive):
     cleanup_cache_group_artifacts(engine, namespace, interactive)
     migrate_metadata_integrity(engine, namespace, interactive)
     migrate_fix_refinery_indexes(engine, namespace, interactive)
+    migrate_drop_ready_column(engine, namespace, interactive)
 
 
 def migrate_rework_events_to_task_events(engine, namespace, interactive):
@@ -103,6 +104,14 @@ def migrate_fix_refinery_indexes(engine, namespace, interactive):
         f'{namespace}-cache'
     )
     do_fix_indexes(engine, f'{namespace}-cache', interactive, cache_indexes)
+
+
+def migrate_drop_ready_column(engine, namespace, interactive):
+    with engine.begin() as cn:
+        cn.execute(
+            f'alter table "{namespace}".cache_policy '
+            f'drop column if exists ready'
+        )
 
 
 @version('tshistory-refinery', '0.9.2')
