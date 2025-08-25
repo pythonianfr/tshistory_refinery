@@ -9,9 +9,9 @@ from tshistory_refinery.helper import EXPECTED_INDEXES
 
 
 @given(
-    to_duplicate_idx=st.sets(st.integers(0, 4), max_size=5),
-    to_drop_idx=st.sets(st.integers(0, 4), max_size=5),
-    to_misname_idx=st.sets(st.integers(0, 4), max_size=5),
+    to_duplicate_idx=st.sets(st.integers(0, 1), max_size=2),
+    to_drop_idx=st.sets(st.integers(0, 1), max_size=2),
+    to_misname_idx=st.sets(st.integers(0, 1), max_size=2),
 )
 @settings(max_examples=20, deadline=10000)
 def test_migration_fix_refinery_indexes(engine, to_duplicate_idx, to_drop_idx, to_misname_idx):
@@ -21,17 +21,24 @@ def test_migration_fix_refinery_indexes(engine, to_duplicate_idx, to_drop_idx, t
     if to_duplicate_idx & to_drop_idx:
         return
     
-    # get expected indexes for refinery
-    refinery_indexes = {
-        k: (v[0].format(ns='tsh'), v[1])
+    # convert EXPECTED_INDEXES to Index objects
+    from tshistory.sqlparser import Index
+    refinery_indexes = [
+        Index(
+            name=v[0].format(ns='tsh'),
+            schema='tsh',
+            table=k[0],
+            columns=k[1],
+            type=v[1]
+        )
         for k, v in EXPECTED_INDEXES.items()
-    }
+    ]
     
-    # convert indices to actual index tuples
-    all_indexes = list(refinery_indexes.keys())
-    to_duplicate = [all_indexes[i] for i in to_duplicate_idx]
-    to_drop = [all_indexes[i] for i in to_drop_idx]
-    to_misname = [all_indexes[i] for i in to_misname_idx if i not in to_drop_idx]
+    # convert indices to actual index tuples for create_index_issues
+    all_index_keys = [(idx.table, idx.columns) for idx in refinery_indexes]
+    to_duplicate = [all_index_keys[i] for i in to_duplicate_idx]
+    to_drop = [all_index_keys[i] for i in to_drop_idx]
+    to_misname = [all_index_keys[i] for i in to_misname_idx if i not in to_drop_idx]
     
     # create the issues
     create_index_issues(engine, 'tsh', to_duplicate, to_drop, to_misname, refinery_indexes)
@@ -64,8 +71,8 @@ def test_migration_fix_refinery_indexes(engine, to_duplicate_idx, to_drop_idx, t
     # property 3: all expected indexes should exist with correct names
     actual = dbdiag.get_actual_indexes(engine, 'tsh')
     
-    for (table, columns), (expected_name, _) in refinery_indexes.items():
+    for expected_idx in refinery_indexes:
         matching = [idx for idx in actual
-                   if idx['table'] == table and idx['columns'] == columns]
+                   if idx.table == expected_idx.table and idx.columns == expected_idx.columns]
         assert len(matching) == 1
-        assert matching[0]['name'] == expected_name
+        assert matching[0].name == expected_idx.name

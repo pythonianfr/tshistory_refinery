@@ -8,11 +8,8 @@ from tshistory.api import timeseries
 # Format: (table, columns) -> (index_name_template, index_type)
 # Use {ns} as placeholder for namespace
 EXPECTED_INDEXES = {
-    ('cache_policy', ('name',)): ('{ns}_cache_policy_name_idx', 'btree'),
-    ('cache_policy_sched', ('cache_policy_id',)): ('{ns}_cache_policy_sched_cache_policy_id_idx', 'btree'),
     ('cache_policy_sched', ('prepared_task_id',)): ('{ns}_cache_policy_sched_prepared_task_id_idx', 'btree'),
     ('cache_policy_series', ('cache_policy_id',)): ('{ns}_cache_policy_series_cache_policy_id_idx', 'btree'),
-    ('cache_policy_series', ('series_id',)): ('{ns}_cache_policy_series_series_id_idx', 'btree'),
 }
 
 
