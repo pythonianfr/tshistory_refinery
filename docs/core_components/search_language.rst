@@ -16,8 +16,7 @@ Table of Contents
 - `Basic Search Operators`_
 - `Logical Operators`_
 - `Formula-Specific Operators`_
-- `Advanced Patterns`_
-- `Best Practices`_
+- `Tree and Cache Operators`_
 
 Quick Start
 -----------
@@ -27,22 +26,117 @@ Your First Search
 
 .. code-block:: python
 
-    # Find all series containing "temperature" in their name
+    # find all series containing "temperature" in their name
     results = tsa.find('(by.name "temperature")')
+    assert results == ['room_temperature', 'outside_temperature', 'water_temperature']
 
-    # Find series by metadata
-    results = tsa.find('(by.metaitem "sensor_type" "humidity")')
+    # find series by metadata
+    results = tsa.find('(by.metaitem "sensor_type" "humidity")', meta=True)
+    assert results[0].meta == {'sensor_type': 'humidity', 'unit': 'percent', 'location': 'building_a'}
 
-    # Combine conditions
-    results = tsa.find('(by.and (by.name "daily") (by.metaitem "region" "europe"))')
+    # combine conditions
+    results = tsa.find('(by.and (by.name "daily") (by.metaitem "region" "europe"))', limit=50)
+    assert len(results) <= 50
 
-Basic Syntax Rules
-~~~~~~~~~~~~~~~~~~
 
-1. **Parentheses**: Every query is wrapped in parentheses ``(operator args...)``
-2. **Quotes**: All string values use double quotes ``"value"``
-3. **Nesting**: Queries can be nested for complex logic
-4. **Case Sensitive**: All operators and values are case-sensitive
+.. note::
+
+   As the examples above show, results look like strings - which they
+   are ! But they carry .meta and imeta attributes which, when queried
+   with meta=True, get populated.
+
+
+More find API options
+~~~~~~~~~~~~~~~~~~~~~
+
+The find method offers additional capabilities for more advanced use
+cases. You can retrieve all series using either ``find()`` with no
+parameters or the explicit ``(by.everything)`` operator.
+
+In federated setups with multiple data sources, the ``sources``
+parameter lets you filter results by origin. The result objects also
+carry useful attributes: ``.source`` indicates where the data comes
+from (local or remote) and ``.kind`` shows whether it's a primary
+(stored) or formula (computed) series.
+
+.. code-block:: python
+
+    # get all series - two equivalent ways
+    allseries = tsa.find()  # no parameters
+    allseries = tsa.find('(by.everything)')  # explicit
+
+    # filter by source in federated setups
+    localonly = tsa.find('(by.everything)', sources=['local'])
+    assert all(s.source == 'local' for s in localonly)
+
+    remote_series = tsa.find('(by.name "sales")', sources=['remote'])
+    assert all(s.source == 'remote' for s in remote_series)
+
+    # examine result attributes
+    results = tsa.find('(by.name "temperature")')
+    assert results[0].source in ('local', 'remote')
+    assert results[0].kind in ('primary', 'formula')
+
+Finding Groups
+~~~~~~~~~~~~~~
+
+The same search capabilities are available for groups through the
+``group_find`` method. It supports all the same operators and
+parameters as ``find``, but searches within the groups namespace
+instead of series.
+
+.. code-block:: python
+
+    # find groups by name
+    groups = tsa.group_find('(by.name "weather")')
+    assert groups == ['weather_station_paris', 'weather_forecast_lyon']
+
+.. note::
+
+   To create actual groups (DataFrames) from search results, you have two approaches:
+   
+   .. code-block:: python
+   
+       # approach 1: using group-from-series formula operator
+       tsa.register_group_formula(
+           'sensor_group',
+           '''(group-from-series 
+               (bind "sensor1" (series "temperature_sensor_1"))
+               (bind "sensor2" (series "temperature_sensor_2"))
+               (bind "sensor3" (series "temperature_sensor_3")))'''
+       )
+       
+       # approach 2: python code to build dataframe from search results  
+       results = tsa.find('(by.metaitem "type" "sensor")')
+       df = pd.DataFrame({
+           name: tsa.get(name) 
+           for name in results
+       })
+
+Saving Searches with Baskets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Baskets allow you to save frequently used search queries for reuse. This is particularly useful for complex queries or when the same set of series needs to be referenced multiple times. Baskets work for both series and groups independently - they maintain separate namespaces controlled by the ``group`` parameter.
+
+.. code-block:: python
+
+    # register a basket for series
+    tsa.register_basket('energy_sensors', '(by.and (by.metaitem "type" "sensor") (by.metaitem "category" "energy"))')
+    
+    # register a basket for groups  
+    tsa.register_basket('weather_groups', '(by.name "weather")', group=True)
+    
+    # list all series baskets
+    series_baskets = tsa.list_baskets()
+    assert 'energy_sensors' in series_baskets
+    
+    # execute a basket query (supports same parameters as find)
+    results = tsa.basket('energy_sensors', limit=10, meta=True)
+    assert results[0].meta['type'] == 'sensor'
+    
+    # use the basket in formulas
+    formula = '(add (findseries (by.basket "energy_sensors")))'
+
 
 Query Syntax
 ------------
@@ -53,13 +147,24 @@ Structure
 .. code-block:: scheme
 
     ;; Basic structure
-    '(operator "argument")'
+    (operator "argument")
 
     ;; With multiple arguments
-    '(operator "arg1" "arg2")'
+    (operator "arg1" "arg2")
 
     ;; Nested queries
-    '(by.and (by.name "sales") (by.metaitem "region" "north"))'
+    (by.and (by.name "sales") (by.metaitem "region" "north"))
+
+Basic Syntax Rules
+~~~~~~~~~~~~~~~~~~
+
+1. **Parentheses**: Every query is wrapped in parentheses ``(operator args...)``
+2. **Quotes**: All string values use double quotes ``"value"``
+3. **Nesting**: Queries can be nested for complex logic
+4. **Case Sensitivity**: 
+   - Name searches (``by.name``) are **case-insensitive**
+   - Metadata keys and values (``by.metakey``, ``by.metaitem``) are **case-sensitive**
+   - Formula content searches (``by.formulacontents``) are **case-sensitive**
 
 
 Basic Search Operators
@@ -74,7 +179,7 @@ Searches for series whose names contain the specified substring
 .. code-block:: scheme
 
     ;; Basic name search
-    '(by.name "temperature")'  ;; Matches: "room_temperature", "temperature_sensor"
+    (by.name "temperature")  ;; Matches: "room_temperature", "temperature_sensor"
 
 
 Metadata Key Search: ``by.metakey``
@@ -86,7 +191,27 @@ value):
 .. code-block:: scheme
 
     ;; Basic metadata key search
-    '(by.metakey "region")'    ;; All series that have a "region" metadata field
+    (by.metakey "region")    ;; All series that have a "region" metadata field
+
+Everything Operator: ``by.everything``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Returns all series without any filtering:
+
+.. code-block:: scheme
+
+    (by.everything)  ;; Returns all series
+
+
+Timezone-Aware Filter: ``by.tzaware``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Filters for timezone-aware series:
+
+.. code-block:: scheme
+
+    (by.tzaware)  ;; Only timezone-aware series
+
 
 Metadata Value Search: ``by.metaitem``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -98,15 +223,25 @@ matadata:
 .. code-block:: scheme
 
     ;; Basic metadata value search
-    '(by.metaitem "region" "europe")'          ;; Series in Europe region
-    '(by.metaitem "data_type" "financial")'    ;; Financial data
+    (by.metaitem "region" "europe")          ;; Series in Europe region
+    (by.metaitem "data_type" "financial")    ;; Financial data
 
     ;; Quality and status
-    '(by.metaitem "quality" "high")'           ;; High quality data
-    '(by.metaitem "confidence" "reliable")'    ;; Reliable data
+    (by.metaitem "quality" "high")           ;; High quality data
+    (by.metaitem "confidence" "reliable")    ;; Reliable data
 
 
-Value Comparison Search: ``by.value``
+Internal Metadata Search: ``by.internal-metaitem``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Searches internal metadata (system-managed metadata):
+
+.. code-block:: scheme
+
+    (by.internal-metaitem "supervision_status" "supervised")  ;; Find supervised series
+
+
+Value Comparison Search
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finds series where a metadata value meets a numerical condition.
@@ -126,15 +261,12 @@ Finds series where a metadata value meets a numerical condition.
 
 .. code-block:: scheme
 
-    ;; Pure search filters (for use with ``find``)
-    '(> "temperature" 25)'          ;; Temperature metadata > 25
-    '(>= "confidence" 0.8)'         ;; Confidence >= 80%
-    '(< "threshold" 100)'           ;; Threshold < 100
-
-    ;; In the formula language  (for use with ``findseries``)
-    '(by.value "temperature" ">" 25)'     ;; Temperature metadata > 25
-    '(by.value "confidence" ">=" 0.8)'    ;; Confidence >= 80%
-    '(by.value "threshold" "<" 100)'      ;; Threshold < 100
+    ;; Direct comparison operators (for use with find)
+    (< "temperature" 25)          ;; Temperature metadata < 25
+    (<= "confidence" 0.8)         ;; Confidence <= 80%
+    (> "threshold" 100)           ;; Threshold > 100
+    (>= "count" 10)              ;; Count >= 10
+    (= "status" "active")        ;; Status equals "active"
 
 
 Logical Operators
@@ -147,7 +279,7 @@ Combines multiple conditions where ALL must be true:
 
 .. code-block:: scheme
 
-    '(by.and (by.name "temperature") (by.metaitem "region" "europe"))'
+    (by.and (by.name "temperature") (by.metaitem "region" "europe"))
 
 
 OR Operator: ``by.or``
@@ -157,12 +289,12 @@ Combines multiple conditions where ANY can be true:
 
 .. code-block:: scheme
 
-    '(by.or (by.metaitem "region" "europe") (by.metaitem "region" "asia"))'
+    (by.or (by.metaitem "region" "europe") (by.metaitem "region" "asia"))
 
     ;; Multiple regions
-    '(by.or (by.metaitem "country" "france")
+    (by.or (by.metaitem "country" "france")
             (by.metaitem "country" "germany")
-            (by.metaitem "country" "italy"))'
+            (by.metaitem "country" "italy"))
 
 
 NOT Operator: ``by.not``
@@ -172,8 +304,8 @@ Excludes series matching the specified condition:
 
 .. code-block:: scheme
 
-    '(by.not (by.metaitem "status" "deprecated"))' ;; Exclude deprecated series
-    '(by.not (by.name "test"))'                    ;; Exclude test series
+    (by.not (by.metaitem "status" "deprecated")) ;; Exclude deprecated series
+    (by.not (by.name "test"))                    ;; Exclude test series
 
 
 Formula-Specific Operators
@@ -187,14 +319,14 @@ Finds all computed (formula) series:
 .. code-block:: scheme
 
     ;; Find all formula series
-    '(by.formula)'
+    (by.formula)
 
     ;; Combine with other conditions
-    '(by.and (by.formula) (by.metaitem "department" "finance"))'    # Finance formulas
-    '(by.and (by.formula) (by.metaitem "type" "kpi"))'              # KPI formulas
+    (by.and (by.formula) (by.metaitem "department" "finance"))    ;; Finance formulas
+    (by.and (by.formula) (by.metaitem "type" "kpi"))              ;; KPI formulas
 
-    # Find non-formula (stored) series
-    '(by.not (by.formula))'
+    ;; Find non-formula (stored) series
+    (by.not (by.formula))
 
 
 Formula Content Search: ``by.formulacontents``
@@ -211,89 +343,36 @@ Searches within the actual formula expressions:
 .. code-block:: scheme
 
     ;; Find formulas using specific functions
-    '(by.formulacontents "resample")'          ;; Formulas with resampling
-    '(by.formulacontents "priority")'          ;; Formulas using priority operator
+    (by.formulacontents "resample")          ;; Formulas with resampling
+    (by.formulacontents "priority")          ;; Formulas using priority operator
 
     ;; Find formulas referencing specific series
-    '(by.formulacontents "stock_price")'       ;; Formulas using directly stock_price series
+    (by.formulacontents "stock_price")       ;; Formulas using directly stock_price series
 
     ;; Advanced operations
-    '(by.formulacontents "findseries")'        ;; Dynamic series discovery formulas
-    '(by.formulacontents "constant")'          ;; Formulas creating constants
+    (by.formulacontents "findseries")        ;; Dynamic series discovery formulas
+    (by.formulacontents "constant")          ;; Formulas creating constants
 
 
-Advanced Patterns
------------------
+Tree and Cache Operators
+------------------------
 
-Complex Business Logic
-~~~~~~~~~~~~~~~~~~~~~~
+Tree Path Filters
+~~~~~~~~~~~~~~~~~
 
-.. code-block:: python
+Filter series based on their organization in tree paths:
 
-    # Find series for quarterly business review
-    '(by.and (by.metaitem "frequency" "quarterly")
-             (by.or (by.metaitem "category" "revenue")
-                    (by.metaitem "category" "costs")
-                    (by.metaitem "category" "kpi"))
-             (by.metaitem "department" "finance")
-             (by.not (by.metaitem "status" "draft")))'
+.. code-block:: scheme
 
-    # Find anomaly detection candidates
-    '(by.and (by.metaitem "frequency" "daily")
-             (by.value "volatility" ">" 0.1)
-             (by.metaitem "business_critical" "true")
-             (by.not (by.metaitem "anomaly_detection" "enabled")))'
+    (by.without-path)           ;; Series not in any tree path
+    (by.at-path "/energy/solar") ;; Series at specific path (and children)
 
-    # Find series for machine learning pipeline
-    '(by.and (by.value "data_points" ">" 1000)
-             (by.value "completeness" ">" 0.95)
-             (by.metaitem "data_type" "numerical")
-             (by.not (by.metaitem "contains_pii" "true"))
-             (by.metaitem "ml_approved" "true"))'
+Cache Policy Filters
+~~~~~~~~~~~~~~~~~~~~
 
+Filter by cache policy (refinery-specific):
 
-Best Practices
---------------
+.. code-block:: scheme
 
-Error Handling
-~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-    # Always handle empty results
-    results = tsa.find('(by.metaitem "nonexistent" "value")')
-    if not results:
-        print("No series found matching criteria")
-
-    # Validate query syntax before using
-    try:
-        results = tsa.find('(by.and (by.name "test"))')  # Missing closing paren in complex query
-    except SyntaxError as e:
-        print(f"Query syntax error: {e}")
-
-Testing Queries
-~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-    # Start with simple queries and build complexity
-    # Step 1: Test basic condition
-    basic_results = tsa.find('(by.metaitem "type" "sensor")')
-
-    # Step 2: Add location filter
-    location_results = tsa.find('(by.and (by.metaitem "type" "sensor")
-                                         (by.metaitem "location" "building_a"))')
-
-    # Step 3: Add status filter
-    final_results = tsa.find('(by.and (by.metaitem "type" "sensor")
-                                      (by.metaitem "location" "building_a")
-                                      (by.metaitem "status" "active"))')
-
-    # Compare result counts to ensure filters work as expected
-    print(f"All sensors: {len(basic_results)}")
-    print(f"Building A sensors: {len(location_results)}")
-    print(f"Active Building A sensors: {len(final_results)}")
-
-This comprehensive guide covers all aspects of the Refinery search
-query language. Use these patterns as building blocks to create
-sophisticated queries for data discovery and analysis.
+    (by.cache)                    ;; Has any cache policy
+    (by.cachepolicy "daily_cache") ;; Has specific cache policy
