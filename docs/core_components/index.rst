@@ -6,10 +6,10 @@ Core Components
    :caption: Contents:
 
    usage
-   groups
    supervision
    formula
    formula_language
+   groups
    search_language
    rework
    tswatch
