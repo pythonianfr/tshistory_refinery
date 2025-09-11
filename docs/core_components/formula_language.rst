@@ -41,10 +41,19 @@ Your First Formula
 Basic Syntax Rules
 ~~~~~~~~~~~~~~~~~~
 
+Formulas are expressed in a Lisp-like syntax using operators, positional (mandatory) parameters and keyword (optional) parameters.
+
+The general form is:
+
+``(<operator> <param1> ... <paramN> #:<keyword1> <value1> ... #:<keywordN> <valueN>)``
+
+Key rules:
+
 1. **Parentheses**: Every operation is wrapped in parentheses ``(function arg1 arg2 ...)``
 2. **Quotes**: String literals use double quotes ``"series_name"``
 3. **Keywords**: Optional parameters use ``#:keyword value`` syntax
 4. **Nesting**: Functions can be nested ``(add (series "a") (mul (series "b") 2))``
+5. **Operator names**: Can contain dashes or arbitrary characters
 
 Language Basics
 ---------------
