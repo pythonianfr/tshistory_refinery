@@ -1,51 +1,69 @@
 Supervision
 ===========
 
-Purpose
--------
+The supervision mechanism enables data quality management when working with 
+external data sources. As an analyst, you can correct erroneous values while
+the system maintains the original data and ensures that provider corrections
+automatically flow through.
 
-This component provides a supervision mechanism over `tshistory
-<https://heptapod.host/pythonian/timeseries-refinery/tshistory>`__.
+The supervision workflow
+------------------------
 
-The central use case is as follows:
+Consider a typical scenario: you receive daily market data from a provider.
+Sometimes this data contains errors that need immediate correction for your
+reports. The supervision system allows you to:
 
--  time series from third party providers are stored as is
+1. Apply manual corrections to fix errors immediately
+2. Continue receiving updates from the provider
+3. Have provider corrections automatically replace your manual fixes
+4. Maintain full audit trail of all changes
 
--  from time to time, a data analyst will want to override (bogus)
-   values, and need to know what values were overriden
+Making manual corrections
+-------------------------
 
--  when upstream fix its bogus values the fixed values must override the
-   data analyst fixes
-
--  the complete series history must retain information on the
-   supervision activity
-
-Usage
------
-
-The basic `tshistory
-<https://heptapod.host/pythonian/timeseries-refinery/tshistory>`__
-usage is described on its own documentation.
-
-An override is made as follows:
+Manual corrections can be applied in three ways:
 
 .. code:: python
 
-    >>> tsa.update('my-series', series, 'analyst@corp.com', manual=True)
+    >>> corrected_values = pd.Series([95.5, 96.0], 
+    ...                              index=[pd.Timestamp('2023-03-15'),
+    ...                                     pd.Timestamp('2023-03-16')])
+    >>> tsa.update('market-prices', corrected_values, 'analyst@corp.com', manual=True)
 
-This also works with the ``replace`` api call.
+The same manual corrections can be made through the web interface (tsview) or 
+the Excel client - both automatically use manual=True when you edit values.
 
-Inserted values will show up in the next ``.get`` call.
+Your corrections appear immediately in the data. When the provider later sends
+corrected data through the normal update process, their fixes automatically 
+replace your manual corrections.
 
-Specific API calls exist to provide a standard workflow:
+Viewing data provenance
+-----------------------
 
--  ``.edited`` returns a couple *series* and *markers* where *series* is
-   like the output of a standard ``.get`` call and *markers* a boolean
-   series indicating whether any data point is from *upstream* or a
-   manual edition.
+The ``.edited`` method shows you which values are original versus manually edited:
 
-The series metadata grows a new *supervision-status* attribute, whose
-value can be one of ``unsupervised``, ``supervised`` and
-``hand-crafted``.
+.. code:: python
 
-Hand-crafted is for series that are entirely made of ``manual`` updates.
+    >>> series, markers = tsa.edited('market-prices')
+
+The returned series contains the current values, while markers is True where 
+data was manually edited and False for provider data.
+
+Understanding supervision status
+--------------------------------
+
+Every series has a supervision status in its metadata:
+
+- ``unsupervised``: series updated only through normal updates (never with manual=True)
+- ``hand-crafted``: series created and maintained entirely with manual updates (always with manual=True, whether from Python, Excel client, or web UI)
+- ``supervised``: series containing both provider updates and manual corrections
+
+This helps you quickly identify which series have manual interventions.
+
+Supervision API Reference
+-------------------------
+
+.. autoclass:: tshistory_supervision.api.mainsource
+    :noindex:
+    :member-order: bysource
+    :members: edited, supervision_status
