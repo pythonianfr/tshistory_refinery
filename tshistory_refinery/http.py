@@ -132,7 +132,32 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={204: 'Success', 409: 'Error'},
-                description='Create a new cache policy'
+                description="""Create a new cache policy
+
+Cache policies control automated refreshing of formula series to improve query performance.
+
+**Parameters:**
+- name: policy name
+- initial_revdate: initial revision date (ISO8601)
+- look_before: time expression for left refresh horizon (e.g. "today", "today - 1 month")
+- look_after: time expression for right refresh horizon (e.g. "today + 3 months")
+- revdate_rule: cron expression for revision date scheduling
+- schedule_rule: cron expression for cache refresh scheduling
+
+**Returns:** empty body, status 204
+
+**Errors:**
+- 409: policy creation failed (e.g. duplicate name)
+
+**Example:**
+```
+PUT /cache/policy
+  name=daily-refresh&initial_revdate=2025-01-01T00:00:00Z
+  &look_before=today - 1 month&look_after=today + 3 months
+  &revdate_rule=0 2 * * *&schedule_rule=0 3 * * *
+→ 204 Success
+```
+"""
             )
             @api.expect(newcp)
             @onerror
@@ -156,7 +181,21 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={204: 'Success', 409: 'Error'},
-                description='Edit an existing cache policy'
+                description="""Update an existing cache policy
+
+**Parameters:**
+- name: policy name
+- initial_revdate: initial revision date (ISO8601)
+- look_before: time expression for left refresh horizon
+- look_after: time expression for right refresh horizon
+- revdate_rule: cron expression for revision date scheduling
+- schedule_rule: cron expression for cache refresh scheduling
+
+**Returns:** empty body, status 204
+
+**Errors:**
+- 409: policy update failed (e.g. invalid cron expression)
+"""
             )
             @api.expect(newcp)
             @onerror
@@ -179,7 +218,15 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={204: 'Success'},
-                description='Delete a cache policy'
+                description="""Delete a cache policy
+
+**Parameters:**
+- name: policy name
+
+**Returns:** empty body, status 204
+
+**Note:** Associated series will be unmapped from the policy before deletion.
+"""
             )
             @api.expect(deletecp)
             @onerror
@@ -197,7 +244,21 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={204: 'Success'},
-                description='Associate series to a cache policy'
+                description="""Associate series to a cache policy
+
+**Parameters:**
+- name: policy name
+- seriesnames: JSON array of series names
+
+**Returns:** empty body, status 204
+
+**Example:**
+```
+PUT /cache/mapping
+  name=daily-refresh&seriesnames=["temperature", "pressure", "humidity"]
+→ 204 Success
+```
+"""
             )
             @api.expect(mapcp)
             @onerror
@@ -213,7 +274,20 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={204: 'Success'},
-                description='De-associate series from a cache policy'
+                description="""Remove series from their cache policy
+
+**Parameters:**
+- seriesnames: JSON array of series names
+
+**Returns:** empty body, status 204
+
+**Example:**
+```
+DELETE /cache/mapping
+  seriesnames=["temperature", "pressure"]
+→ 204 Success
+```
+"""
             )
             @api.expect(unmapcp)
             @onerror
@@ -231,7 +305,21 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={200: 'Got content'},
-                description='Return list of series that can be cached but are not cached yet'
+                description="""Get list of series eligible for caching
+
+Returns formula series that can be cached but are not yet associated with any cache policy.
+
+**Parameters:**
+- allsources: if true, include series from all sources; if false, only primary source (default: true)
+
+**Returns:** list of series names
+
+**Example:**
+```
+GET /cache/cacheable?allsources=true
+→ ["wind-forecast", "temp-adjusted", "pressure-corrected"]
+```
+"""
             )
             @api.expect(cacheable)
             @onerror
@@ -245,7 +333,22 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={200: 'Got content'},
-                description='Return list of all cache policies'
+                description="""Get list of all cache policies
+
+**Returns:** list of policy definitions
+```json
+[
+  {
+    "name": "daily-refresh",
+    "initial_revdate": "2025-01-01T00:00:00Z",
+    "look_before": "today - 1 month",
+    "look_after": "today + 3 months",
+    "revdate_rule": "0 2 * * *",
+    "schedule_rule": "0 3 * * *"
+  }
+]
+```
+"""
             )
             @onerror
             @required_roles('admin', 'rw', 'ro')
@@ -257,7 +360,19 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={200: 'Got content'},
-                description='Return list of series mapped to a specific cache policy'
+                description="""Get series associated with a cache policy
+
+**Parameters:**
+- name: policy name
+
+**Returns:** list of series names
+
+**Example:**
+```
+GET /cache/policy-series?name=daily-refresh
+→ ["temperature", "pressure", "humidity"]
+```
+"""
             )
             @api.expect(cp)
             @onerror
@@ -271,7 +386,19 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={200: 'Got content'},
-                description='Return the cache policy name for a specific series'
+                description="""Get the cache policy for a series
+
+**Parameters:**
+- name: series name
+
+**Returns:** policy name string, or null if series has no cache policy
+
+**Example:**
+```
+GET /cache/series-policy?name=temperature
+→ "daily-refresh"
+```
+"""
             )
             @api.expect(series_policy)
             @onerror
@@ -285,7 +412,19 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={200: 'Got content'},
-                description='Check if a series has a cache'
+                description="""Check if a series has cached data
+
+**Parameters:**
+- name: series name
+
+**Returns:** boolean
+
+**Example:**
+```
+GET /cache/series-has-cache?name=temperature
+→ true
+```
+"""
             )
             @api.expect(shc)
             @onerror
@@ -296,7 +435,15 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={204: 'Success'},
-                description='Delete the cache for a series'
+                description="""Delete cached data for a series
+
+**Parameters:**
+- name: series name
+
+**Returns:** empty body, status 204
+
+**Note:** This removes cached data but does not unmap the series from its cache policy.
+"""
             )
             @api.expect(delete_cache)
             @onerror
@@ -311,7 +458,23 @@ class refinery_httpapi(xl_httpapi):
 
             @api.doc(
                 responses={200: 'Got content'},
-                description='Refresh all series associated with a cache policy now and return task id'
+                description="""Trigger immediate cache refresh for a policy
+
+Refreshes all series associated with a cache policy immediately, bypassing the scheduled refresh.
+
+**Parameters:**
+- name: policy name
+
+**Returns:** task ID (integer)
+
+**Example:**
+```
+PUT /cache/refresh-policy-now?name=daily-refresh
+→ 12345
+```
+
+**Note:** The returned task ID can be used to monitor the refresh operation status.
+"""
             )
             @api.expect(cp)
             @onerror
