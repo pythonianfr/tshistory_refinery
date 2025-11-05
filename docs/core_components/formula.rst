@@ -448,6 +448,7 @@ itself. Here is how the initial part would look:
        # we assume there is some python client available
        # for the tier timeseries silo
        return silo_client.get(
+           parameter=parameter,
            fromdate=__from_value_date__,
            todate=__to_value_date__,
            revdate=__revision_date__

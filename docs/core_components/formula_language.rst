@@ -234,7 +234,7 @@ Resampling reduces the frequency of data by aggregating values:
 
     ;; Basic resampling with different aggregation methods
     (resample (series "hourly_temperature") "D")                    ;; Daily mean (default)
-    (resample (series "minute_prices") "H" #:method "last")         ;; Hourly last value
+    (resample (series "minute_prices") "h" #:method "last")         ;; Hourly last value
     (resample (series "tick_volume") "15T" #:method "sum")          ;; 15-minute volume sum
     (resample (series "daily_rain") "M" #:method "sum")             ;; Monthly rainfall total
 
@@ -252,13 +252,13 @@ Resampling reduces the frequency of data by aggregating values:
 
 .. code-block:: scheme
 
-    (freq "H")           ;; Hourly frequency
+    (freq "h")           ;; Hourly frequency
     (freq "D")           ;; Daily frequency
     (nfreq 15 "T")       ;; 15-minute frequency
     (nfreq 3 "M")        ;; Quarterly frequency
 
     ;; Use with resample
-    (resample (series "data") (freq "H"))              ;; To hourly
+    (resample (series "data") (freq "h"))              ;; To hourly
     (resample (series "data") (nfreq 15 "T"))          ;; To 15-minute
     (resample (series "data") (nfreq 2 "W"))           ;; To bi-weekly
 
@@ -536,7 +536,7 @@ The priority operator combines series by taking the first available value:
     ;; Sensor data with backup
     '(priority (series "primary_sensor")
                (series "secondary_sensor")
-               (constant 20 (date "2020-01-01") (date "2030-01-01") "H" (today)))'
+               (constant 20 (date "2020-01-01") (date "2030-01-01") "h" (today)))'
 
     ;; Financial data with different frequencies
     '(priority (series "high_freq_prices")     ;; Prefer high-frequency data
@@ -735,7 +735,7 @@ Special Series Generation
     (constant 100
               (date "2020-01-01" #:tz "Europe/Paris")
               (date "2025-12-31" #:tz "Europe/Paris")
-              "H"
+              "h"
               (today #:tz "Europe/Paris"))
 
 Advanced Series Discovery

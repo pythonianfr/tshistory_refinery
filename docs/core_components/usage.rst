@@ -129,7 +129,7 @@ You can erase specific points in a series by updating with NaN values:
 
     >>> # erase the point at 2017-01-02
     >>> erasure = pd.Series([np.nan], index=[pd.Timestamp('2017-01-02')])
-    >>> tsa.update('my_series', erasure, 'cleanup@example.com')
+    >>> tsa.update('my_series', erasure, 'cleanup@example.com', keepnans=True)
 
     >>> # by default, erased points are not shown
     >>> tsa.get('my_series')

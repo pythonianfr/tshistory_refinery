@@ -844,7 +844,7 @@ parameters before launching.
 
 .. note::
 
-   For the tasks to be directly launchable from the Lunchers tab,
+   For the tasks to be directly launchable from the Launchers tab,
    their declaration **must** contain an `inputs` declaration (even
    with an empty tuple if you need none). Only with this formalism can
    the UI know it can present actions, and which ones, to the
