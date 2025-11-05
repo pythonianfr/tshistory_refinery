@@ -201,7 +201,7 @@ Formula Development
 **The "Layer Bypass" Anti-Pattern:**
 
 * Gold formulas directly reading raw data: ``(series "messy_data.raw")``
-* Skips cleaning and validation, leads to hasardous results
+* Skips cleaning and validation, leads to hazardous results
 * Always flow through the medallion: raw → clean → computed
 
 **The "Mixed-Layer Formula" Anti-Pattern:**

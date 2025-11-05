@@ -407,7 +407,7 @@ Understanding Holes and NaN Behavior
 
     print(f"Sensor A points: {len(sensor_a)}")  # e.g., 250 (weekdays only)
     print(f"Sensor B points: {len(sensor_b)}")  # e.g., 365 (every day)
-    print(f"Combined points:r {len(combined)}")  # 365 points
+    print(f"Combined points: {len(combined)}")  # 365 points
     print(f"NaNs in result: {combined.isna().sum()}")  # ~115 (weekends)
 
     # Note: Some operations can create new NaNs:

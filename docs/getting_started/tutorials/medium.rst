@@ -71,7 +71,7 @@ scheduled to be run at periodic moments of the day to continuously
 feed the time series repository; for instance using `cron` on Linux or
 `at` on Windows.
 
-This is a bare-bones solution, which unsurprinsinly is largely used in
+This is a bare-bones solution, which unsurprisingly is largely used in
 the industry. Some prefer to use sophisticated and refined task
 schedulers such as `Apache AirFlow <https://airflow.apache.org/>`_,
 for the additional capacities it provides. Later in this document we
@@ -88,7 +88,7 @@ detail.
 
 Here we start by defining the time window for the data to be
 fetched. Since it is about forecasts, a window from yesterday to next
-week is reasonnable.
+week is reasonable.
 
 .. code:: python
 
@@ -299,7 +299,7 @@ In the basics chapter we learnt how to create and use formulas. Let
 see how to apply this knowledge to build our time series information
 system.
 
-A first step would be *normalization*. Its purpose is to adress the
+A first step would be *normalization*. Its purpose is to address the
 following (non-exhaustive) list of questions :
 
 * do the raw series have the needed granularities ?
@@ -352,7 +352,7 @@ Completeness: it is not uncommon to have raw series describing the
 same fundamental data, while being different in a subtle way. For
 instance, one source has a long history but its update frequency on
 recent data is spotty; and then you find another source with less
-history depth but more stringent update baheviour. Let's combine them
+history depth but more stringent update behaviour. Let's combine them
 into a well-behaved series:
 
 .. code:: lisp
@@ -361,7 +361,7 @@ into a well-behaved series:
        (series "power.price.spot.dk1.da.eurmwh.entsoe.obs.h")
        (series "power.price.spot.dk1.da.eurmwh.epex.obs.h"))
 
-The `priority` operator is immensely helpful there. It wil take the
+The `priority` operator is immensely helpful there. It will take the
 points of the first series if there are any - barring that, the points
 of the second series are selected.
 

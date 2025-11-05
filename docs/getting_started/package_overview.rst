@@ -39,7 +39,7 @@ It provides:
   failing sources)
 
 * a powerful **low-code declarative dashboard** system (specially
-  targetted at energy comodity markets)
+  targeted at energy comodity markets)
 
 * a **rich web user interface** allowing exploration of the catalog,
   visualisation and edition of series, formulas, caches, tasks,

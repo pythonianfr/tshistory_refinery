@@ -12,7 +12,7 @@ The Timeseries Refinery is a tool that :
 - **Centralize** data from various sources: internal data silos - external APIs Data queries on the fly or scraped on schedule
 - **Automate** data processes (ETL, predictions, computations, sanity checks, …)
 - **Aggregate** and **transform** timeseries with formulas
-- Build a common **catalog** -> shared (high level, cured) data referential
+- Build a common **catalog** -> shared (high level, curated) data referential
 
 .. image:: _static/TSR.png
 

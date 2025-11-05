@@ -89,7 +89,7 @@ Indeed, we need these 3 scenarios to be handled:
 * scripting access for end users
 
 Though the last two ones look similar, their security context is
-differents:
+different:
 
 * the robots are hosted on a secure server platform,
 

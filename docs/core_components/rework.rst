@@ -2,7 +2,7 @@ Task Manager Operations
 =======================
 
 `rework` is a distributed execution system for the execution of tasks
-that can belong to independant python environments and code bases,
+that can belong to independent python environments and code bases,
 even hosted on different computers.
 
 The only constraint is that postgres must be accessible from all nodes
@@ -53,7 +53,7 @@ To use it properly one has to understand the following concepts:
 `domain` 
     A label associated with `operations`, `tasks` and `workers`,
     which can be used to map operations to virtual environments or
-    just help oprganize a logical separation of operations (and the
+    just help organize a logical separation of operations (and the
     associated pools of workers).
 
 `monitor` 
@@ -85,7 +85,7 @@ We need to set up a database first, which we'll name `jobstore`.
 
 Rework will install its tables into its own namespace schema, so you
 can use either a dedicated database (like we're doing right now) or an
-exising one, with little risk of conflict.
+existing one, with little risk of conflict.
 
 Now we must set up the rework schema:
 
@@ -129,7 +129,7 @@ This being done, we can start writing our first task:
 
 
 Here we have defined a dummy task that will print a bunch of
-sentences, doubler the input value and save a result back.
+sentences, double the input value and save a result back.
 
 This has to be put into a python module, e.g. `test_rework.py`
 
@@ -168,7 +168,7 @@ operation:
 Then, the script will quickly terminate, as both tasks have been
 executed.
 
-Congratulations ! You juste fired your first rework tasks.
+Congratulations ! You just fired your first rework tasks.
 We can finish this chapter with a few command line goodies.
 
 First we'll want to know about the existing tasks:

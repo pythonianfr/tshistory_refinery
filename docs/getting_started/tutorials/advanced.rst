@@ -385,7 +385,7 @@ On computation (for the formulas), the effort is directly proportional to:
 * the complexity of involved operations.
 
 A simple `resample` formula is cheap and can be computed on the fly
-with a reasonnably small overhead. But in a developped time series
+with a reasonably small overhead. But in a developped time series
 information system, formulas of formulas exist and it is possible to
 have a very deep level of formulas made of formulas until one hits the
 ground of stored time series, hence increasing latency, sometimes very
@@ -421,7 +421,7 @@ Writing an autotrophic operator is a viable option if (and only if):
 * the latency of the remote source remains reasonnably low.
 
 Even in the best case, such an operator can have some nasty
-performance caracteristics from the point of view of the remote
+performance characteristics from the point of view of the remote
 source: a new load at arbitrary times that interferes with the load as
 initially designed. Caching formulas made with such operators can help
 smooth out the load and establish good relationships with the upstream
@@ -458,7 +458,7 @@ axis) and `insertion dates` (vertical axis), and their regularities,
 is key to set up a working cache policy.
 
 So let's define immediately the notion of `cache policy`. It is
-caracterized by:
+characterized by:
 
 * an `initial revision date` (or insertion date)
 
@@ -502,7 +502,7 @@ It must be configured so as to:
 
 * permit catching possible updates to the `observed` domain,
 
-* garantee the lossless ingestion of the `predictive` part of the
+* guarantee the lossless ingestion of the `predictive` part of the
   curve.
 
 Now let's observe how the presence of a formula cache affects the
@@ -622,7 +622,7 @@ Python function that will run as a task. Here's an example:
 
    @task
    def hello(task):
-       with.task.capturelogs(std=True):
+       with task.capturelogs(std=True):
            print('Hello')
 
 Let's examine what's there:
