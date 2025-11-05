@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.10.1] - 2025-11-05
+
+### Added
+- doc: comprehensive formula documentation rewrite
+- doc: comprehensive group formula documentation
+- doc: time series and supervision documentation expansion
+- doc: search language enhancements with examples and missing operators
+- doc: formula group API documentation
+
+### Fixed
+- http/doc: cache endpoint documentation format
+
+## [0.10.0] - 2025-08-29
+
 ### Added
 - support for limit parameter in tsio/insertion_dates
 
@@ -13,6 +27,7 @@
 ### Fixed
 - api/set_cache_policy no longer crashes when setting already set series
 - tables updated for tshistory_formula bound groups changes
+- migrate: ensure initial_revdate column not null in cache_policy
 
 ## [0.9.2] - 2025-03-05
 
