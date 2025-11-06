@@ -19,13 +19,12 @@ Table of Contents
 - `Date and Time Semantic Errors`_
 - `Formula Dependencies and Recursion`_
 - `Understanding the Reactive System`_
-- `Summary: Semantic Debugging Checklist`_
 
 Common Semantic Issues
 ----------------------
 
-**The formula works but the results are wrong.** Here are the most
- frequent semantic problems:
+**The formula works but the results are wrong.** 
+    Here are the most frequent semantic problems:
 
 1. **Data Alignment Issues** - Series with different frequencies or date ranges
 2. **Missing Data Propagation** - Holes in data becoming NaNs when series combine
@@ -37,10 +36,10 @@ Common Semantic Issues
 Progressive Debugging Strategy
 ------------------------------
 
-Using the TSView Formula Editor
+Using the Formula Editor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**The TSView formula editor is your primary tool for incremental
+**The formula editor is your primary tool for incremental
 formula construction and debugging.** It provides real-time
 validation, immediate visual feedback, and powerful debugging
 capabilities that make semantic issue detection much easier.
@@ -49,7 +48,7 @@ capabilities that make semantic issue detection much easier.
 
 **Dual Editor Interface**
 
-The TSView editor provides both a text editor with ACE editor
+The formula editor provides both a text editor with ACE editor
 integration for code-based formula editing and a visual tree editor
 for graphical formula construction. Changes in either editor
 automatically update the other in real-time, allowing you to choose
@@ -82,7 +81,7 @@ editor, with separate modes for series and group formula
 types. Protected formulas can be viewed in read-only mode for
 reference without modification risk.
 
-**Incremental Building Workflow in TSView:**
+**Incremental Building Workflow in the formula editor:**
 
 .. code-block:: scheme
 
@@ -129,157 +128,26 @@ reference without modification risk.
    - Spot normalization problems
    - Verify percentage vs ratio calculations
 
-**Common Debugging Patterns in TSView:**
+**Common Debugging Patterns in the formula editor:**
 
 .. code-block:: scheme
 
-    ;; Pattern 1: Data alignment debugging
-    ;; Plot both series to check overlap and frequency
-    (series "daily_sales")      ;; Plot this first
-    (series "monthly_budget")   ;; Add as overlay - see the frequency difference
-
-    ;; Pattern 2: Missing data investigation
+    ;; Pattern 1: Missing data investigation
     (series "sensor_data")                    ;; See the gaps
     (series "sensor_data" #:fill "ffill")    ;; See fill effect immediately
 
-    ;; Pattern 3: Aggregation verification
+    ;; Pattern 2: Aggregation verification
     (resample (series "hourly_data") "D")    ;; Check daily aggregation visually
     (resample (series "hourly_data") "D" #:method "sum")  ;; Compare sum vs mean
 
-    ;; Pattern 4: Rolling operation tuning
+    ;; Pattern 3: Rolling operation tuning
     (rolling (series "noisy_signal") 5)     ;; Too little smoothing?
     (rolling (series "noisy_signal") 20)    ;; Better smoothing
     (rolling (series "noisy_signal") 50)    ;; Too much smoothing?
 
-**Advanced Debugging Workflow:**
 
-**Formula Iteration and Refinement**
-
-The editor's undo/redo system allows you to step through your formula
-development history, making it easy to revert to working versions when
-debugging fails. You can build complexity gradually with immediate
-feedback, experimenting with different approaches without fear of
-losing progress since you can always navigate back to previous
-iterations.
-
-**Parameter Experimentation**
-
-Live parameter tuning lets you adjust rolling window sizes and see
-immediate effects in the plot. You can test different resampling
-frequencies and aggregation methods, experiment with various fill
-methods (ffill, bfill, etc.), and compare results instantly without
-separate evaluation steps. This visual validation makes it easy to
-find optimal parameter values.
-
-**Multi-series Analysis**
-
-The editor supports overlay comparisons where you can plot formula
-results alongside source data for validation (see quickview). You can
-compare with expected patterns or manual calculations, visualize how
-changes affect dependent formulas, and cross-validate your work
-against known good implementations. This comprehensive view helps
-ensure your formulas behave correctly in context.
-
-**Error Diagnosis and Resolution**
-
-ACE editor annotations show exact error locations inline with your
-code, while contextual error messages provide detailed information
-with parser context. Syntax highlighting gives visual cues for proper
-formula structure, and real-time type validation checks operator
-signatures and data types as you work. This multi-layered error
-detection system catches issues early in the development process.
-
-**TSView Editor Workflow Example:**
-
-.. code-block:: python
-
-    # The TSView editor provides a complete debugging environment:
-
-    # 1. Open the formula editor (series or group mode)
-    # 2. Start typing in the text editor or use the tree editor
-    # 3. Editor automatically evaluates after 2-second pause
-    # 4. Results appear in the plot immediately
-    # 5. Any errors appear as annotations in the editor
-    # 6. Use undo/redo to navigate through iterations
-    # 7. Save the formula when satisfied with results
-
-    # Example debugging session:
-    # Start simple
-    (series "temperature")
-    # → Plot appears immediately showing temperature data
-
-    # Add transformation
-    (rolling (series "temperature") 24)
-    # → Plot updates to show 24-hour rolling average
-
-    # Add comparison
-    (sub (series "temperature") (rolling (series "temperature") 24))
-    # → Plot shows temperature deviations from rolling average
-
-    # If error occurs, editor shows inline annotation
-    # Fix syntax and continue - immediate feedback loop
-
-**Editor Integration Benefits:**
-
-**Immediate Feedback Loop**
-
-Visual results appear automatically as you type, error detection
-happens in real-time, and parameter changes are reflected instantly in
-the plot. This immediate feedback significantly accelerates the
-debugging process.
-
-**Dual Interface Advantage**
-
-The text editor serves experienced users who prefer code-based
-editing, while the tree editor provides visual construction for those
-who benefit from graphical interfaces. Both editors stay synchronized
-automatically, allowing you to choose the interface that best fits
-your current workflow or switch between them as needed.
-
-**Production Workflow Integration**
-
-The editor enables thorough formula testing before saving, with direct
-save functionality to the series/group registry. Automatic formula
-validation ensures quality control, while the seamless transition from
-development to production reduces the friction between experimentation
-and deployment.
-
-
-Build and Test Incrementally
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**The golden rule: Start simple, add complexity step by step.**
-
-.. code-block:: python
-
-    # Example: Debugging a complex financial calculation
-    # Final target: Rolling Sharpe ratio
-    target_formula = '''
-    (div (sub (rolling (series "daily_returns") 252 #:method "mean")
-              (series "risk_free_rate"))
-         (rolling (series "daily_returns") 252 #:method "std"))
-    '''
-
-    # Step 1: Test basic data access
-    tsa.eval_formula('(series "daily_returns")')
-    tsa.eval_formula('(series "risk_free_rate")')
-
-    # Step 2: Test individual components
-    mean_returns = tsa.eval_formula('(rolling (series "daily_returns") 252 #:method "mean")')
-    volatility = tsa.eval_formula('(rolling (series "daily_returns") 252 #:method "std")')
-
-    # Step 3: Test intermediate calculations
-    excess_returns = tsa.eval_formula('''
-        (sub (rolling (series "daily_returns") 252 #:method "mean")
-             (series "risk_free_rate"))
-    ''')
-
-    # Step 4: Final calculation
-    sharpe_ratio = tsa.eval_formula(target_formula)
-
-
-Inspect Intermediate Results
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Inspect Intermediate Results with python
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -333,19 +201,19 @@ Series with Different Frequencies
 
 **Solutions:**
 
-.. code-block:: python
+.. code-block:: scheme
 
-    # Solution: Aggregate daily to monthly (downsampling)
-    '(add (resample (series "daily_sales") "M" #:method "sum")
-          (series "monthly_budget"))'
-    # Downsampling is reliable - aggregation works within known boundaries
+    ;; Solution: Aggregate daily to monthly (downsampling)
+    (add (resample (series "daily_sales") "M" #:method "sum")
+          (series "monthly_budget"))
+    ;; Downsampling is reliable - aggregation works within known boundaries
 
-    # ❌ Solution 3: NEVER DO THIS - Calendar approximation is dangerous!
-    '(add (series "daily_sales")
-          (div (series "monthly_budget") 30))'  # Calendars are tricky: NEVER APPROXIMATE THEM!
-    # This fails because months have different lengths (28-31 days)
-    # February gets wrong allocation, leap years break it, etc.
-    # ALWAYS use calendar-preserving operations like resample!
+    ;; ❌ Solution 3: NEVER DO THIS - Calendar approximation is dangerous!
+    (add (series "daily_sales")
+          (div (series "monthly_budget") 30))  ;; Calendars are tricky: NEVER APPROXIMATE THEM!
+    ;; This fails because months have different lengths (28-31 days)
+    ;; February gets wrong allocation, leap years break it, etc.
+    ;; ALWAYS use calendar-preserving operations like resample!
 
 
 Different Date Ranges
@@ -369,7 +237,7 @@ Different Date Ranges
 
     ;; Use priority to create seamless time series
     ;; Old source first, then newer source patches/extends it
-    '(priority (series "bloomberg_prices") (series "reuters_prices"))'
+    (priority (series "bloomberg_prices") (series "reuters_prices"))
 
 
 Date Range Slicing for Optimization
@@ -391,10 +259,10 @@ Slicing can optimize data retrieval and avoid unnecessary overlap:
 Missing Data Propagation
 -------------------------
 
-Understanding Holes and NaN Behavior
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Understanding Holes propagation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Problem**: Holes in upstream data become NaNs when series are combined.
+**Problem**: Holes in upstream data are propagated when series are combined.
 
 .. code-block:: python
 
@@ -402,50 +270,30 @@ Understanding Holes and NaN Behavior
     sensor_a = tsa.eval_formula('(series "sensor_a")')  # Has data Mon-Fri
     sensor_b = tsa.eval_formula('(series "sensor_b")')  # Has data every day
 
-    # When combined, holes in sensor_a become NaNs in the result
+    # When combined, holes in sensor_a become holes in the result
     combined = tsa.eval_formula('(add (series "sensor_a") (series "sensor_b"))')
 
     print(f"Sensor A points: {len(sensor_a)}")  # e.g., 250 (weekdays only)
     print(f"Sensor B points: {len(sensor_b)}")  # e.g., 365 (every day)
-    print(f"Combined points: {len(combined)}")  # 365 points
-    print(f"NaNs in result: {combined.isna().sum()}")  # ~115 (weekends)
+    print(f"Combined points: {len(combined)}")  # 250 points
 
-    # Note: Some operations can create new NaNs:
+    # Note: Some operations can create holes:
     # - div by zero, log of negative values, rolling std with insufficient data
     # But the main challenge is managing holes in upstream series
-
-**Debugging NaN sources:**
-
-.. code-block:: python
-
-    # Trace NaN propagation step by step
-    step1 = tsa.eval_formula('(series "a")')
-    step2 = tsa.eval_formula('(series "b")')
-    step3 = tsa.eval_formula('(add (series "a") (series "b"))')
-
-    print(f"Series A NaNs: {step1.isna().sum()}")
-    print(f"Series B NaNs: {step2.isna().sum()}")
-    print(f"Combined NaNs: {step3.isna().sum()}")
-
-    # Find when both are NaN vs when only one is NaN
-    both_nan = step1.isna() & step2.isna()
-    either_nan = step1.isna() | step2.isna()
-    print(f"Both NaN: {both_nan.sum()}")
-    print(f"Either NaN: {either_nan.sum()}")
 
 **Solutions:**
 
 .. code-block:: scheme
 
     ;; Use fill options strategically
-    '(add (series "a" #:fill "ffill") (series "b" #:fill "ffill"))'
+    (add (series "a" #:fill "ffill") (series "b" #:fill "ffill"))
 
     ;; Use priority for fallback
-    '(priority (add (series "a") (series "b"))
-               (series "backup_calculation"))'
+    (priority (add (series "a") (series "b"))
+               (series "backup_calculation"))
 
-    # Control aggregation NaN handling
-    '(row-mean (series "sensor_1") (series "sensor_2") #:skipna #t)'
+    ;; Control aggregation NaN handling
+    (row-mean (series "sensor_1") (series "sensor_2") #:skipna #t)
 
 Date and Time Semantic Errors
 ------------------------------
@@ -520,37 +368,6 @@ Time Shifting for Business Period Alignment
 Formula Dependencies and Recursion
 -----------------------------------
 
-Circular Dependencies
-~~~~~~~~~~~~~~~~~~~~~
-
-**Problem**: Formula A depends on Formula B which depends on Formula A.
-
-**Warning**: Circular dependencies are NOT automatically detected and
- can cause infinite loops or crashes.
-
-.. code-block:: python
-
-    # Example circular dependency:
-    # 'price_adjusted' depends on 'adjustment_factor'
-    # 'adjustment_factor' depends on 'price_adjusted'
-
-    # Manual check with tsa.depends()
-    deps = tsa.depends('price_adjusted', direct=False)
-    if 'price_adjusted' in deps:
-        print("WARNING: Possible circular dependency!")
-
-    # But this is not foolproof - complex cycles may not be caught
-
-    # Check for circular dependencies
-    if formula_def and 'price_adjusted' in tsa.depends('price_adjusted'):
-        print("CIRCULAR DEPENDENCY DETECTED!")
-        # Investigate dependency chain
-        expanded = tsa.formula('price_adjusted', expanded=True)
-        print(f"Expanded formula: {expanded}")
-
-    # Find what depends on this formula
-    dependents = tsa.depends('price_adjusted', reverse=True)
-    print(f"Series depending on this: {dependents}")
 
 Deep Formula Performance
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -573,9 +390,8 @@ Deep Formula Performance
 **Debugging approach:**
 
 Deep formulas are naturally composed of many simpler formulas, each doing one job well.
-Use TSView's `/tsinfo` interface to navigate the dependency tree and spot where problems occur
+Use `/tsinfo` interface to navigate the dependency tree and spot where problems occur
 (typically bad values or data holes at specific formula levels).
-
 
 
 **Performance Optimization**
@@ -584,33 +400,7 @@ For formulas with performance issues, the Refinery provides a caching system tha
 intermediate results. See :ref:`getting_started/tutorials/advanced:Formulas: when to use a cache/materialized view` for details on setting up cached series.
 
 
-**Using TSView's TSInfo Interface for Formula Analysis**
-
-**The `/tsinfo` URL in TSView provides comprehensive series analysis without additional tools:**
-
-The TSInfo UI is accessible at `/tsinfo?name=series_name` and provides immediate visual insight into formula structure and data quality issues:
-
-**Key TSInfo Interface Features:**
-
-**1. Formula Structure Visualization**
-- **Formula depth display**: Shows the exact dependency depth
-- **Multi-level formula expansion**: Use the depth selector to view formulas at different expansion levels
-- **Formula history tracking**: See how formulas evolved over time
-- **Source system identification**: Know where data originates
-
-**2. Data Quality and Visualization**
-- **Statistics panel**: Automatic data quality metrics (min, max, mean, std, etc.)
-- **Inferred frequency toggle**: Switch between line plot and points to highlight data holes
-- **Horizon widget**: Navigate through time slices of long series efficiently
-- **History mode**: Compare multiple data revisions on the same plot
-- **Point evolution**: In history mode, see how specific data points changed over time
-
-**3. Monitoring and Audit**
-- **Cache status**: See if formulas are cached and cache policies
-- **Update logs**: Full history of insertions (primary series only)
-- **Metadata tracking**: Both system and user metadata with full history
-
-**4. Interactive Formula Analysis**
+**Using TSInfo Interface for Formula Analysis**
 
 For a deep formula:
 
@@ -620,19 +410,6 @@ For a deep formula:
 4. Use the Cache tab to see cache status and policies
 5. Enable "History mode" to compare revisions and debug temporal issues
 6. Use the formula depth selector to examine different expansion levels
-
-**Formula Tree Walking with Tsinfo:**
-
-Tsinfo (Time Series Info) provides a comprehensive view of any series, including formulas.
-For deep formulas, you can systematically analyze the dependency tree:
-
-1. Start at the top-level formula
-2. Note the maximum depth shown
-3. Use the depth selector to examine each level - this shows the formula partially expanded
-4. Look for cache information to identify performance bottlenecks
-5. Check statistics for data quality issues at each level
-6. Use history mode to identify when problems started appearing
-
 
 
 Understanding the Reactive System
@@ -694,51 +471,3 @@ Historical data becomes immutable once "settled":
     year_end = tsa.get('financial_metric', revision_date='2023-12-31')
     # This result is now permanent - perfect for compliance
 
-**Debugging Implications:**
-
-- Recent data may change as new updates arrive
-- Use fixed dates instead of `(today)` for reproducible formulas
-- Historical debugging with `revision_date` works best for settled past data
-
-
-
-
-Summary: Semantic Debugging Checklist
---------------------------------------
-
-When your formula produces unexpected results, work through this checklist:
-
-**1. Data Inspection**
-   - Check frequency, date ranges, timezone of all input series
-   - Verify data types and value ranges
-   - Count and locate NaN values
-
-**2. Progressive Testing**
-   - Build formula incrementally from simple to complex
-   - Test each intermediate step
-   - Compare with manual calculations
-
-**3. Alignment Verification**
-   - Ensure series align temporally as expected
-   - Check for frequency mismatches
-   - Verify timezone consistency
-
-**4. Aggregation Logic**
-   - Confirm row-wise vs time-wise operations
-   - Verify weighting schemes
-   - Test boundary conditions (start/end of periods)
-
-**5. Performance Analysis**
-   - Monitor execution time and memory usage
-   - Identify expensive operations
-   - Optimize data loading and caching
-
-**6. Regression Testing**
-   - Create test cases with known expected outputs
-   - Test edge cases and boundary conditions
-   - Set up automated validation for critical formulas
-
-The key insight: **semantic errors are often about data behavior, not
-code logic**. Understanding your data's temporal patterns, missing
-value distributions, and business context is crucial for effective
-formula debugging.
