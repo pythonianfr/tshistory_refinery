@@ -284,6 +284,11 @@ Series can have metadata attached to help document and organize them:
      (pd.Timestamp('2023-01-03 09:00:00+00:00'),
       {'unit': 'fahrenheit', 'status': 'active'})]
 
+Beyond managing metadata for individual series, you can also discover what metadata
+keys are used across all series in your refinery instance:
+
+.. code:: python
+
     >>> # list all metadata keys in use
     >>> tsa.list_metadata_keys()
     ['calibrated', 'frequency', 'location', 'sensor_type', 'status', 'unit']
@@ -292,32 +297,62 @@ Replacing a series entirely
 ----------------------------
 
 In specific circumstances, you may need to completely replace a series - for
-example, when correcting historical data or resetting a series. The ``replace``
+example, when you are working with forecast data and you need only the last updated forecast. The ``replace``
 method provides this capability:
 
 .. code:: python
 
     >>> # create initial series
     >>> series = pd.Series([10, 20, 30],
-    ...                    pd.date_range(start=pd.Timestamp(2017, 1, 1),
+    ...                    pd.date_range(start=pd.Timestamp(2025, 1, 2),
     ...                                  freq='D', periods=3))
-    >>> tsa.update('stock_levels', series, 'operator@example.com')
+    >>> tsa.update('stock_levels_forecast', series, 'operator@example.com', insertion_date=pd.Timestamp(2025,1,1))
 
-    >>> # later, replace the entire series
-    >>> new_series = pd.Series([100, 200, 300, 400],
-    ...                        pd.date_range(start=pd.Timestamp(2017, 1, 1),
-    ...                                      freq='D', periods=4))
-    >>> tsa.replace('stock_levels', new_series, 'admin@example.com')
+    >>> # later, replace the entire series with a new forecast
+    >>> new_series = pd.Series([70, 50, 60],
+    ...                        pd.date_range(start=pd.Timestamp(2025, 1, 3),
+    ...                                      freq='D', periods=3))
+    >>> tsa.replace('stock_levels_forecast', new_series, 'admin@example.com', insertion_date=pd.Timestamp(2025,1,2))
 
-    >>> tsa.get('stock_levels')
-    2017-01-01    100.0
-    2017-01-02    200.0
-    2017-01-03    300.0
-    2017-01-04    400.0
-    Name: stock_levels, dtype: float64
+    >>> tsa.get('stock_levels_forecast')
+    2025-01-03    70.0
+    2025-01-04    50.0
+    2025-01-05    60.0
+    Freq: D, Name: stock_levels_forecast, dtype: float64
 
 The ``replace`` method completely overwrites the series with new data,
 removing any points not present in the new series.
+
+.. note::
+
+    It's important to note that ``replace`` preserves the complete version history.
+    The replace operation appears as a new insertion date in the series history:
+
+    .. code:: python
+
+        >>> tsa.insertion_dates('stock_levels_forecast')
+        [pd.Timestamp('2025-01-01 00:00:00+0000', tz='UTC'),  # original update
+        pd.Timestamp('2025-01-02 00:00:00+0000', tz='UTC')]  # replace operation
+
+        >>> # history shows both the original and replaced versions
+        >>> history = tsa.history('stock_levels_forecast')
+        >>> for idate, series in history.items():
+        ...     print(f'insertion date: {idate}')
+        ...     print(series)
+        ...
+        insertion date: 2025-01-01 00:00:00+00:00
+        2025-01-02    10.0
+        2025-01-03    20.0
+        2025-01-04    30.0
+        Name: stock_levels_forecast, dtype: float64
+        insertion date: 2025-01-02 00:00:00+00:00
+        2025-01-03    70.0
+        2025-01-04    50.0
+        2025-01-05    60.0
+        Name: stock_levels_forecast, dtype: float64
+
+    This means you can always retrieve previous states of the series before the
+    replace operation using ``revision_date``.
 
 Checking series existence
 --------------------------
@@ -363,12 +398,15 @@ To find series in the database:
 
     >>> # find all series
     >>> tsa.find()
-    ['my_series', 'temperature', 'calculated_avg']
+    ['my_series', 'temperature_fr', 'calculated_avg', 'temperature_paris']
 
     >>> # find with metadata
     >>> results = tsa.find('(by.name "temperature")', meta=True)
+    >>> results
+    ['temperature_fr', 'temperature_paris']
+    >>> # access directly the metadata of found series
     >>> results[0].meta
-    {'unit': 'celsius', 'location': 'room'}
+    {'unit': 'celsius', 'location': 'fr'}
 
 See the :ref:`search_language` documentation for comprehensive query capabilities.
 
@@ -378,7 +416,7 @@ from all sources in a slightly cumbersome structure:
 .. code:: python
 
     >>> tsa.catalog()
-    {'local': [('my_series', 'primary'), ('temperature', 'primary')],
+    {'local': [('my_series', 'primary'), ('temperature_fr', 'primary'), ('temperature_paris', 'primary')],
      'remote': [('calculated_avg', 'formula')]}
 
 The ``find()`` API is generally preferred for its flexibility.
@@ -394,7 +432,7 @@ To get detailed information about a series:
     'primary'
 
     >>> tsa.interval('my_series')
-    (pd.Timestamp('2017-01-01'), pd.Timestamp('2017-01-05'))
+    (pd.Timestamp('2025-01-01'), pd.Timestamp('2025-01-05'))
 
     >>> tsa.source('my_series')
     'local'
@@ -402,6 +440,19 @@ To get detailed information about a series:
     >>> # get inferred frequency
     >>> tsa.inferred_freq('my_series')
     'D'  # daily frequency
+
+    >>> # get various informations with internal_metadata.
+    >>> # tzawareness, value type (float, string) and supervision_status
+    >>> tsa.internal_metadata('my_series')
+    {'left': '2025-01-01T00:00:00',
+    'right': '2025-01-05T00:00:00',
+    'tzaware': False,
+    'tablename': 'my_series',
+    'index_type': 'datetime64[ns]',
+    'value_type': 'float64',
+    'index_dtype': '<M8[ns]',
+    'value_dtype': '<f8',
+    'supervision_status': 'unsupervised'}
 
 Working with logs
 -----------------
