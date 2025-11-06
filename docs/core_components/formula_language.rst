@@ -291,16 +291,22 @@ Three main use cases:
 
 1. **Fix badly indexed series** - When timestamps are wrong by a consistent offset
 
+.. code-block:: scheme
+
    ;; Series was recorded in wrong timezone, shift by 5 hours
    (time-shifted (series "misindexed_data") #:hours 5)
 
 2. **Business period alignment** - e.g., gas day (06:00 to 06:00)
+
+.. code-block:: scheme
 
    ;; Shift gas flow data so gas day aligns with calendar day
    (time-shifted (series "gas_flow") #:hours -6)
    ;; Now midnight values represent start of gas day
 
 3. **"What if" scenarios** - Exploring hypothetical time shifts
+
+.. code-block:: scheme
 
    ;; What if maintenance was delayed by 2 days?
    (time-shifted (series "maintenance_schedule") #:days 2)

@@ -32,27 +32,32 @@ Overview
 
 To use it properly one has to understand the following concepts:
 
-`operation` A python function decorated with the `task` decorator. The
+`operation` 
+    A python function decorated with the `task` decorator. The
     function has a single `task` parameter that allows to communicate
     with the system (for the purposes of input and output management,
     and log capture). It is defined within a `domain` and on a
     specific `host`.
 
-`task` A concrete execution of an operation. Also, name of the
+`task` 
+    A concrete execution of an operation. Also, name of the
     decorator that indicates an `operation`. The task can indicate its
     state and be aborted if needed. It can provide access to the
     captured logs, input and output.
 
-`worker` A python process spawned by a `monitor`, that will execute
+`worker` 
+    A python process spawned by a `monitor`, that will execute
     `tasks`. It is always associated with a `domain` on a specific
     `host`.
 
-`domain` A label associated with `operations`, `tasks` and `workers`,
+`domain` 
+    A label associated with `operations`, `tasks` and `workers`,
     which can be used to map operations to virtual environments or
     just help oprganize a logical separation of operations (and the
     associated pools of workers).
 
-`monitor` A python process which is responsible for the management of
+`monitor` 
+    A python process which is responsible for the management of
     workers (start, stop and abort), whose precise amount is
     configurable, within a `domain`.
 

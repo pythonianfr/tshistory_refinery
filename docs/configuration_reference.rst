@@ -236,7 +236,7 @@ The ``[dashboard]`` section defines URLs for external dashboard services and int
 .. code:: ini
 
    [dashboard]
-   instance_name = external_dashboard_url
+   refinery = external_dashboard_url
    dashboards = external_dashboards_service_url
 
 **Examples:**

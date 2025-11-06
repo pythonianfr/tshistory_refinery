@@ -133,7 +133,7 @@ Then, the second part:
 .. image:: eflower-dev-private-2.png
 
 The `client authentication flow` flag is of utmost importance, since
-it indicates this is a confidential or `confidential` client.
+it indicates this is a confidential or `public` client.
 
 Now we have to setup a number of uris:
 
