@@ -229,7 +229,12 @@ default have the `guest` status. Guests are unknown from the Refinery
 and can't see nor do anything at all.
 
 So one needs to assign users to relevant roles: `admin`, `rw` or
-`ro`. Two command line operations are provided to manage this:
+`ro`. 
+
+Using the command line
+......................
+
+Two command line operations are provided to manage this:
 
 * tsh list-users-roles
 
@@ -258,8 +263,11 @@ Here's how it works.
    rw → ['celeste@timeseries.fr']
 
 
+Using the settings section
+..........................
+
+A web ui in the `settings` section is also provided to help perform these operations. 
+
 .. note::
 
-   A web ui in the `settings` section will also be provided in an
-   upcoming release to help perform these operations. The initial
-   `admin` role will still have to be set up through the command line.
+   The initial `admin` role will still have to be set up through the command line.

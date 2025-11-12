@@ -275,7 +275,7 @@ The excel addin allows to resample the data when pulling them with the
 option ``(agg = <method>)`` where the method can be ``mean``,
 ``sum``,\ ``max``, ``min``.
 
-The resampling algorithm uses the dates in the left margin as intervals
+The resampling algorithm uses the dates given by the user in the left margin as intervals
 for the resampling wich will led to an empty cell at the end.
 
 ========== ==============

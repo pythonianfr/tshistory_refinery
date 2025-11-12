@@ -46,6 +46,20 @@ Your First Search
    with meta=True, get populated.
 
 
+.. warning::
+
+   By default, ``find()`` returns **only timezone-aware series**. If you need to search for timezone-naive series, you must explicitly use the ``by.not`` operator combined with ``by.tzaware``:
+
+   .. code-block:: python
+
+       # find only timezone-naive series
+       naive_series = tsa.find('(by.not (by.tzaware))')
+
+       # combine with other conditions to find naive series
+       naive_temp = tsa.find('(by.and (by.name "temperature") (by.not (by.tzaware)))')
+
+
+
 More find API options
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -93,7 +107,7 @@ instead of series.
 
 .. note::
 
-   To create actual groups (DataFrames) from search results, you have two approaches:
+   To create actual groups (DataFrames) from **series** search results, you have two approaches:
    
    .. code-block:: python
    
