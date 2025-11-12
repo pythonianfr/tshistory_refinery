@@ -31,12 +31,12 @@ Here's how creating a primary group looks like:
  tsa = timeseries()
 
  group_data = pd.DataFrame({
-     'temperature': [20, 21, 22],
-     'pressure': [1013, 1014, 1015],
-     'humidity': [60, 65, 70]
- }, index=pd.date_range('2025-01-01', periods=3, freq='D'))
+     'low': [17.0, 21.6, 18.2],
+     'mid': [20.5, 22.1, 23.4],
+     'high': [21.3, 22.6, 24.9]
+ }, index=pd.date_range('2025-01-01', periods=3, freq='M'))
 
- tsa.group_replace('weather_station_fr', group_data, 'operator')
+ tsa.group_update('subsidiary1.revenues.fcst', group_data, 'operator')
 
 .. note::
 
@@ -75,7 +75,7 @@ operator:
 
 .. code:: scheme
 
-    (group "weather_station_fr")
+    (group "subsidiary1.revenues.fcst")
 
 **group-add**
 
@@ -84,10 +84,10 @@ have compatible indexes:
 
 .. code:: scheme
 
-    ;; add weather data from multiple stations
-    (group-add (group "station_paris")
-               (group "station_lyon")
-               (group "station_marseille"))
+    ;; obtain low, mid and high revenue scenarios for a company with 3 subsidiaries
+    (group-add (group "subsidiary1.revenues.fcst")
+               (group "subsidiary2.revenues.fcst")
+               (group "subsidiary3.revenues.fcst"))
 
 This operator aligns the groups by their time index and adds
 corresponding columns.
@@ -114,9 +114,9 @@ scenarios:
 
     ;; create scenarios from individual series
     (group-from-series
-        (bind "optimistic" (series "forecast_high"))
-        (bind "baseline" (series "forecast_mid"))
-        (bind "pessimistic" (series "forecast_low")))
+        (bind "high" (series "forecast_high"))
+        (bind "mid" (series "forecast_mid"))
+        (bind "low" (series "forecast_low")))
 
 Each ``bind`` creates a named column in the resulting group. This is
 particularly useful for creating scenario-based groups from individual
@@ -130,21 +130,21 @@ Register a group formula using the API:
 .. code:: python
 
     >>> tsa.register_group_formula(
-    ...     'eu_temperatures',
-    ...     '(group-add (group "france_temps") '
-    ...     '           (group "germany_temps") '
-    ...     '           (group "spain_temps"))'
+    ...     'eu_production_mwh',
+    ...     '(group-add (group "france_production_mwh") '
+    ...     '           (group "germany_production_mwh") '
+    ...     '           (group "spain_production_mwh"))'
     ... )
 
 Once registered, use it like any other group:
 
 .. code:: python
 
-    >>> df = tsa.group_get('eu_temperatures')
+    >>> df = tsa.group_get('eu_production_mwh')
     >>> print(df.head())
                           low    mid    high
-    2024-01-01 00:00:00  48.5   52.2   55.8
-    2024-01-02 00:00:00  49.1   52.7   56.4
+    2025-01-01 00:00:00  48.5   52.2   55.8
+    2025-01-02 00:00:00  49.1   52.7   56.4
 
 Group Formula Metadata
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -153,10 +153,10 @@ Group formulas can have metadata like primary groups:
 
 .. code:: python
 
-    >>> tsa.update_group_metadata('eu_temperatures', {
-    ...     'unit': 'celsius',
+    >>> tsa.update_group_metadata('eu_production_mwh', {
+    ...     'unit': 'mwh',
     ...     'frequency': 'daily',
-    ...     'scenarios': 'temperature forecasts'
+    ...     'scenarios': 'energy production forecasts'
     ... })
 
 Formula-Specific Methods
@@ -167,12 +167,12 @@ Several methods are specific to group formulas:
 .. code:: python
 
     >>> # get the formula definition
-    >>> formula = tsa.group_formula('eu_temperatures')
+    >>> formula = tsa.group_formula('eu_production_mwh')
     >>> print(formula)
-    '(group-add (group "france_temps") ...)'
+    '(group-add (group "france_production_mwh") ...)'
 
     >>> # get expanded formula (resolving nested formulas)
-    >>> expanded = tsa.group_formula('eu_temperatures', expanded=True)
+    >>> expanded = tsa.group_formula('eu_production_mwh', expanded=True)
 
     >>> # test a formula without registering
     >>> result = tsa.group_eval_formula(
