@@ -6,6 +6,12 @@ helps you track the health and update frequency of your most important
 time series. It provides a web-based tool to monitor data
 freshness and identify potential issues with data pipelines.
 
+.. note::
+
+   This is an essential feature of the Timeseries Refinery. It is only accessible within the pro version.
+   If interested, please visit: https://timeseries.pythonian.fr/#ouroffer. 
+
+
 Overview
 --------
 
@@ -20,6 +26,10 @@ Tswatch continuously monitors your critical time series and provides:
 The system automatically calculates expected update frequencies based
 on historical patterns and alerts you when series deviate from their
 normal update schedule.
+
+
+.. image:: tswatch.png
+
 
 Adding Series to Monitor
 ------------------------

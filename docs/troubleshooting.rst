@@ -94,7 +94,8 @@ If you encounter issues not covered here:
 
 1. Check the server logs for detailed error messages
 2. Visit the project documentation at https://refinery.docs.pythonian.fr
-3. Contact support with:
+3. Contact support here https://heptapod.host/groups/pythonian/timeseries-refinery/-/issues, with:
+
    * Error message details
    * System configuration
    * Steps to reproduce the issue

@@ -44,6 +44,10 @@ formula construction and debugging.** It provides real-time
 validation, immediate visual feedback, and powerful debugging
 capabilities that make semantic issue detection much easier.
 
+
+.. image:: formula_editor.png
+
+
 **Key Capabilities:**
 
 **Dual Editor Interface**

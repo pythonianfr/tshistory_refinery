@@ -19,6 +19,9 @@ the same time index and are managed as a unit. They are particularly
 useful for handling scenarized time series or multivariate time series
 data where multiple series need to be kept in sync.
 
+
+.. image:: groups.png
+
 They come in two flavors: primary groups (stored) and formula groups.
 
 Here's how creating a primary group looks like:

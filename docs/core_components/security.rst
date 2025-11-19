@@ -266,7 +266,11 @@ Here's how it works.
 Using the settings section
 ..........................
 
-A web ui in the `settings` section is also provided to help perform these operations. 
+A web ui in the `settings` section is also provided to help perform these operations :
+
+
+.. image:: settings.png
+
 
 .. note::
 
