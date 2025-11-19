@@ -14,5 +14,6 @@ Core Components
    rework
    tswatch
    exceladdin
-   security
    dashboard
+   security
+

@@ -1,9 +1,8 @@
 Dashboards
 ==========
 
-Tshistory Dashboard is a comprehensive web-based platform for creating
-sophisticated, interactive visualizations from time
-series data. It features an extensive browser-based interface that
+The dashboards are sophisticated, interactive visualizations from time
+series data. It features a browser-based interface that
 enables users to build complex analytical dashboards without
 programming knowledge, while still supporting advanced configuration
 options for power users.
@@ -14,18 +13,31 @@ options for power users.
    If interested, please visit: https://timeseries.pythonian.fr/#ouroffer. 
 
 
-Configuration
--------------
+.. image:: dashboard_homepage.png
 
-The dashboards can be fully integrated to the app, or can run as a standalone app.
 
-In the case of a standalone app, a "dashboard" section is expected in the tshistory.cfg file: 
+Dashboard Editor
+----------------
 
-.. code:: ini
+The dashboard editor provides a comprehensive visual interface for
+creating or modifying real-time dashboards.
 
-   [dashboard]
-   refinery = https://refinery.example.com/
-   dashboards = https://dashboard.example.com/
+Creating a New Dashboard
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: dashboard_editor.png
+
+
+1. **Access the Dashboard Editor**: From the dashboard's homepage, or the "dashboard" dropdown at the top right of the page.
+2. **General information**: Define the title, the segment (of the future link of your dashboard) and a short description.
+3. **Menu depth**: Set up the depth of your menu tree. You'll be able to increase it later if you reorganize your page.
+4. **Structure**: Define level and section names. Organize your figures in the right sections. A figure catalog is available to choose existing figures.
+5. **Save**: Save your dashboard and follow the link given in the "General" section to view it. You can share this link with your team!
+
+
+.. warning::
+
+    Mandatory fields are highlighted with red dots appearing in the input field. You cannot save your dashboard if mandatory fields are empty.
 
 
 
@@ -146,22 +158,6 @@ data exports, and when exact numerical values are more important than visual tre
 .. image:: table.png
    :align: center
 
-Group
-~~~~~
-The group figure is designed to visualize "group" data, which represents multiple related scenarios
-or ensemble forecasts. It displays all members of a group simultaneously, allowing comparison
-between different scenarios or model runs.
-
-**Common use cases:**
-    - Weather ensemble forecasts (multiple model runs)
-    - Monte Carlo simulation results
-    - Scenario planning (best case, worst case, expected)
-    - Uncertainty quantification in predictions
-
-.. image:: group.png
-   :width: 600px
-   :align: center
-
 Scatter
 ~~~~~~~
 The scatter plot is essential for analyzing correlations and relationships between two variables.
@@ -240,6 +236,24 @@ particularly useful for tracking changes and understanding data evolution.
    :width: 600px
    :align: center
 
+
+Group
+~~~~~
+The group figure is designed to visualize "group" data, which represents multiple related scenarios
+or ensemble forecasts. It displays all members of a group simultaneously, allowing comparison
+between different scenarios or model runs.
+
+**Common use cases:**
+    - Weather ensemble forecasts (multiple model runs)
+    - Monte Carlo simulation results
+    - Scenario planning (best case, worst case, expected)
+    - Uncertainty quantification in predictions
+
+.. image:: group.png
+   :width: 600px
+   :align: center
+
+
 .. note::
 
     Keep in mind that new figure types can be easily added.
@@ -264,30 +278,6 @@ capabilities:
     - Embedded preview functionality
 
 
-Dashboard Editor
-----------------
-
-The dashboard editor provides a comprehensive visual interface for
-creating or modifying real-time dashboards.
-
-Creating a New Dashboard
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. image:: dashboard_editor.png
-
-
-1. **Access the Dashboard Editor**: From the dashboard's homepage, or the "dashboard" dropdown at the top right of the page.
-2. **General information**: Define the title, the segment (of the future link of your dashboard) and a short description.
-3. **Menu depth**: Set up the depth of your menu tree. You'll be able to increase it later if you reorganize your page.
-4. **Structure**: Define level and section names. Organize your figures in the right sections. A figure catalog is available to choose existing figures.
-5. **Save**: Save your dashboard and follow the link given in the "General" section to view it. You can share this link with your team!
-
-
-.. warning::
-
-    Mandatory fields are highlighted with red dots appearing in the input field. You cannot save your dashboard if mandatory fields are empty.
-
-
 Legacy CSV Configuration Support
 ---------------------------------
 
@@ -303,3 +293,20 @@ Dashboard maintains support for CSV-based configuration for:
    A Python client will be available in a next version of the tool.
    This client will allow users to create, modify or delete figures and dashboards programmatically.
    It will ease the *automated dashboard generation*.
+
+
+Access
+------
+
+The dashboards are accessible from the menu. 
+By default, there are fully integrated to the app (under the segment `/dashboards`).
+
+If needed, it can run as a standalone app. 
+It might be useful to have separated domains if user access are different between refinery and dashboard.
+In this case, a "dashboard" section is expected in the tshistory.cfg file: 
+
+.. code:: ini
+
+   [dashboard]
+   refinery = https://refinery.example.com/
+   dashboards = https://dashboard.example.com/
