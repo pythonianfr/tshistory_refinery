@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from sqlhelp.pgapi import pgdb
+
 from tshistory.migrate import (
     create_revision_metadata_for_ns,
     do_cleanup_kvstore,
@@ -32,7 +34,7 @@ class Migrator(_Migrator):
 
 
 @version('tshistory-refinery', '0.10.0')
-def migrate_0100(engine, namespace, interactive):
+def migrate_0100(engine: pgdb, namespace: str, interactive: bool) -> None:
     migrate_rework_events_to_task_events(engine, namespace, interactive)
     do_cleanup_kvstore(engine, f'{namespace}-cache', interactive)
     cleanup_cache_group_artifacts(engine, namespace, interactive)
@@ -41,7 +43,7 @@ def migrate_0100(engine, namespace, interactive):
     migrate_drop_ready_column(engine, namespace, interactive)
 
 
-def migrate_rework_events_to_task_events(engine, namespace, interactive):
+def migrate_rework_events_to_task_events(engine: pgdb, namespace: str, interactive: bool) -> None:
     with engine.begin() as cn:
         # check if already migrated
         task_events_exists = cn.execute(
@@ -72,12 +74,12 @@ def migrate_rework_events_to_task_events(engine, namespace, interactive):
         cn.execute(sql, _binary=False)
 
 
-def migrate_metadata_integrity(engine, namespace, interactive):
+def migrate_metadata_integrity(engine: pgdb, namespace: str, interactive: bool) -> None:
     # Apply metadata integrity migration to cache namespace (series only)
     do_enforce_series_metadata_integrity(engine, f'{namespace}-cache', interactive)
 
 
-def cleanup_cache_group_artifacts(engine, namespace, interactive):
+def cleanup_cache_group_artifacts(engine: pgdb, namespace: str, interactive: bool) -> None:
     """Clean up group-related schemas and tables from cache namespace"""
     with engine.begin() as cn:
         for schema in (f'{namespace}-cache.group', f'{namespace}-cache.group-kvstore'):
@@ -87,7 +89,7 @@ def cleanup_cache_group_artifacts(engine, namespace, interactive):
             cn.execute(f'drop table if exists "{namespace}-cache".{table} cascade')
 
 
-def migrate_fix_refinery_indexes(engine, namespace, interactive):
+def migrate_fix_refinery_indexes(engine: pgdb, namespace: str, interactive: bool) -> None:
     """Fix refinery-specific cache table indexes to use explicit names"""
     refinery_path = Path(__file__).parent
 
@@ -106,7 +108,7 @@ def migrate_fix_refinery_indexes(engine, namespace, interactive):
     do_fix_indexes(engine, f'{namespace}-cache', interactive, cache_indexes)
 
 
-def migrate_drop_ready_column(engine, namespace, interactive):
+def migrate_drop_ready_column(engine: pgdb, namespace: str, interactive: bool) -> None:
     with engine.begin() as cn:
         cn.execute(
             f'alter table "{namespace}".cache_policy '
@@ -140,7 +142,7 @@ def migrate_drop_ready_column(engine, namespace, interactive):
 
 
 @version('tshistory-refinery', '0.9.2')
-def migrate_rework_schema_interval(engine, namespace, interactive):
+def migrate_rework_schema_interval(engine: pgdb, namespace: str, interactive: bool) -> None:
     # rework schema
     with engine.begin() as cn:
         cn.execute(
@@ -192,7 +194,7 @@ def migrate_rework_schema_interval(engine, namespace, interactive):
 
 
 @version('tshistory-refinery', '0.9.1')
-def migrate_drop_ready(engine, namespace, interactive):
+def migrate_drop_ready(engine: pgdb, namespace: str, interactive: bool) -> None:
     sql = (
         f'alter table "{namespace}".cache_policy_series '
         f'drop column if exists ready'
@@ -202,7 +204,7 @@ def migrate_drop_ready(engine, namespace, interactive):
 
 
 @version('tshistory-refinery', '0.9.0')
-def migrate_revision_table(engine, namespace, interactive):
+def migrate_revision_table(engine: pgdb, namespace: str, interactive: bool) -> None:
     from tshistory.migrate import migrate_add_diffstart_diffend
 
     migrate_add_diffstart_diffend(engine, f'{namespace}-cache', interactive)
