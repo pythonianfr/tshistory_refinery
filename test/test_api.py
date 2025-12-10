@@ -1243,6 +1243,6 @@ def test_refresh_series_policy_now(engine, tsa):
         ['api-refresh-now']
     )
 
-    with pytest.raises(AttributeError) as err:
-        tsa.refresh_series_policy_now('api-policy-refresh-now')
-    assert err.value.args[0] == "'executor' object has no attribute 'begin'"
+    tid = tsa.refresh_series_policy_now('api-policy-refresh-now')
+    assert isinstance(tid, int)
+    assert tid > 0

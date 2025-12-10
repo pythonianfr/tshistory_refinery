@@ -177,10 +177,9 @@ def delete_cache(self, seriesname: str):
 
 @extend(mainsource)
 def refresh_series_policy_now(self, policyname: str):
-    with self.engine.begin() as cn:
-        return rapi.schedule(
-            cn,
-            'refresh_formula_cache_now',
-            domain='timeseries',
-            inputdata={'policy': policyname}
-        ).tid
+    return rapi.schedule(
+        self.engine,
+        'refresh_formula_cache_now',
+        domain='timeseries',
+        inputdata={'policy': policyname}
+    ).tid
