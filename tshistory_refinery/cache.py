@@ -500,10 +500,6 @@ def refresh_series(cn, tsa, name, final_revdate=None):
                 if revdate == initial_revdate:
                     continue
 
-            if not idx and not exists:
-                # cache creation: first revision was created before
-                continue
-
             from_value_date = eval_moment(
                 policy['look_before'],
                 {'now': revdate}

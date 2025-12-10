@@ -2177,10 +2177,10 @@ def test_second_insertion_not_skipped(engine, tsa):
 
     cache_idates = tsa.insertion_dates('formula-second-insertion')
 
-    # bug on empty cache: missing 2025-01-01 08:00:00
-    buggy_idates = [
+    expected_idates = [
         pd.Timestamp('2025-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2025-01-01 08:00:00+0000', tz='UTC'),
         pd.Timestamp('2025-01-02 08:00:00+0000', tz='UTC'),
     ]
 
-    assert cache_idates == buggy_idates
+    assert cache_idates == expected_idates
