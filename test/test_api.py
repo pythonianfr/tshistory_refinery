@@ -1209,3 +1209,40 @@ def test_insertion_dates_vs_cache(tsa):
 
     # our poisoned middle cache shows up there
     assert len(refresh_idates) == 1
+
+
+def test_refresh_series_policy_now(engine, tsa):
+    tsa.update(
+        'ground-api-refresh-now',
+        pd.Series(
+            range(3),
+            index=pd.date_range(
+                pd.Timestamp('2022-1-1'),
+                freq='d',
+                periods=3
+            )
+        ),
+        'Babar',
+        insertion_date=pd.Timestamp('2022-1-1', tz='UTC')
+    )
+    tsa.register_formula(
+        'api-refresh-now',
+        '(series "ground-api-refresh-now")'
+    )
+
+    tsa.new_cache_policy(
+        'api-policy-refresh-now',
+        initial_revdate='(date "2022-1-1")',
+        look_before='(shifted now #:days -10)',
+        look_after='(shifted now #:days 10)',
+        revdate_rule='0 0 * * *',
+        schedule_rule='0 8-18 * * *'
+    )
+    tsa.set_cache_policy(
+        'api-policy-refresh-now',
+        ['api-refresh-now']
+    )
+
+    with pytest.raises(AttributeError) as err:
+        tsa.refresh_series_policy_now('api-policy-refresh-now')
+    assert err.value.args[0] == "'executor' object has no attribute 'begin'"
