@@ -422,6 +422,11 @@ def refresh_series(cn, tsa, name, final_revdate=None):
     tsh = tsa.tsh
     policy = series_policy(cn, name, tsh.namespace)
 
+    print(
+        f'cache policy: revdate_rule={policy["revdate_rule"]}, '
+        f'look_before={policy["look_before"]}, look_after={policy["look_after"]}'
+    )
+
     # now, prepare the formula
     formula = tsa.formula(name)
 
@@ -508,6 +513,7 @@ def refresh_series(cn, tsa, name, final_revdate=None):
                 policy['look_after'],
                 {'now': revdate}
             )
+            print(f'{revdate}: value window [{from_value_date}, {to_value_date}]')
 
             ts = tsa.eval_formula(
                 formula,
