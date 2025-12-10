@@ -2124,3 +2124,63 @@ def test_cache_slice(tsa):
         tsa.get(formula_name),
         tsa.get(formula_name, nocache=True)
     )
+
+
+def test_second_insertion_not_skipped(engine, tsa):
+    tsh = tsa.tsh
+
+    with engine.begin() as cn:
+        cn.execute(f'delete from "{tsh.namespace}".cache_policy')
+
+    for day in [1, 2, 3]:
+        for hour in [0, 8]:
+            ts = pd.Series(
+                [day + hour/10] * 3,
+                index=pd.date_range(
+                    utcdt(2025, 1, day),
+                    freq='d',
+                    periods=3
+                )
+            )
+            tsa.update(
+                'ground-second-insertion',
+                ts,
+                'Babar',
+                insertion_date=pd.Timestamp(f'2025-1-{day} {hour:02d}:00', tz='utc')
+            )
+
+    tsa.register_formula(
+        'formula-second-insertion',
+        '(series "ground-second-insertion")'
+    )
+
+    tsa.new_cache_policy(
+        'policy-second-insertion',
+        initial_revdate='(date "2025-1-1")',
+        look_before='(shifted now #:days -1)',
+        look_after='(shifted now #:days 1)',
+        revdate_rule='0 8 * * *',
+        schedule_rule='0 8 * * *'
+    )
+    tsa.set_cache_policy(
+        'policy-second-insertion',
+        ['formula-second-insertion']
+    )
+
+    with engine.begin() as cn:
+        cache.refresh_series(
+            cn,
+            tsa,
+            'formula-second-insertion',
+            final_revdate=pd.Timestamp('2025-1-3', tz='UTC')
+        )
+
+    cache_idates = tsa.insertion_dates('formula-second-insertion')
+
+    # bug on empty cache: missing 2025-01-01 08:00:00
+    buggy_idates = [
+        pd.Timestamp('2025-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2025-01-02 08:00:00+0000', tz='UTC'),
+    ]
+
+    assert cache_idates == buggy_idates

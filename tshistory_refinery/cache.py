@@ -430,6 +430,7 @@ def refresh_series(cn, tsa, name, final_revdate=None):
         if exists:
             cache_idates = tsh.cache.insertion_dates(cn, name)
             cached_last_idate = cache_idates[-1]
+            # imagine an initial_revdate based on (today), which is sliding
             policy_initial_revdate = pd.Timestamp(
                 eval_moment(policy['initial_revdate']),
                 tz='UTC'
