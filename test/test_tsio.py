@@ -841,14 +841,9 @@ def test_deleted_basket_breaks_cache_invalidation(engine, tsh):
 
         tsh.delete_basket(cn, 'refinery-ghost-basket')
 
-        with pytest.raises(TypeError) as err:
-            tsh.register_formula(
-                cn,
-                'refinery-innocent-formula',
-                '(series "refinery-unrelated")'
-            )
-        assert err.value.args[0] == "'NoneType' object is not subscriptable"
-
-        tsh.delete(cn, 'refinery-formula-with-basket')
-        tsh.delete(cn, 'refinery-ghost-series')
-        tsh.delete(cn, 'refinery-unrelated')
+        tsh.register_formula(
+            cn,
+            'refinery-innocent-formula',
+            '(series "refinery-unrelated")'
+        )
+        assert tsh.exists(cn, 'refinery-innocent-formula')
