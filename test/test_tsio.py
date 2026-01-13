@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 import numpy as np
+import pytest
 
 from tshistory.testutil import (
     assert_df,
@@ -815,3 +816,39 @@ def test_types():
     assert {
         'priority-origin': {'return': 'Series', 'serieslist': 'Packed[Series]'}
     } == types
+
+
+def test_deleted_basket_breaks_cache_invalidation(engine, tsh):
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2026, 1, 1), periods=3, freq='D')
+    )
+    with engine.begin() as cn:
+        tsh.update(cn, a, 'refinery-ghost-series', 'Babar')
+        tsh.update(cn, a, 'refinery-unrelated', 'Babar')
+
+        tsh.register_basket(
+            cn,
+            'refinery-ghost-basket',
+            '(by.name "refinery-ghost")'
+        )
+
+        tsh.register_formula(
+            cn,
+            'refinery-formula-with-basket',
+            '(add (findseries (by.basket "refinery-ghost-basket")))'
+        )
+
+        tsh.delete_basket(cn, 'refinery-ghost-basket')
+
+        with pytest.raises(TypeError) as err:
+            tsh.register_formula(
+                cn,
+                'refinery-innocent-formula',
+                '(series "refinery-unrelated")'
+            )
+        assert err.value.args[0] == "'NoneType' object is not subscriptable"
+
+        tsh.delete(cn, 'refinery-formula-with-basket')
+        tsh.delete(cn, 'refinery-ghost-series')
+        tsh.delete(cn, 'refinery-unrelated')
