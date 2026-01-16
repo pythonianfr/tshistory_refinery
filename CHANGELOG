@@ -1,6 +1,16 @@
 # Changelog
 
-## [Unreleased]
+## [0.10.2] - 2026-01-16
+
+### Added
+- cache: logging for policy parameters and value windows
+
+### Changed
+- doc: various improvements and reorganisation
+
+### Fixed
+- api/cache: refresh_series_policy_now passing executor instead of engine
+- cache: second insertion skip bug
 
 ## [0.10.1] - 2025-11-05
 
